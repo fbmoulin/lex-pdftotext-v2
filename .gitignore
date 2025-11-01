@@ -55,6 +55,7 @@ data/output/
 !BUILD_GUIDE.md
 !SECURITY_IMPROVEMENTS.md
 !CHANGELOG_SECURITY.md
+!GITHUB_SETUP.md
 !assets/ICON_CREATION.md
 
 *.txt
