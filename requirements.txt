@@ -1,0 +1,23 @@
+# Core PDF extraction
+pymupdf>=1.23.0
+
+# Alternative PDF library (fallback for tables)
+pdfplumber>=0.11.0
+
+# CLI interface
+click>=8.1.0
+
+# Environment configuration
+python-dotenv>=1.0.0
+
+# Progress bars
+tqdm>=4.66.0
+
+# Testing
+pytest>=7.4.0
+
+# GUI Interface
+pywebview>=4.0
+
+# Build tools
+pyinstaller>=6.0.0

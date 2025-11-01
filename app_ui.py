@@ -1,0 +1,393 @@
+#!/usr/bin/env python3
+"""
+PDF Legal Text Extractor - GUI Application
+
+Interface gráfica para extração de texto de PDFs judiciais brasileiros.
+"""
+
+import sys
+import os
+from pathlib import Path
+import webview
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from src.extractors import PyMuPDFExtractor
+from src.processors import TextNormalizer, MetadataParser
+from src.formatters import MarkdownFormatter
+from src.utils.exceptions import PDFExtractionError
+
+
+class API:
+    """Backend API for PyWebview interface."""
+
+    def __init__(self):
+        self.window = None
+
+    def select_folder(self):
+        """
+        Open folder selection dialog.
+
+        Returns:
+            str: Selected folder path
+        """
+        try:
+            result = self.window.create_file_dialog(
+                webview.FOLDER_DIALOG,
+                allow_multiple=False
+            )
+            if result and len(result) > 0:
+                return result[0]
+            return None
+        except Exception as e:
+            return None
+
+    def select_file(self):
+        """
+        Open file selection dialog.
+
+        Returns:
+            str: Selected file path
+        """
+        try:
+            result = self.window.create_file_dialog(
+                webview.OPEN_DIALOG,
+                file_types=('PDF Files (*.pdf)',),
+                allow_multiple=False
+            )
+            if result and len(result) > 0:
+                return result[0]
+            return None
+        except Exception as e:
+            return None
+
+    def extract_pdf(self, pdf_path, options):
+        """
+        Extract text from a single PDF.
+
+        Args:
+            pdf_path: Path to PDF file
+            options: Dictionary with options (normalize, metadata, structured)
+
+        Returns:
+            str: Success message
+        """
+        try:
+            pdf_path = Path(pdf_path)
+
+            # Generate output path
+            output_path = pdf_path.with_suffix('.md')
+
+            # Extract text
+            with PyMuPDFExtractor(pdf_path) as extractor:
+                raw_text = extractor.extract_text()
+                page_count = extractor.get_page_count()
+
+            # Process text
+            if options.get('normalize', True):
+                normalizer = TextNormalizer()
+                processed_text = normalizer.normalize(raw_text)
+                processed_text = normalizer.remove_page_markers(processed_text)
+            else:
+                processed_text = raw_text
+
+            # Extract metadata
+            metadata_parser = MetadataParser()
+            doc_metadata = metadata_parser.parse(processed_text)
+
+            # Format output
+            formatter = MarkdownFormatter()
+
+            if options.get('structured', False):
+                output_text = formatter.format_with_sections(
+                    processed_text,
+                    doc_metadata
+                )
+            else:
+                output_text = formatter.format(
+                    processed_text,
+                    doc_metadata,
+                    include_metadata_header=options.get('metadata', True)
+                )
+
+            # Save to file
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            MarkdownFormatter.save_to_file(output_text, str(output_path))
+
+            # Move to processed
+            processado_dir = pdf_path.parent / 'processado'
+            processado_dir.mkdir(parents=True, exist_ok=True)
+            new_pdf_path = processado_dir / pdf_path.name
+
+            import shutil
+            shutil.move(str(pdf_path), str(new_pdf_path))
+
+            return f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+
+        except PDFExtractionError as e:
+            raise Exception(f"Erro ao processar PDF: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Erro inesperado: {str(e)}")
+
+    def batch_process(self, input_dir, options):
+        """
+        Process all PDFs in a directory.
+
+        Args:
+            input_dir: Input directory path
+            options: Dictionary with options (normalize, metadata, output_dir)
+
+        Returns:
+            str: Success message
+        """
+        try:
+            input_dir = Path(input_dir)
+
+            # Determine output directory
+            output_dir = options.get('output_dir')
+            if output_dir:
+                output_dir = Path(output_dir)
+            else:
+                output_dir = input_dir / 'output'
+
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Find all PDFs
+            pdf_files = list(input_dir.glob('*.pdf'))
+
+            if not pdf_files:
+                raise Exception(f"Nenhum arquivo PDF encontrado em: {input_dir}")
+
+            # Process each PDF
+            success_count = 0
+            error_count = 0
+            errors = []
+
+            for pdf_path in pdf_files:
+                try:
+                    # Extract text
+                    with PyMuPDFExtractor(pdf_path) as extractor:
+                        raw_text = extractor.extract_text()
+
+                    # Process text
+                    if options.get('normalize', True):
+                        normalizer = TextNormalizer()
+                        processed_text = normalizer.normalize(raw_text)
+                        processed_text = normalizer.remove_page_markers(processed_text)
+                    else:
+                        processed_text = raw_text
+
+                    # Extract metadata
+                    metadata_parser = MetadataParser()
+                    doc_metadata = metadata_parser.parse(processed_text)
+
+                    # Format output
+                    formatter = MarkdownFormatter()
+                    output_text = formatter.format(
+                        processed_text,
+                        doc_metadata,
+                        include_metadata_header=options.get('metadata', True)
+                    )
+
+                    # Save to file
+                    output_path = output_dir / pdf_path.with_suffix('.md').name
+                    MarkdownFormatter.save_to_file(output_text, str(output_path))
+
+                    # Move processed PDF
+                    processado_dir = input_dir / 'processado'
+                    processado_dir.mkdir(parents=True, exist_ok=True)
+                    new_pdf_path = processado_dir / pdf_path.name
+
+                    import shutil
+                    shutil.move(str(pdf_path), str(new_pdf_path))
+
+                    success_count += 1
+
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"{pdf_path.name}: {str(e)}")
+
+            # Summary
+            message = f"✅ Concluído!\n"
+            message += f"   Sucesso: {success_count} arquivo(s)\n"
+            if error_count > 0:
+                message += f"   Erros: {error_count} arquivo(s)\n"
+                message += "\nDetalhes dos erros:\n" + "\n".join(errors[:5])
+                if len(errors) > 5:
+                    message += f"\n... e mais {len(errors) - 5} erro(s)"
+
+            return message
+
+        except Exception as e:
+            raise Exception(f"Erro no processamento em lote: {str(e)}")
+
+    def merge_process(self, input_dir, options):
+        """
+        Merge multiple PDFs of the same process.
+
+        Args:
+            input_dir: Input directory path
+            options: Dictionary with options (normalize, process_number)
+
+        Returns:
+            str: Success message
+        """
+        try:
+            input_dir = Path(input_dir)
+            import re
+            import shutil
+
+            # Find all PDFs recursively
+            pdf_files = sorted(list(input_dir.rglob('*.pdf')))
+
+            # Exclude PDFs in processado folder
+            pdf_files = [f for f in pdf_files if 'processado' not in f.parts]
+
+            if not pdf_files:
+                raise Exception(f"Nenhum arquivo PDF encontrado em: {input_dir}")
+
+            # Group PDFs by process number
+            metadata_parser = MetadataParser()
+            normalizer = TextNormalizer() if options.get('normalize', True) else None
+            process_groups = {}
+
+            for pdf_path in pdf_files:
+                try:
+                    # Extract text
+                    with PyMuPDFExtractor(pdf_path) as extractor:
+                        raw_text = extractor.extract_text()
+
+                    # Normalize if enabled
+                    if normalizer:
+                        processed_text = normalizer.normalize(raw_text)
+                        processed_text = normalizer.remove_page_markers(processed_text)
+                    else:
+                        processed_text = raw_text
+
+                    # Extract metadata
+                    doc_metadata = metadata_parser.parse(processed_text)
+
+                    # Get process number
+                    proc_num = doc_metadata.process_number
+                    if not proc_num:
+                        # Try to extract from filename
+                        match = re.search(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}', pdf_path.name)
+                        proc_num = match.group(0) if match else "UNKNOWN"
+
+                    # Group by process number
+                    if proc_num not in process_groups:
+                        process_groups[proc_num] = []
+
+                    process_groups[proc_num].append((pdf_path, processed_text, doc_metadata))
+
+                except Exception as e:
+                    continue
+
+            # Filter by process number if specified
+            process_number = options.get('process_number')
+            if process_number:
+                if process_number in process_groups:
+                    process_groups = {process_number: process_groups[process_number]}
+                else:
+                    raise Exception(f"Processo {process_number} não encontrado!")
+
+            # Process each group
+            files_created = []
+            for proc_num, files in process_groups.items():
+                if len(files) == 1 and not process_number:
+                    continue  # Skip single-file processes
+
+                # Build merged content
+                combined_sections = []
+
+                for i, (pdf_path, text, metadata) in enumerate(files, 1):
+                    section_parts = []
+
+                    # Document separator
+                    section_parts.append(f"## Documento {i}: {pdf_path.name}")
+
+                    # Metadata
+                    metadata_md = metadata_parser.format_metadata_as_markdown(metadata)
+                    if metadata_md:
+                        section_parts.append("\n**Metadados:**\n")
+                        section_parts.append(metadata_md)
+
+                    # Content
+                    section_parts.append("\n### Conteúdo\n")
+                    section_parts.append(text)
+
+                    combined_sections.append('\n'.join(section_parts))
+
+                # Build final document
+                safe_proc = proc_num.replace('/', '-')
+                output_path = input_dir / f"processo_{safe_proc}_merged.md"
+
+                final_content = f"# Processo {proc_num} - Consolidado\n\n"
+                final_content += f"*Mesclado a partir de {len(files)} arquivo(s) PDF*\n\n"
+                final_content += "---\n\n"
+                final_content += "\n\n---\n\n".join(combined_sections)
+
+                # Save
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                MarkdownFormatter.save_to_file(final_content, str(output_path))
+
+                files_created.append((proc_num, len(files), output_path))
+
+                # Move processed PDFs
+                processado_dir = input_dir / 'processado'
+                processado_dir.mkdir(parents=True, exist_ok=True)
+
+                for pdf_path, _, _ in files:
+                    relative_path = pdf_path.relative_to(input_dir)
+                    new_pdf_path = processado_dir / relative_path
+                    new_pdf_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(pdf_path), str(new_pdf_path))
+
+            # Summary
+            if not files_created:
+                return "ℹ️ Nenhum processo com múltiplos volumes encontrado."
+
+            message = f"✅ Concluído! {len(files_created)} processo(s) mesclado(s):\n\n"
+            for proc_num, file_count, output_path in files_created:
+                message += f"• Processo {proc_num}: {file_count} arquivo(s)\n"
+                message += f"  📄 {output_path.name}\n"
+
+            return message
+
+        except Exception as e:
+            raise Exception(f"Erro ao mesclar processos: {str(e)}")
+
+
+def main():
+    """Main application entry point."""
+    # Create API instance
+    api = API()
+
+    # Get HTML path
+    html_path = Path(__file__).parent / 'assets' / 'html' / 'index.html'
+
+    if not html_path.exists():
+        print(f"❌ Erro: Arquivo HTML não encontrado: {html_path}")
+        sys.exit(1)
+
+    # Create window
+    window = webview.create_window(
+        'PDF Legal Extractor',
+        html_path.as_uri(),
+        js_api=api,
+        width=900,
+        height=750,
+        resizable=True,
+        min_size=(800, 600)
+    )
+
+    # Store window reference in API
+    api.window = window
+
+    # Start application
+    webview.start(debug=False)
+
+
+if __name__ == '__main__':
+    main()

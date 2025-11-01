@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Legal Extractor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #718096;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .drop-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .drop-zone-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .drop-zone-text {
+            color: #4a5568;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-hint {
+            color: #a0aec0;
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .options {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .option-group {
+            margin-bottom: 20px;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .option-description {
+            color: #718096;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-list {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .file-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .file-name {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .file-size {
+            color: #a0aec0;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .file-remove {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .file-remove:hover {
+            background: #fc8181;
+            color: white;
+        }
+
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #3182ce;
+        }
+
+        .progress {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .progress-text {
+            margin-top: 8px;
+            text-align: center;
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .folder-input {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 PDF Legal Extractor</h1>
+        <p class="subtitle">Extração inteligente de texto de documentos judiciais brasileiros (PJe)</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('extract')">Extrair PDF</button>
+            <button class="tab" onclick="switchTab('batch')">Processamento em Lote</button>
+            <button class="tab" onclick="switchTab('merge')">Mesclar Processos</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <!-- Tab: Extract -->
+        <div id="tab-extract" class="tab-content active">
+            <div class="drop-zone" id="dropZoneSingle" onclick="document.getElementById('fileInput').click()">
+                <div class="drop-zone-icon">📑</div>
+                <div class="drop-zone-text">Arraste um PDF aqui</div>
+                <div class="drop-zone-hint">ou clique para selecionar</div>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".pdf">
+
+            <div class="options">
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="normalizeExtract" checked>
+                            <span>Normalizar texto</span>
+                        </div>
+                    </label>
+                    <div class="option-description">Converte MAIÚSCULAS excessivas para sentence case</div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="metadataExtract" checked>
+                            <span>Incluir metadados</span>
+                        </div>
+                    </label>
+                    <div class="option-description">Adiciona cabeçalho com informações do processo</div>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="structuredExtract">
+                            <span>Estruturar seções</span>
+                        </div>
+                    </label>
+                    <div class="option-description">Detecta e organiza seções automaticamente</div>
+                </div>
+            </div>
+
+            <div class="progress" id="progressExtract">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFillExtract"></div>
+                </div>
+                <div class="progress-text" id="progressTextExtract">Processando...</div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-primary" id="btnExtract" onclick="extractPDF()" disabled>Extrair Texto</button>
+            </div>
+        </div>
+
+        <!-- Tab: Batch -->
+        <div id="tab-batch" class="tab-content">
+            <div class="drop-zone" id="dropZoneBatch" onclick="selectFolder('batch')">
+                <div class="drop-zone-icon">📁</div>
+                <div class="drop-zone-text">Selecionar pasta com PDFs</div>
+                <div class="drop-zone-hint">Todos os PDFs na pasta serão processados</div>
+            </div>
+
+            <div class="folder-input">
+                <label class="option-label">Pasta de saída (opcional)</label>
+                <input type="text" id="outputDirBatch" placeholder="Deixe vazio para usar pasta padrão 'output'">
+            </div>
+
+            <div class="options">
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="normalizeBatch" checked>
+                            <span>Normalizar texto</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="metadataBatch" checked>
+                            <span>Incluir metadados</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="progress" id="progressBatch">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFillBatch"></div>
+                </div>
+                <div class="progress-text" id="progressTextBatch">Processando...</div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-primary" id="btnBatch" onclick="batchProcess()" disabled>Processar Lote</button>
+            </div>
+        </div>
+
+        <!-- Tab: Merge -->
+        <div id="tab-merge" class="tab-content">
+            <div class="drop-zone" id="dropZoneMerge" onclick="selectFolder('merge')">
+                <div class="drop-zone-icon">🔀</div>
+                <div class="drop-zone-text">Selecionar pasta com PDFs</div>
+                <div class="drop-zone-hint">PDFs serão agrupados por número de processo</div>
+            </div>
+
+            <div class="folder-input">
+                <label class="option-label">Número de processo específico (opcional)</label>
+                <input type="text" id="processNumber" placeholder="Ex: 5015904-66.2025.8.08.0012">
+                <div class="option-description">Deixe vazio para mesclar todos os processos encontrados</div>
+            </div>
+
+            <div class="options">
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="normalizeMerge" checked>
+                            <span>Normalizar texto</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="progress" id="progressMerge">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFillMerge"></div>
+                </div>
+                <div class="progress-text" id="progressTextMerge">Processando...</div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-primary" id="btnMerge" onclick="mergeProcess()" disabled>Mesclar Processos</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let currentFolder = null;
+        let currentMode = 'batch';
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Hide status
+            hideStatus();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        function hideStatus() {
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function showProgress(mode, show = true) {
+            const progress = document.getElementById('progress' + capitalize(mode));
+            progress.style.display = show ? 'block' : 'none';
+            if (!show) {
+                document.getElementById('progressFill' + capitalize(mode)).style.width = '0%';
+            }
+        }
+
+        function updateProgress(mode, percent, text) {
+            document.getElementById('progressFill' + capitalize(mode)).style.width = percent + '%';
+            document.getElementById('progressText' + capitalize(mode)).textContent = text;
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                currentFile = e.target.files[0].path;
+                document.getElementById('btnExtract').disabled = false;
+                showStatus('Arquivo selecionado: ' + e.target.files[0].name, 'info');
+            }
+        });
+
+        // Drag and drop
+        ['dropZoneSingle', 'dropZoneBatch', 'dropZoneMerge'].forEach(id => {
+            const zone = document.getElementById(id);
+            if (!zone) return;
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                // Handle drop
+            });
+        });
+
+        async function selectFolder(mode) {
+            currentMode = mode;
+            const result = await pywebview.api.select_folder();
+            if (result) {
+                currentFolder = result;
+                document.getElementById('btn' + capitalize(mode)).disabled = false;
+                showStatus('Pasta selecionada: ' + result, 'info');
+            }
+        }
+
+        async function extractPDF() {
+            if (!currentFile) return;
+
+            hideStatus();
+            showProgress('extract');
+            document.getElementById('btnExtract').disabled = true;
+
+            const options = {
+                normalize: document.getElementById('normalizeExtract').checked,
+                metadata: document.getElementById('metadataExtract').checked,
+                structured: document.getElementById('structuredExtract').checked
+            };
+
+            updateProgress('extract', 30, 'Extraindo texto...');
+
+            try {
+                const result = await pywebview.api.extract_pdf(currentFile, options);
+                updateProgress('extract', 100, 'Concluído!');
+
+                setTimeout(() => {
+                    showProgress('extract', false);
+                    showStatus(result, 'success');
+                    document.getElementById('btnExtract').disabled = false;
+                    currentFile = null;
+                }, 1000);
+            } catch (error) {
+                showProgress('extract', false);
+                showStatus('Erro: ' + error, 'error');
+                document.getElementById('btnExtract').disabled = false;
+            }
+        }
+
+        async function batchProcess() {
+            if (!currentFolder) return;
+
+            hideStatus();
+            showProgress('batch');
+            document.getElementById('btnBatch').disabled = true;
+
+            const options = {
+                normalize: document.getElementById('normalizeBatch').checked,
+                metadata: document.getElementById('metadataBatch').checked,
+                output_dir: document.getElementById('outputDirBatch').value
+            };
+
+            updateProgress('batch', 0, 'Iniciando...');
+
+            try {
+                const result = await pywebview.api.batch_process(currentFolder, options);
+                updateProgress('batch', 100, 'Concluído!');
+
+                setTimeout(() => {
+                    showProgress('batch', false);
+                    showStatus(result, 'success');
+                    document.getElementById('btnBatch').disabled = false;
+                }, 1000);
+            } catch (error) {
+                showProgress('batch', false);
+                showStatus('Erro: ' + error, 'error');
+                document.getElementById('btnBatch').disabled = false;
+            }
+        }
+
+        async function mergeProcess() {
+            if (!currentFolder) return;
+
+            hideStatus();
+            showProgress('merge');
+            document.getElementById('btnMerge').disabled = true;
+
+            const options = {
+                normalize: document.getElementById('normalizeMerge').checked,
+                process_number: document.getElementById('processNumber').value
+            };
+
+            updateProgress('merge', 0, 'Agrupando PDFs...');
+
+            try {
+                const result = await pywebview.api.merge_process(currentFolder, options);
+                updateProgress('merge', 100, 'Concluído!');
+
+                setTimeout(() => {
+                    showProgress('merge', false);
+                    showStatus(result, 'success');
+                    document.getElementById('btnMerge').disabled = false;
+                }, 1000);
+            } catch (error) {
+                showProgress('merge', false);
+                showStatus('Erro: ' + error, 'error');
+                document.getElementById('btnMerge').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
