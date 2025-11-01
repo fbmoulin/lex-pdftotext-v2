@@ -53,14 +53,17 @@ def build_executable():
         print("   O executável será criado sem ícone personalizado")
         print("   Veja assets/ICON_CREATION.md para criar um ícone\n")
 
+    # Separador de path (Windows usa ; Linux/macOS usa :)
+    separator = ';' if sys.platform == 'win32' else ':'
+
     # Comando PyInstaller
     cmd = [
         'pyinstaller',
         '--onefile',              # Gerar único executável
         '--windowed',             # Sem console (GUI apenas)
         '--name=PDF2MD',          # Nome do executável
-        '--add-data=assets;assets',  # Incluir assets
-        '--add-data=src;src',        # Incluir src
+        f'--add-data=assets{separator}assets',  # Incluir assets
+        f'--add-data=src{separator}src',        # Incluir src
     ]
 
     if icon_arg:
@@ -94,7 +97,9 @@ def build_executable():
 
 def verify_build():
     """Verifica se o build foi bem-sucedido."""
-    exe_path = Path('dist/PDF2MD.exe')
+    # No Windows: .exe, no Linux/macOS: sem extensão
+    exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
+    exe_path = Path('dist') / exe_name
 
     if exe_path.exists():
         size_mb = exe_path.stat().st_size / (1024 * 1024)
@@ -119,8 +124,15 @@ def create_portable_package():
 
     package_dir.mkdir(parents=True)
 
-    # Copiar executável
-    shutil.copy(dist_dir / 'PDF2MD.exe', package_dir)
+    # Copiar executável (adaptar para o SO)
+    exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
+    exe_path = dist_dir / exe_name
+
+    if exe_path.exists():
+        shutil.copy(exe_path, package_dir)
+    else:
+        print(f"⚠️  Executável não encontrado: {exe_path}")
+        return
 
     # Copiar README
     if Path('README.md').exists():
