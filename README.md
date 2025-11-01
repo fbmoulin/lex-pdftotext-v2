@@ -6,6 +6,8 @@
 [![PyPI](https://img.shields.io/badge/GUI-PyWebview-green.svg)](https://pywebview.flowrl.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+> **Projeto criado por [Lex Intelligentia](https://lexintelligentia.com)** - Soluções inteligentes para análise jurídica
+
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
 **Disponível em duas versões**:
@@ -424,11 +426,12 @@ chunks = process_for_rag("processo.pdf")
 
 ## 📄 Licença
 
-Este projeto é de código aberto.
+Este projeto é de código aberto sob a licença MIT.
 
-## 👤 Autor
+## 👤 Autoria
 
-Felipe Moulin
+**Criado por**: [Lex Intelligentia](https://lexintelligentia.com)
+**Desenvolvedor**: Felipe Bertrand Sardenberg Moulin
 
 ---
 

@@ -1,5 +1,7 @@
 # Contribuindo para PDF Legal Extractor
 
+> **Projeto da [Lex Intelligentia](https://lexintelligentia.com)** - Desenvolvido por Felipe Moulin
+
 Obrigado por considerar contribuir para o PDF Legal Extractor! 🎉
 
 ## 🤝 Como Contribuir

@@ -1,5 +1,7 @@
 # Guia de Build e Distribuição - PDF Legal Extractor
 
+> **Projeto da [Lex Intelligentia](https://lexintelligentia.com)** - Desenvolvido por Felipe Moulin
+
 ## 📋 Índice
 
 1. [Pré-requisitos](#pré-requisitos)

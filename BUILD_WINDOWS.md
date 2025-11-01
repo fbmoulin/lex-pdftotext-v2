@@ -1,5 +1,7 @@
 # Build do Executável Windows
 
+> **Projeto da [Lex Intelligentia](https://lexintelligentia.com)** - Desenvolvido por Felipe Moulin
+
 Este guia explica como criar o executável Windows (.exe) do PDF Legal Extractor.
 
 ## Pré-requisitos
