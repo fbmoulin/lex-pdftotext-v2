@@ -24,6 +24,7 @@ class API:
 
     def __init__(self):
         self.window = None
+        self.last_output_path = None  # Store last generated file path
 
     def select_folder(self):
         """
@@ -61,6 +62,66 @@ class API:
             return None
         except Exception as e:
             return None
+
+    def open_folder(self, file_path=None):
+        """
+        Open folder containing the file in system file explorer.
+
+        Args:
+            file_path: Path to file (optional, uses last_output_path if not provided)
+
+        Returns:
+            dict: Success status
+        """
+        try:
+            import subprocess
+            import platform
+
+            # Use provided path or last output path
+            if file_path is None:
+                if not self.last_output_path:
+                    raise Exception("Nenhum arquivo foi gerado ainda")
+                file_path = self.last_output_path
+
+            folder_path = Path(file_path).parent
+
+            if platform.system() == 'Windows':
+                os.startfile(folder_path)
+            elif platform.system() == 'Darwin':  # macOS
+                subprocess.run(['open', folder_path])
+            else:  # Linux
+                subprocess.run(['xdg-open', folder_path])
+
+            return {'success': True, 'message': f'Pasta aberta: {folder_path}'}
+        except Exception as e:
+            return {'success': False, 'message': f'Erro ao abrir pasta: {str(e)}'}
+
+    def save_as(self):
+        """
+        Open save dialog to export file to another location.
+
+        Returns:
+            str: Selected save path or None
+        """
+        try:
+            if not self.last_output_path or not Path(self.last_output_path).exists():
+                raise Exception("Nenhum arquivo foi gerado ainda")
+
+            result = self.window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                save_filename=Path(self.last_output_path).name,
+                file_types=('Markdown Files (*.md)',)
+            )
+
+            if result:
+                # Copy file to new location
+                import shutil
+                shutil.copy2(self.last_output_path, result)
+                return {'success': True, 'path': result, 'message': f'Arquivo salvo em: {result}'}
+
+            return {'success': False, 'message': 'Operação cancelada'}
+        except Exception as e:
+            return {'success': False, 'message': f'Erro: {str(e)}'}
 
     def extract_pdf(self, pdf_path, options):
         """
@@ -115,6 +176,9 @@ class API:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             MarkdownFormatter.save_to_file(output_text, str(output_path))
 
+            # Store last output path for export functions
+            self.last_output_path = str(output_path)
+
             # Move to processed
             processado_dir = pdf_path.parent / 'processado'
             processado_dir.mkdir(parents=True, exist_ok=True)
@@ -123,12 +187,17 @@ class API:
             import shutil
             shutil.move(str(pdf_path), str(new_pdf_path))
 
-            return f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+            return {
+                'success': True,
+                'output_path': str(output_path),
+                'pdf_moved': str(new_pdf_path),
+                'message': f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+            }
 
         except PDFExtractionError as e:
-            raise Exception(f"Erro ao processar PDF: {str(e)}")
+            return {'success': False, 'message': f"❌ Erro ao processar PDF: {str(e)}"}
         except Exception as e:
-            raise Exception(f"Erro inesperado: {str(e)}")
+            return {'success': False, 'message': f"❌ Erro inesperado: {str(e)}"}
 
     def batch_process(self, input_dir, options):
         """

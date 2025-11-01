@@ -377,6 +377,15 @@
                 <div class="progress-text" id="progressTextExtract">Processando...</div>
             </div>
 
+            <div class="buttons" id="exportButtonsExtract" style="display: none; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="openOutputFolder()">
+                    📁 Abrir Pasta
+                </button>
+                <button class="btn btn-secondary" onclick="saveAs()">
+                    💾 Salvar Como...
+                </button>
+            </div>
+
             <div class="buttons">
                 <button class="btn btn-primary" id="btnExtract" onclick="extractPDF()" disabled>Extrair Texto</button>
             </div>
@@ -576,14 +585,54 @@
 
                 setTimeout(() => {
                     showProgress('extract', false);
-                    showStatus(result, 'success');
+                    if (result && result.success) {
+                        showStatus(result.message, 'success');
+                        // Show export buttons
+                        document.getElementById('exportButtonsExtract').style.display = 'flex';
+                    } else if (result && result.success === false) {
+                        showStatus(result.message, 'error');
+                        // Hide export buttons on error
+                        document.getElementById('exportButtonsExtract').style.display = 'none';
+                    } else {
+                        // Backward compatibility: string result
+                        showStatus(result || 'Concluído com sucesso!', 'success');
+                        document.getElementById('exportButtonsExtract').style.display = 'flex';
+                    }
                     document.getElementById('btnExtract').disabled = false;
                     currentFile = null;
                 }, 1000);
             } catch (error) {
                 showProgress('extract', false);
-                showStatus('Erro: ' + error, 'error');
+                showStatus('❌ Erro: ' + error, 'error');
                 document.getElementById('btnExtract').disabled = false;
+                // Hide export buttons on error
+                document.getElementById('exportButtonsExtract').style.display = 'none';
+            }
+        }
+
+        async function openOutputFolder() {
+            try {
+                const result = await pywebview.api.open_folder();
+                if (result.success) {
+                    showStatus(result.message, 'info');
+                } else {
+                    showStatus(result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Erro ao abrir pasta: ' + error, 'error');
+            }
+        }
+
+        async function saveAs() {
+            try {
+                const result = await pywebview.api.save_as();
+                if (result.success) {
+                    showStatus(result.message, 'success');
+                } else {
+                    showStatus(result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Erro ao salvar arquivo: ' + error, 'error');
             }
         }
 
