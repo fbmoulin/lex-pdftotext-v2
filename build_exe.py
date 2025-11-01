@@ -26,18 +26,37 @@ def check_requirements():
 
 def clean_build_dirs():
     """Limpa diretórios de build anteriores."""
+    import time
+
     dirs_to_clean = ['build', 'dist']
     files_to_clean = ['*.spec']
 
     for dir_name in dirs_to_clean:
         if Path(dir_name).exists():
             print(f"🗑️  Removendo {dir_name}/")
-            shutil.rmtree(dir_name)
+            # Try multiple times on Windows (files may be locked)
+            for attempt in range(3):
+                try:
+                    shutil.rmtree(dir_name)
+                    break
+                except PermissionError as e:
+                    if attempt < 2:
+                        print(f"   ⚠️  Arquivo bloqueado, tentando novamente... ({attempt + 1}/3)")
+                        time.sleep(1)
+                    else:
+                        print(f"   ⚠️  Alguns arquivos não puderam ser removidos (podem estar em uso)")
+                        print(f"   💡 Feche qualquer executável rodando e tente novamente")
+                        # Continue anyway - PyInstaller will overwrite
+                except Exception as e:
+                    print(f"   ⚠️  Erro ao limpar: {e}")
 
     for pattern in files_to_clean:
         for file in Path('.').glob(pattern):
             print(f"🗑️  Removendo {file}")
-            file.unlink()
+            try:
+                file.unlink()
+            except Exception as e:
+                print(f"   ⚠️  Não foi possível remover {file}: {e}")
 
 
 def build_executable():
