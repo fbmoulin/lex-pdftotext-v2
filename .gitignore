@@ -56,7 +56,9 @@ data/output/
 !SECURITY_IMPROVEMENTS.md
 !CHANGELOG_SECURITY.md
 !GITHUB_SETUP.md
+!CONTRIBUTING.md
 !assets/ICON_CREATION.md
+!.github/**/*.md
 
 *.txt
 !requirements.txt

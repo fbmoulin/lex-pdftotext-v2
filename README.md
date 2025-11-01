@@ -1,5 +1,11 @@
 # PDF Legal Text Extractor
 
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/fbmoulin/pdftotext)
+[![PyPI](https://img.shields.io/badge/GUI-PyWebview-green.svg)](https://pywebview.flowrl.com/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
 **Disponível em duas versões**:
