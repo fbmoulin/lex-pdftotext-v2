@@ -159,4 +159,6 @@ Abra uma [discussão](https://github.com/fbmoulin/pdftotext/discussions) ou issu
 
 ## 📄 Licença
 
-Ao contribuir, você concorda que suas contribuições serão licenciadas sob a licença MIT.
+Este projeto é licenciado sob a **MIT License**. Ao contribuir, você concorda que suas contribuições serão licenciadas sob a mesma licença MIT.
+
+Veja o arquivo [LICENSE](./LICENSE) para detalhes completos.

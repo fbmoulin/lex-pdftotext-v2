@@ -496,5 +496,5 @@ copy Output\PDF2MD_Setup.exe <destino>
 ---
 
 **Desenvolvido por**: Felipe Bertrand Sardenberg Moulin
-**Licença**: Ver LICENSE.txt
-**Suporte**: [GitHub Issues](https://github.com/seu-usuario/pdftotext/issues)
+**Licença**: MIT License - Ver arquivo [LICENSE](./LICENSE)
+**Suporte**: [GitHub Issues](https://github.com/fbmoulin/pdftotext/issues)

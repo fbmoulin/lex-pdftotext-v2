@@ -151,3 +151,8 @@ python build_exe.py
 Para problemas, consulte:
 - [BUILD_GUIDE.md](BUILD_GUIDE.md) - Guia completo de build
 - [README.md](README.md) - Documentação do projeto
+
+---
+
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
+**Licença**: MIT License - Ver [LICENSE](./LICENSE)

@@ -235,3 +235,8 @@ python main.py extract documento.pdf --ocr  # Detecta e aplica OCR se necessári
 ```
 
 Por enquanto, use o workflow acima! 📄✨
+
+---
+
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
+**Licença**: MIT License - Ver [LICENSE](./LICENSE)

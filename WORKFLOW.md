@@ -298,3 +298,8 @@ Após gerar os .md:
 2. **RAG**: Importar para pipeline de IA (Qdrant, Pinecone, etc.)
 3. **Limpar**: Deletar PDFs em `processado/` se confirmado OK
 4. **Organizar**: Mover .md para repositório de documentos
+
+---
+
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
+**Licença**: MIT License - Ver [LICENSE](./LICENSE)

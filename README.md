@@ -426,7 +426,14 @@ chunks = process_for_rag("processo.pdf")
 
 ## 📄 Licença
 
-Este projeto é de código aberto sob a licença MIT.
+Este projeto é licenciado sob a **MIT License**.
+
+Copyright (c) 2025 Lex Intelligentia
+Desenvolvido por Felipe Bertrand Sardenberg Moulin
+
+Você tem permissão para usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias deste software, sujeito às condições da licença MIT.
+
+Veja o arquivo [LICENSE](./LICENSE) para o texto completo da licença.
 
 ## 👤 Autoria
 
