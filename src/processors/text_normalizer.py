@@ -37,19 +37,91 @@ class TextNormalizer:
         Returns:
             str: Normalized text
         """
-        # 1. Remove noise (page numbers, URLs, codes)
+        # 1. Remove repetitive footers/headers (law firm info, addresses)
+        text = self._remove_repetitive_content(text)
+
+        # 2. Remove noise (page numbers, URLs, codes)
         text = self._clean_noise(text)
 
-        # 2. Normalize UPPERCASE lines
+        # 3. Normalize UPPERCASE lines
         text = self._normalize_uppercase(text)
 
-        # 3. Clean whitespace
+        # 4. Clean whitespace
         text = self._normalize_whitespace(text)
 
-        # 4. Final aggressive cleanup of blank lines
+        # 5. Final aggressive cleanup of blank lines
         text = self._final_cleanup(text)
 
         return text
+
+    def _remove_repetitive_content(self, text: str, threshold: int = 3) -> str:
+        """
+        Remove repetitive footers/headers that appear across multiple pages.
+
+        Common examples:
+        - Law firm names and addresses
+        - Phone numbers, emails, websites
+        - CEP (postal codes)
+        - Repeated disclaimers
+
+        Args:
+            text: Raw text from PDF
+            threshold: Minimum number of occurrences to be considered repetitive
+
+        Returns:
+            str: Text with repetitive content removed
+        """
+        lines = text.split('\n')
+
+        # Count line frequencies (ignoring empty lines and very short lines)
+        line_counts = {}
+        for line in lines:
+            stripped = line.strip()
+            # Only count substantial lines (more than 10 chars)
+            if len(stripped) > 10:
+                line_counts[stripped] = line_counts.get(stripped, 0) + 1
+
+        # Identify repetitive lines (appear more than threshold times)
+        repetitive_lines = {
+            line for line, count in line_counts.items()
+            if count >= threshold
+        }
+
+        # Additional patterns to remove (common footer/header indicators)
+        footer_patterns = [
+            r'\b\d{5}-?\d{3}\b',  # CEP format (12345-678 or 12345678)
+            r'\(\d{2}\)\s*\d{4,5}-?\d{4}',  # Phone numbers (11) 98765-4321
+            r'www\.',  # Websites
+            r'@\w+\.\w+',  # Email addresses
+            r'\b[Aa]v\.|[Rr]ua\s+',  # Street addresses (Av. / Rua)
+            r'\b[Ee]scritor[ií]o\s+de\s+[Aa]dvocacia\b',  # "Escritório de Advocacia"
+            r'\b[Aa]dvocacia\s+e\s+[Cc]onsultoria\b',  # "Advocacia e Consultoria"
+            r'\bOAB/[A-Z]{2}\s+\d+',  # OAB registration
+        ]
+
+        # Filter out repetitive lines and footer patterns
+        filtered_lines = []
+        for line in lines:
+            stripped = line.strip()
+
+            # Skip if it's a repetitive line
+            if stripped in repetitive_lines:
+                continue
+
+            # Skip if matches footer patterns
+            is_footer = False
+            for pattern in footer_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    # Double check it's repetitive or very footer-like
+                    # Allow it if it appears only once (might be legitimate content)
+                    if line_counts.get(stripped, 0) >= 2:
+                        is_footer = True
+                        break
+
+            if not is_footer:
+                filtered_lines.append(line)
+
+        return '\n'.join(filtered_lines)
 
     def _final_cleanup(self, text: str) -> str:
         """
