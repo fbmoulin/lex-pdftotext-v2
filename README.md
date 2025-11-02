@@ -11,7 +11,7 @@
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
 **Disponível em duas versões**:
-- 🖥️ **Interface Gráfica (GUI)** - Aplicativo Windows stand-alone
+- 🖥️ **Interface Gráfica (GUI)** - Aplicativo Windows stand-alone com design moderno dark theme
 - ⌨️ **Interface de Linha de Comando (CLI)** - Terminal/script
 
 ## 🎯 Objetivo
@@ -25,10 +25,17 @@ Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, r
 
 ## ✨ Funcionalidades
 
-✅ Extração rápida e precisa de texto (PyMuPDF)
-✅ Remoção automática de ruído (logos, URLs, códigos de verificação)
+### Extração e Processamento
+✅ Extração rápida e precisa de texto (PyMuPDF - 60x mais rápido)
+✅ **Análise de imagens com IA** - Detecta e descreve imagens usando Google Gemini Vision
+✅ Remoção automática de ruído:
+  - Logos, URLs, códigos de verificação
+  - Rodapés repetitivos de escritórios de advocacia
+  - Endereços, telefones, emails duplicados
 ✅ Normalização de texto (conversão de UPPERCASE excessivo para sentence case)
-✅ Extração de metadados jurídicos:
+
+### Extração de Metadados
+✅ Extração inteligente de metadados jurídicos:
   - Números de processo (formato CNJ)
   - IDs de documentos (Num. XXXXXXXX)
   - Partes (autor, réu)
@@ -36,14 +43,18 @@ Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, r
   - Juízes
   - Datas de assinatura digital
   - Vara/tribunal
+  - Valor da causa
 
+### Interface e Organização
+✅ **Interface moderna dark theme** - Design sofisticado com glassmorphism e animações
 ✅ Detecção automática de tipo de documento (petição inicial, decisão, certidão)
 ✅ Saída estruturada em Markdown hierárquico
 ✅ Processamento em lote (batch)
 ✅ **Merge inteligente** - Mescla automaticamente PDFs do mesmo processo
 ✅ **Organização automática** - Move PDFs processados para pasta separada
 ✅ **Busca recursiva** - Processa subpastas (processos com múltiplos volumes)
-✅ CLI amigável
+✅ **Exportação flexível** - Abrir pasta ou salvar em local personalizado
+✅ CLI amigável com comandos intuitivos
 
 ## 📦 Instalação
 
@@ -68,6 +79,26 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
+### 4. Configure a API do Gemini (Opcional - para análise de imagens)
+
+Para habilitar a análise de imagens com IA:
+
+```bash
+# Windows (PowerShell como Administrador)
+[System.Environment]::SetEnvironmentVariable('GEMINI_API_KEY', 'sua-chave-aqui', 'User')
+
+# Linux/macOS
+export GEMINI_API_KEY='sua-chave-aqui'
+# Adicione ao ~/.bashrc ou ~/.zshrc para persistir
+```
+
+**Obter chave da API:**
+1. Acesse [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Crie uma API key gratuita
+3. Configure a variável de ambiente acima
+
+**Nota:** A análise de imagens é opcional. Se não configurada, o app funcionará normalmente sem esta feature.
+
 ## 🚀 Uso
 
 ### Interface Gráfica (GUI)
@@ -77,17 +108,25 @@ pip install -r requirements.txt
 Se você tem o executável `PDF2MD.exe`:
 
 1. Execute `PDF2MD.exe`
-2. Escolha uma das abas:
+2. **Aprecie a interface moderna dark theme** com efeitos de glassmorphism
+3. Escolha uma das abas:
    - **Extrair PDF**: Processa um único PDF
    - **Processamento em Lote**: Processa múltiplos PDFs
    - **Mesclar Processos**: Agrupa PDFs do mesmo processo
-3. Selecione arquivos/pasta
-4. Configure opções (normalização, metadados)
-5. Clique no botão para processar
+4. Selecione arquivos/pasta
+5. Configure opções:
+   - ✅ Normalizar texto
+   - ✅ Incluir metadados
+   - ✅ Estruturar seções
+   - 🤖 **Analisar imagens (Gemini)** - Descreve imagens encontradas no PDF
+6. Clique no botão para processar
+7. Use os botões de exportação para abrir pasta ou salvar em outro local
 
 **Vantagens da GUI**:
+- ✅ Design moderno dark theme com animações suaves
 - ✅ Não requer Python instalado
-- ✅ Interface visual intuitiva
+- ✅ Interface visual intuitiva e responsiva
+- ✅ Análise de imagens com IA integrada
 - ✅ Ideal para usuários não-técnicos
 - ✅ Instalador Windows disponível
 
@@ -407,22 +446,38 @@ chunks = process_for_rag("processo.pdf")
 
 ## 📚 Bibliotecas Utilizadas
 
-- **PyMuPDF (fitz)** - Extração rápida e precisa de texto
-- **pdfplumber** - Fallback para tabelas (futuro)
-- **click** - Interface CLI
+**Core:**
+- **PyMuPDF (fitz)** - Extração rápida e precisa de texto (60x mais rápido)
+- **Pillow (PIL)** - Processamento de imagens extraídas
+- **google-generativeai** - Análise de imagens com Gemini Vision API
+
+**Interface:**
+- **pywebview** - Interface gráfica moderna com HTML/CSS/JS
+- **click** - Interface CLI elegante
+
+**Utilidades:**
 - **tqdm** - Barras de progresso
-- **pytest** - Testes
+- **python-dotenv** - Gerenciamento de variáveis de ambiente
+
+**Build:**
+- **pyinstaller** - Empacotamento como executável Windows
+
+**Desenvolvimento:**
+- **pytest** - Framework de testes
 
 ## 🛠️ Melhorias Futuras
 
 - [ ] Suporte nativo a OCR para PDFs escaneados (veja [OCR_GUIDE.md](./OCR_GUIDE.md) para soluções atuais)
 - [ ] Extração de tabelas estruturadas
 - [ ] Detecção automática de seções (NLP)
+- [ ] Cache de análises de imagens
+- [ ] Retry logic para API calls do Gemini
 - [ ] API REST (FastAPI)
-- [ ] Interface web
+- [ ] Interface web responsiva
 - [ ] Exportação JSON estruturado
 - [ ] Integração direta com vector databases
 - [ ] Análise FIRAC+ automática
+- [ ] Suporte a mais idiomas de interface
 
 ## 📄 Licença
 
