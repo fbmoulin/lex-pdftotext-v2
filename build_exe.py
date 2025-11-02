@@ -2,14 +2,22 @@
 """
 Script de Build para PDF Legal Extractor
 
-Gera executável Windows (.exe) usando PyInstaller.
+Gera executável Windows (.exe) usando PyInstaller com tratamento
+robusto de erros e limpeza automática de arquivos bloqueados.
 """
 
 import sys
 import os
-import shutil
 from pathlib import Path
 import subprocess
+
+# Import build utilities
+try:
+    from build_utils import pre_build_cleanup, verify_build_result
+    HAS_BUILD_UTILS = True
+except ImportError:
+    HAS_BUILD_UTILS = False
+    print("⚠️  build_utils.py não encontrado - usando limpeza básica")
 
 
 def check_requirements():
@@ -22,41 +30,6 @@ def check_requirements():
         print("❌ PyInstaller não encontrado")
         print("   Instale com: pip install pyinstaller")
         return False
-
-
-def clean_build_dirs():
-    """Limpa diretórios de build anteriores."""
-    import time
-
-    dirs_to_clean = ['build', 'dist']
-    files_to_clean = ['*.spec']
-
-    for dir_name in dirs_to_clean:
-        if Path(dir_name).exists():
-            print(f"🗑️  Removendo {dir_name}/")
-            # Try multiple times on Windows (files may be locked)
-            for attempt in range(3):
-                try:
-                    shutil.rmtree(dir_name)
-                    break
-                except PermissionError as e:
-                    if attempt < 2:
-                        print(f"   ⚠️  Arquivo bloqueado, tentando novamente... ({attempt + 1}/3)")
-                        time.sleep(1)
-                    else:
-                        print(f"   ⚠️  Alguns arquivos não puderam ser removidos (podem estar em uso)")
-                        print(f"   💡 Feche qualquer executável rodando e tente novamente")
-                        # Continue anyway - PyInstaller will overwrite
-                except Exception as e:
-                    print(f"   ⚠️  Erro ao limpar: {e}")
-
-    for pattern in files_to_clean:
-        for file in Path('.').glob(pattern):
-            print(f"🗑️  Removendo {file}")
-            try:
-                file.unlink()
-            except Exception as e:
-                print(f"   ⚠️  Não foi possível remover {file}: {e}")
 
 
 def build_executable():
@@ -83,6 +56,7 @@ def build_executable():
         '--name=PDF2MD',          # Nome do executável
         f'--add-data=assets{separator}assets',  # Incluir assets
         f'--add-data=src{separator}src',        # Incluir src
+        '--clean',                # Limpar cache antes do build
     ]
 
     if icon_arg:
@@ -110,56 +84,49 @@ def build_executable():
         result = subprocess.run(cmd, check=True, capture_output=False)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ Erro ao construir executável: {e}")
+        print(f"\n❌ Erro ao construir executável (código {e.returncode})")
         return False
-
-
-def verify_build():
-    """Verifica se o build foi bem-sucedido."""
-    # No Windows: .exe, no Linux/macOS: sem extensão
-    exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
-    exe_path = Path('dist') / exe_name
-
-    if exe_path.exists():
-        size_mb = exe_path.stat().st_size / (1024 * 1024)
-        print(f"\n✅ Executável criado com sucesso!")
-        print(f"   📍 Localização: {exe_path}")
-        print(f"   📦 Tamanho: {size_mb:.2f} MB")
-        return True
-    else:
-        print(f"\n❌ Executável não encontrado em: {exe_path}")
+    except Exception as e:
+        print(f"\n❌ Erro inesperado: {e}")
         return False
 
 
 def create_portable_package():
     """Cria pacote portável (opcional)."""
+    import shutil
+
     print("\n📦 Criando pacote portável...")
 
     dist_dir = Path('dist')
     package_dir = dist_dir / 'PDF2MD_Portable'
 
-    if package_dir.exists():
-        shutil.rmtree(package_dir)
-
-    package_dir.mkdir(parents=True)
-
-    # Copiar executável (adaptar para o SO)
+    # Determinar nome do executável
     exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
     exe_path = dist_dir / exe_name
 
-    if exe_path.exists():
+    if not exe_path.exists():
+        print("   ⚠️  Executável não encontrado - pulando criação de pacote")
+        return False
+
+    try:
+        # Remover pacote antigo se existir
+        if package_dir.exists():
+            shutil.rmtree(package_dir)
+
+        package_dir.mkdir(parents=True)
+
+        # Copiar executável
         shutil.copy(exe_path, package_dir)
-    else:
-        print(f"⚠️  Executável não encontrado: {exe_path}")
-        return
+        print(f"   ✓ Copiado: {exe_name}")
 
-    # Copiar README
-    if Path('README.md').exists():
-        shutil.copy('README.md', package_dir)
+        # Copiar README
+        if Path('README.md').exists():
+            shutil.copy('README.md', package_dir)
+            print("   ✓ Copiado: README.md")
 
-    # Criar README de instalação
-    install_readme = package_dir / 'LEIA-ME.txt'
-    install_readme.write_text("""
+        # Criar README de instalação
+        install_readme = package_dir / 'LEIA-ME.txt'
+        install_readme.write_text("""
 PDF Legal Extractor - Versão Portável
 ====================================
 
@@ -179,21 +146,59 @@ Se o Windows Defender bloquear o executável:
 
 (Isso acontece porque o executável não tem assinatura digital)
 
+FUNCIONALIDADES:
+- Extrair texto de PDFs judiciais brasileiros
+- Processamento em lote de múltiplos PDFs
+- Mesclar documentos do mesmo processo
+- Exportar resultados para diferentes locais
+
 SUPORTE:
-Para questões ou problemas, contate o desenvolvedor.
+Para questões ou problemas, abra uma issue no GitHub:
+https://github.com/fbmoulin/pdftotext
 
 Versão: 1.0
+Criado por: Lex Intelligentia
 """, encoding='utf-8')
+        print("   ✓ Criado: LEIA-ME.txt")
 
-    # Criar arquivo zip
-    print(f"   Criando PDF2MD_Portable.zip...")
-    shutil.make_archive(
-        str(dist_dir / 'PDF2MD_Portable'),
-        'zip',
-        package_dir
-    )
+        # Criar arquivo zip
+        print(f"   Criando PDF2MD_Portable.zip...")
+        shutil.make_archive(
+            str(dist_dir / 'PDF2MD_Portable'),
+            'zip',
+            package_dir
+        )
 
-    print(f"✅ Pacote portável criado: dist/PDF2MD_Portable.zip")
+        print(f"✅ Pacote portável criado: dist/PDF2MD_Portable.zip")
+        return True
+
+    except Exception as e:
+        print(f"⚠️  Erro ao criar pacote portável: {e}")
+        print("   (Isso não afeta o executável principal)")
+        return False
+
+
+def print_next_steps():
+    """Imprime instruções de próximos passos."""
+    print("\n" + "=" * 60)
+    print("🎉 Build concluído!")
+    print("=" * 60)
+    print("\nPRÓXIMOS PASSOS:")
+    print("\n1. Teste o executável:")
+    if sys.platform == 'win32':
+        print("   > .\\dist\\PDF2MD.exe")
+    else:
+        print("   > ./dist/PDF2MD")
+
+    print("\n2. Para criar instalador Windows:")
+    print("   > Abra installer.iss no Inno Setup Compiler")
+    print("   > Clique em 'Compile' (F9)")
+
+    print("\n3. Distribua:")
+    print("   - Executável: dist/PDF2MD.exe (stand-alone)")
+    print("   - Portável: dist/PDF2MD_Portable.zip")
+    print("   - Instalador: Output/PDF2MD_Setup.exe (após Inno Setup)")
+    print("\n" + "=" * 60)
 
 
 def main():
@@ -206,17 +211,33 @@ def main():
     if not check_requirements():
         sys.exit(1)
 
-    # Limpar builds anteriores
-    print("\n🧹 Limpando builds anteriores...")
-    clean_build_dirs()
+    # Limpeza pré-build (usando build_utils se disponível)
+    if HAS_BUILD_UTILS:
+        cleanup_ok = pre_build_cleanup()
+        if not cleanup_ok:
+            print("⚠️  A limpeza não foi completamente bem-sucedida")
+            print("   Continuando mesmo assim...\n")
+    else:
+        print("\n🧹 Pulando limpeza avançada (build_utils indisponível)\n")
 
     # Construir executável
     if not build_executable():
+        print("\n" + "=" * 60)
+        print("❌ Build falhou!")
+        print("=" * 60)
+        print("\nDICAS DE TROUBLESHOOTING:")
+        print("1. Feche qualquer instância de PDF2MD.exe rodando")
+        print("2. Feche todas as janelas do Explorer visualizando dist/")
+        print("3. Execute: taskkill /F /IM PDF2MD.exe")
+        print("4. Execute: Remove-Item dist -Recurse -Force")
+        print("5. Tente novamente")
+        print("=" * 60)
         sys.exit(1)
 
-    # Verificar build
-    if not verify_build():
-        sys.exit(1)
+    # Verificar build (usando build_utils se disponível)
+    if HAS_BUILD_UTILS:
+        if not verify_build_result():
+            sys.exit(1)
 
     # Criar pacote portável (opcional)
     try:
@@ -226,20 +247,7 @@ def main():
         print("   (Isso não afeta o executável principal)")
 
     # Instruções finais
-    print("\n" + "=" * 60)
-    print("🎉 Build concluído com sucesso!")
-    print("=" * 60)
-    print("\nPRÓXIMOS PASSOS:")
-    print("\n1. Teste o executável:")
-    print("   > dist\\PDF2MD.exe")
-    print("\n2. Para criar instalador Windows:")
-    print("   > Abra installer.iss no Inno Setup Compiler")
-    print("   > Clique em 'Compile'")
-    print("\n3. Distribua:")
-    print("   - Executável: dist/PDF2MD.exe (stand-alone)")
-    print("   - Portável: dist/PDF2MD_Portable.zip")
-    print("   - Instalador: Output/PDF2MD_Setup.exe (após Inno Setup)")
-    print("\n" + "=" * 60)
+    print_next_steps()
 
 
 if __name__ == '__main__':
