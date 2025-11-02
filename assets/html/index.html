@@ -367,6 +367,16 @@
                     </label>
                     <div class="option-description">Detecta e organiza seções automaticamente</div>
                 </div>
+
+                <div class="option-group">
+                    <label class="option-label">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="analyzeImages">
+                            <span>Analisar imagens (Gemini)</span>
+                        </div>
+                    </label>
+                    <div class="option-description">Detecta e descreve imagens usando IA (requer GEMINI_API_KEY)</div>
+                </div>
             </div>
 
             <div class="progress" id="progressExtract">
@@ -575,7 +585,8 @@
             const options = {
                 normalize: document.getElementById('normalizeExtract').checked,
                 metadata: document.getElementById('metadataExtract').checked,
-                structured: document.getElementById('structuredExtract').checked
+                structured: document.getElementById('structuredExtract').checked,
+                analyze_images: document.getElementById('analyzeImages').checked
             };
 
             updateProgress('extract', 30, 'Extraindo texto...');

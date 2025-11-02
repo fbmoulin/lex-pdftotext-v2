@@ -14,7 +14,7 @@ import webview
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.extractors import PyMuPDFExtractor
-from src.processors import TextNormalizer, MetadataParser
+from src.processors import TextNormalizer, MetadataParser, ImageAnalyzer, format_image_description_markdown
 from src.formatters import MarkdownFormatter
 from src.utils.exceptions import PDFExtractionError
 
@@ -129,10 +129,10 @@ class API:
 
         Args:
             pdf_path: Path to PDF file
-            options: Dictionary with options (normalize, metadata, structured)
+            options: Dictionary with options (normalize, metadata, structured, analyze_images)
 
         Returns:
-            str: Success message
+            dict: Success status and message
         """
         try:
             pdf_path = Path(pdf_path)
@@ -140,10 +140,15 @@ class API:
             # Generate output path
             output_path = pdf_path.with_suffix('.md')
 
-            # Extract text
+            # Extract text and images
             with PyMuPDFExtractor(pdf_path) as extractor:
                 raw_text = extractor.extract_text()
                 page_count = extractor.get_page_count()
+
+                # Extract images if option is enabled
+                images = []
+                if options.get('analyze_images', False):
+                    images = extractor.extract_images()
 
             # Process text
             if options.get('normalize', True):
@@ -156,6 +161,28 @@ class API:
             # Extract metadata
             metadata_parser = MetadataParser()
             doc_metadata = metadata_parser.parse(processed_text)
+
+            # Analyze images if any were found and option is enabled
+            image_descriptions = ""
+            if images and options.get('analyze_images', False):
+                try:
+                    analyzer = ImageAnalyzer()
+                    analyzed_images = analyzer.describe_images_batch(
+                        images,
+                        context="documento judicial brasileiro"
+                    )
+
+                    # Format image descriptions
+                    image_descriptions = "\n\n## 📸 Imagens Anexadas\n\n"
+                    for idx, img_data in enumerate(analyzed_images, 1):
+                        image_descriptions += format_image_description_markdown(img_data, idx)
+
+                except ValueError as e:
+                    # API key not configured - skip image analysis
+                    image_descriptions = f"\n\n## ⚠️ Imagens Detectadas\n\n{len(images)} imagem(ns) encontrada(s), mas análise não foi possível (configure GEMINI_API_KEY).\n\n"
+                except Exception as e:
+                    # Other error - log but continue
+                    image_descriptions = f"\n\n## ⚠️ Erro na Análise de Imagens\n\n{str(e)}\n\n"
 
             # Format output
             formatter = MarkdownFormatter()
@@ -172,6 +199,9 @@ class API:
                     include_metadata_header=options.get('metadata', True)
                 )
 
+            # Append image descriptions
+            output_text += image_descriptions
+
             # Save to file
             output_path.parent.mkdir(parents=True, exist_ok=True)
             MarkdownFormatter.save_to_file(output_text, str(output_path))
@@ -187,11 +217,16 @@ class API:
             import shutil
             shutil.move(str(pdf_path), str(new_pdf_path))
 
+            # Build success message
+            message = f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+            if images:
+                message += f"\n🖼️ {len(images)} imagem(ns) processada(s)"
+
             return {
                 'success': True,
                 'output_path': str(output_path),
                 'pdf_moved': str(new_pdf_path),
-                'message': f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+                'message': message
             }
 
         except PDFExtractionError as e:

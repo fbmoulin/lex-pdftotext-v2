@@ -69,6 +69,11 @@ def build_executable():
         'webview',
         'click',
         'tqdm',
+        'PIL',
+        'PIL.Image',
+        'google.generativeai',
+        'google.ai',
+        'google.ai.generativelanguage',
     ]
 
     for imp in hidden_imports:

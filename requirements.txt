@@ -19,5 +19,9 @@ pytest>=7.4.0
 # GUI Interface
 pywebview>=4.0
 
+# Image processing and AI
+Pillow>=10.0.0
+google-generativeai>=0.3.0
+
 # Build tools
 pyinstaller>=6.0.0

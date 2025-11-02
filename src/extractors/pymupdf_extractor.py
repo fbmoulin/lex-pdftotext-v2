@@ -3,6 +3,8 @@
 import fitz  # PyMuPDF
 from pathlib import Path
 from typing import Any
+import io
+from PIL import Image
 
 from .base import PDFExtractor
 from ..utils.validators import PDFValidator
@@ -158,6 +160,54 @@ class PyMuPDFExtractor(PDFExtractor):
         return "\n\n--- PÁGINA {} ---\n\n".join(
             [f"\n\n--- PÁGINA {i+1} ---\n\n{text}" for i, text in enumerate(pages)]
         ).lstrip("\n\n--- PÁGINA 1 ---\n\n")
+
+    def extract_images(self) -> list[dict[str, Any]]:
+        """
+        Extract all images from the PDF with their metadata.
+
+        Returns:
+            list[dict]: List of image dictionaries containing:
+                - page_num: Page number where image was found (1-indexed)
+                - image_index: Index of image on that page
+                - image: PIL Image object
+                - width: Image width in pixels
+                - height: Image height in pixels
+                - xref: Internal PDF reference number
+        """
+        self._ensure_document_open()
+
+        images = []
+        for page_num in range(len(self.doc)):
+            page = self.doc[page_num]
+            image_list = page.get_images(full=True)
+
+            for img_index, img_info in enumerate(image_list):
+                xref = img_info[0]  # Image XREF reference
+
+                try:
+                    # Extract the image
+                    base_image = self.doc.extract_image(xref)
+                    image_bytes = base_image["image"]
+
+                    # Convert to PIL Image
+                    pil_image = Image.open(io.BytesIO(image_bytes))
+
+                    # Store image info
+                    images.append({
+                        'page_num': page_num + 1,  # 1-indexed for users
+                        'image_index': img_index,
+                        'image': pil_image,
+                        'width': pil_image.width,
+                        'height': pil_image.height,
+                        'xref': xref,
+                        'format': base_image.get("ext", "unknown")
+                    })
+
+                except Exception as e:
+                    # Skip images that can't be extracted (e.g., inline images, forms)
+                    continue
+
+        return images
 
     def close(self):
         """Explicitly close the document."""

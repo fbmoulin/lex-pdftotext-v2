@@ -41,8 +41,8 @@ Write-Host "[3/4] Instalando dependencias..." -ForegroundColor Yellow
 Write-Host "   Atualizando pip..." -ForegroundColor Gray
 python -m pip install --upgrade pip --quiet
 
-Write-Host "   Instalando PyMuPDF, click, tqdm, pywebview, pyinstaller..." -ForegroundColor Gray
-pip install PyMuPDF click tqdm pywebview pyinstaller --quiet
+Write-Host "   Instalando PyMuPDF, click, tqdm, pywebview, Pillow, google-generativeai, pyinstaller..." -ForegroundColor Gray
+pip install PyMuPDF click tqdm pywebview Pillow google-generativeai pyinstaller --quiet
 
 if (-not $?) {
     Write-Host "ERRO: Falha ao instalar dependencias" -ForegroundColor Red
