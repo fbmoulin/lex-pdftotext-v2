@@ -331,12 +331,11 @@
 
         <!-- Tab: Extract -->
         <div id="tab-extract" class="tab-content active">
-            <div class="drop-zone" id="dropZoneSingle" onclick="document.getElementById('fileInput').click()">
+            <div class="drop-zone" id="dropZoneSingle" onclick="selectFile()">
                 <div class="drop-zone-icon">📑</div>
-                <div class="drop-zone-text">Arraste um PDF aqui</div>
-                <div class="drop-zone-hint">ou clique para selecionar</div>
+                <div class="drop-zone-text">Clique para selecionar um PDF</div>
+                <div class="drop-zone-hint">Arquivo será processado individualmente</div>
             </div>
-            <input type="file" id="fileInput" class="file-input" accept=".pdf">
 
             <div class="options">
                 <div class="option-group">
@@ -524,15 +523,6 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
-        // File input handler
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                currentFile = e.target.files[0].path;
-                document.getElementById('btnExtract').disabled = false;
-                showStatus('Arquivo selecionado: ' + e.target.files[0].name, 'info');
-            }
-        });
-
         // Drag and drop
         ['dropZoneSingle', 'dropZoneBatch', 'dropZoneMerge'].forEach(id => {
             const zone = document.getElementById(id);
@@ -561,6 +551,17 @@
                 currentFolder = result;
                 document.getElementById('btn' + capitalize(mode)).disabled = false;
                 showStatus('Pasta selecionada: ' + result, 'info');
+            }
+        }
+
+        async function selectFile() {
+            const result = await pywebview.api.select_file();
+            if (result) {
+                currentFile = result;
+                document.getElementById('btnExtract').disabled = false;
+                // Extract filename from path
+                const filename = result.split(/[\\/]/).pop();
+                showStatus('Arquivo selecionado: ' + filename, 'info');
             }
         }
 
