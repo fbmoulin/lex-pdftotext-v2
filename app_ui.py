@@ -13,13 +13,6 @@ from pathlib import Path
 import webview
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-env_path = Path(__file__).parent / ".env"
-load_dotenv(env_path)
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent))
-
 from src.extractors import PyMuPDFExtractor
 from src.formatters import MarkdownFormatter
 from src.processors import (
@@ -516,6 +509,10 @@ class API:
 
 def main():
     """Main application entry point."""
+    # Load environment variables from .env file
+    env_path = Path(__file__).parent / ".env"
+    load_dotenv(env_path)
+
     # Create API instance
     api = API()
 

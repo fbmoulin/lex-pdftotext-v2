@@ -13,13 +13,6 @@ import click
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-# Load environment variables from .env file
-env_path = Path(__file__).parent / ".env"
-load_dotenv(env_path)
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent))
-
 from src.extractors import PyMuPDFExtractor, TableExtractor
 from src.formatters import JSONFormatter, MarkdownFormatter, TableFormatter
 from src.processors import MetadataParser, TextNormalizer
@@ -175,7 +168,9 @@ def cli():
 
     Extract and structure text from Brazilian legal PDF documents (PJe format).
     """
-    pass
+    # Load environment variables from .env file
+    env_path = Path(__file__).parent / ".env"
+    load_dotenv(env_path)
 
 
 @cli.command()
