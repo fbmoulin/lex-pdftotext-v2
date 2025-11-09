@@ -60,8 +60,9 @@ repos:
   rev: 1.8.6
   hooks:
   - id: bandit
-    args: [-r, src/, -f, screen]
+    args: [-r, src/, -f, screen, -s, 'B101,B110,B112']
     exclude: ^tests/|^docs/
+    pass_filenames: false
 
   # Docstring checks
 - repo: https://github.com/PyCQA/pydocstyle

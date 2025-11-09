@@ -1,6 +1,4 @@
-"""
-PDF validation utilities.
-"""
+"""PDF validation utilities."""
 
 import platform
 import re
@@ -30,8 +28,7 @@ class PDFValidator:
 
     @staticmethod
     def validate_path(pdf_path: Path) -> None:
-        """
-        Validate that path exists and is a PDF file.
+        """Validate that path exists and is a PDF file.
 
         Args:
             pdf_path: Path to PDF file
@@ -50,8 +47,7 @@ class PDFValidator:
 
     @staticmethod
     def validate_size(pdf_path: Path, max_size_mb: int = DEFAULT_MAX_SIZE_MB) -> None:
-        """
-        Validate PDF file size.
+        """Validate PDF file size.
 
         Args:
             pdf_path: Path to PDF file
@@ -70,8 +66,7 @@ class PDFValidator:
 
     @staticmethod
     def validate_integrity(pdf_path: Path, max_pages: int = DEFAULT_MAX_PAGES) -> tuple[bool, str]:
-        """
-        Validate PDF integrity and readability.
+        """Validate PDF integrity and readability.
 
         Args:
             pdf_path: Path to PDF file
@@ -114,13 +109,13 @@ class PDFValidator:
                 _ = first_page.get_text()
             except Exception as e:
                 doc.close()
-                raise PDFCorruptedError(f"Erro ao ler primeira página: {e}")
+                raise PDFCorruptedError(f"Erro ao ler primeira página: {e}") from e
 
             doc.close()
             return True, "OK"
 
-        except (fitz.FileDataError, fitz.FitzError) as e:
-            raise PDFCorruptedError(f"Arquivo PDF corrompido: {pdf_path.name} - {str(e)}")
+        except fitz.FileDataError as e:
+            raise PDFCorruptedError(f"Arquivo PDF corrompido: {pdf_path.name} - {str(e)}") from e
 
     @classmethod
     def validate_all(
@@ -129,8 +124,7 @@ class PDFValidator:
         max_size_mb: int = DEFAULT_MAX_SIZE_MB,
         max_pages: int = DEFAULT_MAX_PAGES,
     ) -> tuple[bool, str]:
-        """
-        Run all validations on PDF file.
+        """Run all validations on PDF file.
 
         Args:
             pdf_path: Path to PDF file
@@ -154,8 +148,7 @@ class PDFValidator:
 
 
 def sanitize_output_path(user_input: str, base_dir: Path) -> Path:
-    """
-    Sanitize output path to prevent path traversal attacks.
+    """Sanitize output path to prevent path traversal attacks.
 
     Args:
         user_input: User-provided path
@@ -173,15 +166,16 @@ def sanitize_output_path(user_input: str, base_dir: Path) -> Path:
     # Ensure it's within base directory
     try:
         output_path.relative_to(base_dir.resolve())
-    except ValueError:
-        raise InvalidPathError("Caminho inválido: tentativa de acesso fora do diretório permitido")
+    except ValueError as e:
+        raise InvalidPathError(
+            "Caminho inválido: tentativa de acesso fora do diretório permitido"
+        ) from e
 
     return output_path
 
 
 def validate_process_number(process_number: str) -> bool:
-    """
-    Validate Brazilian process number in CNJ format.
+    """Validate Brazilian process number in CNJ format.
 
     Format: NNNNNNN-DD.AAAA.J.TT.OOOO
     Example: 5022930-18.2025.8.08.0012
@@ -218,8 +212,7 @@ def validate_process_number(process_number: str) -> bool:
 
 
 def validate_filename(filename: str, allow_path: bool = False) -> str:
-    """
-    Validate and sanitize filename for cross-platform compatibility.
+    """Validate and sanitize filename for cross-platform compatibility.
 
     Checks for:
     - Invalid characters (Windows/Linux)
@@ -306,8 +299,7 @@ def validate_filename(filename: str, allow_path: bool = False) -> str:
 
 
 def validate_chunk_size(chunk_size: int, min_size: int = 100, max_size: int = 10000) -> bool:
-    """
-    Validate chunk size for text chunking.
+    """Validate chunk size for text chunking.
 
     Args:
         chunk_size: Chunk size in characters
@@ -334,8 +326,7 @@ def validate_chunk_size(chunk_size: int, min_size: int = 100, max_size: int = 10
 
 
 def check_disk_space(path: Path, required_mb: int = 100) -> tuple[bool, int]:
-    """
-    Check if sufficient disk space is available.
+    """Check if sufficient disk space is available.
 
     Args:
         path: Path to check (file or directory)
@@ -381,8 +372,7 @@ def check_disk_space(path: Path, required_mb: int = 100) -> tuple[bool, int]:
 
 
 def estimate_output_size(pdf_path: Path, multiplier: float = 1.5) -> int:
-    """
-    Estimate output file size based on PDF size.
+    """Estimate output file size based on PDF size.
 
     Text extraction typically produces files 1-2x the PDF size.
 
