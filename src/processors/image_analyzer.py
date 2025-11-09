@@ -5,6 +5,14 @@ import io
 import base64
 from typing import Optional
 from PIL import Image
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from ratelimit import limits, sleep_and_retry
+
+from ..utils.logger import get_logger
+from ..utils.cache import get_image_cache
+
+# Initialize logger
+logger = get_logger(__name__)
 
 
 class ImageAnalyzer:
@@ -15,18 +23,32 @@ class ImageAnalyzer:
     identifying evidence, exhibits, signatures, stamps, etc.
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, max_image_size_mb: int = 4, enable_cache: bool = True):
         """
         Initialize image analyzer with Gemini API.
 
         Args:
             api_key: Gemini API key (uses GEMINI_API_KEY env var if not provided)
+            max_image_size_mb: Maximum image size in MB before resizing (default: 4MB)
+            enable_cache: Enable caching of image descriptions (default: True)
 
         Raises:
             ValueError: If no API key is found
         """
         self.api_key = api_key or os.environ.get('GEMINI_API_KEY')
+        self.max_image_size_mb = max_image_size_mb
+        self.enable_cache = enable_cache
+
+        # Initialize cache if enabled
+        if self.enable_cache:
+            self.cache = get_image_cache()
+            logger.info("Image description caching enabled")
+        else:
+            self.cache = None
+            logger.info("Image description caching disabled")
+
         if not self.api_key:
+            logger.error("Gemini API key not found in environment")
             raise ValueError(
                 "Gemini API key not found. Set GEMINI_API_KEY environment variable "
                 "or pass api_key parameter."
@@ -38,11 +60,86 @@ class ImageAnalyzer:
             self.genai = genai
             self.genai.configure(api_key=self.api_key)
             self.model = self.genai.GenerativeModel('gemini-1.5-flash')
-        except ImportError:
+            logger.info("ImageAnalyzer initialized with Gemini API")
+        except ImportError as e:
+            logger.error(f"Failed to import google-generativeai: {e}")
             raise ImportError(
                 "google-generativeai not installed. "
                 "Install with: pip install google-generativeai"
             )
+
+    def _resize_image_if_needed(self, image: Image.Image) -> Image.Image:
+        """
+        Resize image if it exceeds maximum size.
+
+        Args:
+            image: PIL Image to check and resize
+
+        Returns:
+            Original or resized PIL Image
+        """
+        # Calculate current size
+        img_buffer = io.BytesIO()
+        image.save(img_buffer, format='PNG')
+        size_mb = len(img_buffer.getvalue()) / (1024 * 1024)
+
+        if size_mb > self.max_image_size_mb:
+            logger.warning(f"Image size {size_mb:.2f}MB exceeds {self.max_image_size_mb}MB, resizing...")
+
+            # Calculate new dimensions (reduce by half iteratively until under limit)
+            width, height = image.size
+            while size_mb > self.max_image_size_mb:
+                width = int(width * 0.7)
+                height = int(height * 0.7)
+
+                resized = image.resize((width, height), Image.Resampling.LANCZOS)
+
+                # Recalculate size
+                img_buffer = io.BytesIO()
+                resized.save(img_buffer, format='PNG')
+                size_mb = len(img_buffer.getvalue()) / (1024 * 1024)
+
+            logger.info(f"Image resized to {width}x{height} ({size_mb:.2f}MB)")
+            return resized
+
+        return image
+
+    @sleep_and_retry
+    @limits(calls=60, period=60)  # 60 calls per minute
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((Exception,)),
+        reraise=True
+    )
+    def _call_gemini_api(self, prompt: str, image: Image.Image) -> str:
+        """
+        Call Gemini API with retry and rate limiting.
+
+        Args:
+            prompt: Text prompt for analysis
+            image: PIL Image to analyze
+
+        Returns:
+            API response text
+
+        Raises:
+            Exception: If all retries fail
+        """
+        try:
+            logger.debug("Calling Gemini API for image analysis")
+            response = self.model.generate_content([prompt, image], request_options={'timeout': 30})
+
+            if not response or not response.text:
+                logger.warning("Empty response from Gemini API")
+                raise ValueError("Empty response from Gemini API")
+
+            logger.debug("Successfully received Gemini API response")
+            return response.text.strip()
+
+        except Exception as e:
+            logger.error(f"Gemini API call failed: {type(e).__name__}: {str(e)}")
+            raise
 
     def describe_image(
         self,
@@ -53,6 +150,8 @@ class ImageAnalyzer:
         """
         Generate a description of an image using Gemini Vision.
 
+        Checks cache first to avoid redundant API calls for identical images.
+
         Args:
             image: PIL Image object to analyze
             context: Context about the document (e.g., "legal petition", "court decision")
@@ -60,22 +159,40 @@ class ImageAnalyzer:
 
         Returns:
             str: Description of the image in Portuguese
+
+        Raises:
+            Exception: If image analysis fails after all retries
         """
+        logger.info(f"Analyzing image from page {page_num or 'unknown'}")
+
+        # Check cache first if enabled
+        if self.cache:
+            cached_description = self.cache.get(image, context)
+            if cached_description:
+                logger.info("Using cached image description (API call saved)")
+                return cached_description
+
         # Build prompt
         prompt = self._build_prompt(context, page_num)
 
         try:
-            # Convert PIL Image to format Gemini accepts
-            # Gemini can handle PIL Image directly
-            response = self.model.generate_content([prompt, image])
+            # Resize image if needed
+            processed_image = self._resize_image_if_needed(image)
 
-            # Extract text from response
-            description = response.text.strip()
+            # Call API with retry and rate limiting
+            description = self._call_gemini_api(prompt, processed_image)
 
+            # Cache the result if caching is enabled
+            if self.cache:
+                self.cache.set(image, description, context)
+
+            logger.info("Image analysis completed successfully")
             return description
 
         except Exception as e:
-            return f"[Erro ao analisar imagem: {str(e)}]"
+            error_msg = f"[Erro ao analisar imagem: {type(e).__name__}]"
+            logger.error(f"Failed to analyze image: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise  # Raise exception instead of returning error string
 
     def describe_images_batch(
         self,
@@ -93,9 +210,14 @@ class ImageAnalyzer:
             list[dict]: Images with added 'description' field
         """
         results = []
+        total = len(images)
 
-        for img_data in images:
+        logger.info(f"Starting batch image analysis for {total} images")
+
+        for idx, img_data in enumerate(images, 1):
             try:
+                logger.debug(f"Processing image {idx}/{total}")
+
                 description = self.describe_image(
                     img_data['image'],
                     context=context,
@@ -108,11 +230,18 @@ class ImageAnalyzer:
                 results.append(img_data_copy)
 
             except Exception as e:
+                # Log error but continue processing other images
+                logger.warning(
+                    f"Failed to analyze image {idx}/{total} from page {img_data.get('page_num')}: "
+                    f"{type(e).__name__}: {str(e)}"
+                )
+
                 # Add error as description
                 img_data_copy = img_data.copy()
-                img_data_copy['description'] = f"[Erro: {str(e)}]"
+                img_data_copy['description'] = f"[Erro: {type(e).__name__}]"
                 results.append(img_data_copy)
 
+        logger.info(f"Batch image analysis completed: {len(results)} images processed")
         return results
 
     def _build_prompt(self, context: str, page_num: Optional[int] = None) -> str:

@@ -5,10 +5,18 @@ from pathlib import Path
 from typing import Any
 import io
 from PIL import Image
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 from .base import PDFExtractor
 from ..utils.validators import PDFValidator
 from ..utils.exceptions import PDFExtractionError
+from ..utils.logger import get_logger
+from ..utils.timeout import TimeoutError
+from ..utils.cache import get_performance_monitor
+
+# Initialize logger and performance monitor
+logger = get_logger(__name__)
+performance = get_performance_monitor()
 
 
 class PyMuPDFExtractor(PDFExtractor):
@@ -21,7 +29,7 @@ class PyMuPDFExtractor(PDFExtractor):
     - Good handling of whitespace and formatting
     """
 
-    def __init__(self, pdf_path: str | Path, validate: bool = True, max_size_mb: int = 500):
+    def __init__(self, pdf_path: str | Path, validate: bool = True, max_size_mb: int = 500, open_timeout: int = 30):
         """
         Initialize PyMuPDF extractor.
 
@@ -29,53 +37,110 @@ class PyMuPDFExtractor(PDFExtractor):
             pdf_path: Path to the PDF file
             validate: Whether to validate PDF before processing (default: True)
             max_size_mb: Maximum allowed file size in MB (default: 500)
+            open_timeout: Timeout in seconds for opening PDF (default: 30)
 
         Raises:
             PDFExtractionError: If validation fails
         """
         super().__init__(pdf_path)
         self.doc: fitz.Document | None = None
+        self.open_timeout = open_timeout
+
+        logger.info(f"Initializing PyMuPDF extractor for: {pdf_path}")
 
         # Validate PDF if requested
         if validate:
             try:
+                logger.debug("Validating PDF...")
                 PDFValidator.validate_all(self.pdf_path, max_size_mb=max_size_mb)
-            except PDFExtractionError:
+                logger.debug("PDF validation successful")
+            except PDFExtractionError as e:
+                logger.error(f"PDF validation failed: {e}")
                 # Re-raise validation errors
                 raise
 
+    def _open_pdf_with_timeout(self) -> fitz.Document:
+        """
+        Open PDF with timeout to prevent infinite hangs.
+
+        Returns:
+            Opened fitz.Document
+
+        Raises:
+            TimeoutError: If PDF opening exceeds timeout
+        """
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(fitz.open, str(self.pdf_path))
+            try:
+                logger.debug(f"Opening PDF with {self.open_timeout}s timeout...")
+                doc = future.result(timeout=self.open_timeout)
+                logger.info(f"PDF opened successfully: {len(doc)} pages")
+                return doc
+            except FuturesTimeoutError:
+                future.cancel()
+                error_msg = f"PDF opening exceeded timeout of {self.open_timeout} seconds"
+                logger.error(error_msg)
+                raise TimeoutError(error_msg)
+
     def __enter__(self):
         """Context manager entry."""
-        self.doc = fitz.open(self.pdf_path)
+        self.doc = self._open_pdf_with_timeout()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - close document."""
         if self.doc:
+            logger.debug("Closing PDF document")
             self.doc.close()
             self.doc = None
 
     def _ensure_document_open(self):
         """Ensure document is open, open if not."""
         if self.doc is None:
-            self.doc = fitz.open(self.pdf_path)
+            self.doc = self._open_pdf_with_timeout()
 
+    @performance.track("pdf_text_extraction")
     def extract_text(self) -> str:
         """
         Extract all text from the PDF.
 
         Returns:
             str: Complete text from all pages, separated by page breaks
+
+        Raises:
+            TimeoutError: If text extraction takes too long
         """
         self._ensure_document_open()
 
+        logger.info(f"Extracting text from {len(self.doc)} pages")
         pages = []
+
         for page_num in range(len(self.doc)):
-            page = self.doc[page_num]
-            text = page.get_text("text")  # Extract as plain text
-            # Skip completely empty or whitespace-only pages
-            if text.strip():
-                pages.append(text)
+            try:
+                page = self.doc[page_num]
+
+                # Extract text with timeout for potentially slow pages
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(page.get_text, "text")
+                    try:
+                        text = future.result(timeout=10)  # 10s timeout per page
+                    except FuturesTimeoutError:
+                        logger.warning(f"Page {page_num + 1} extraction timed out, skipping")
+                        continue
+
+                # Skip completely empty or whitespace-only pages
+                if text.strip():
+                    pages.append(text)
+
+                if (page_num + 1) % 50 == 0:
+                    logger.debug(f"Processed {page_num + 1}/{len(self.doc)} pages")
+
+            except Exception as e:
+                logger.error(f"Error extracting text from page {page_num + 1}: {e}")
+                # Continue with other pages
+                continue
+
+        logger.info(f"Text extraction completed: {len(pages)} non-empty pages")
 
         # Join pages with simple double newline (will be cleaned later)
         return "\n\n".join(pages)

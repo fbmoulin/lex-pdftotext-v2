@@ -1,7 +1,14 @@
 """Markdown formatter for legal document text."""
 
 from typing import Optional
+import os
+import tempfile
+from pathlib import Path
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
+from ..utils.logger import get_logger
+
+# Initialize logger
+logger = get_logger(__name__)
 
 
 class MarkdownFormatter:
@@ -225,11 +232,48 @@ class MarkdownFormatter:
     @staticmethod
     def save_to_file(content: str, output_path: str) -> None:
         """
-        Save formatted content to file.
+        Save formatted content to file using atomic write.
+
+        Writes to a temporary file first, then renames to final path.
+        This prevents file corruption if write fails midway.
 
         Args:
             content: Markdown content
             output_path: Path to save file
+
+        Raises:
+            OSError: If file write or rename fails
         """
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(content)
+        output_path = Path(output_path)
+        logger.info(f"Saving content to: {output_path}")
+
+        # Create output directory if it doesn't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write to temporary file in same directory (for atomic rename)
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=output_path.parent,
+            prefix=f".{output_path.stem}_",
+            suffix=".tmp"
+        )
+
+        try:
+            # Write content to temporary file
+            with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())  # Ensure data is written to disk
+
+            # Atomic rename (overwrites if exists)
+            os.replace(temp_path, str(output_path))
+            logger.info(f"File saved successfully: {output_path} ({len(content)} bytes)")
+
+        except Exception as e:
+            # Clean up temp file on failure
+            logger.error(f"Failed to save file {output_path}: {e}", exc_info=True)
+            try:
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+            except Exception:
+                pass  # Ignore cleanup errors
+            raise
