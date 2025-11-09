@@ -6,9 +6,10 @@ Environment variables take precedence over config file values.
 """
 
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -132,7 +133,7 @@ class Config:
         config_dict = base_config.__dict__.copy()
 
         # Override with environment variables
-        env_mappings = {
+        env_mappings: dict[str, tuple[str, Callable[[str], Any]]] = {
             "MAX_PDF_SIZE_MB": ("max_pdf_size_mb", int),
             "MAX_PDF_PAGES": ("max_pdf_pages", int),
             "PDF_OPEN_TIMEOUT": ("pdf_open_timeout", int),

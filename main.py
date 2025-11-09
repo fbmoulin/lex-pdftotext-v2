@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from src.extractors import PyMuPDFExtractor, TableExtractor
 from src.formatters import JSONFormatter, MarkdownFormatter, TableFormatter
-from src.processors import MetadataParser, TextNormalizer
+from src.processors import DocumentMetadata, MetadataParser, TextNormalizer
 from src.utils.cache import get_performance_monitor
 from src.utils.config import get_config
 from src.utils.constants import FILENAME_DISPLAY_LENGTH, MAX_DETAILED_ITEMS, MAX_SUMMARY_ITEMS
@@ -34,7 +34,9 @@ setup_logger(log_level=config.log_level, log_file=config.log_file)
 logger = get_logger(__name__)
 
 
-def extract_and_normalize_pdf(pdf_path: Path, normalize: bool = True) -> tuple[str, str, object]:
+def extract_and_normalize_pdf(
+    pdf_path: Path, normalize: bool = True
+) -> tuple[str, str, DocumentMetadata]:
     """Extract and normalize text from a PDF file.
 
     Args:
@@ -65,7 +67,7 @@ def extract_and_normalize_pdf(pdf_path: Path, normalize: bool = True) -> tuple[s
 
 def format_output_text(
     processed_text: str,
-    doc_metadata: object,
+    doc_metadata: DocumentMetadata,
     format: str = "markdown",
     include_metadata: bool = True,
     structured: bool = False,
@@ -83,18 +85,18 @@ def format_output_text(
         Formatted output text
     """
     if format == "markdown":
-        formatter = MarkdownFormatter()
+        md_formatter = MarkdownFormatter()
 
         if structured:
-            return formatter.format_with_sections(processed_text, doc_metadata)
+            return md_formatter.format_with_sections(processed_text, doc_metadata)
         else:
-            return formatter.format(
+            return md_formatter.format(
                 processed_text, doc_metadata, include_metadata_header=include_metadata
             )
     elif format == "json":
         # JSON output
-        formatter = JSONFormatter()
-        return formatter.format_to_string(
+        json_formatter = JSONFormatter()
+        return json_formatter.format_to_string(
             processed_text,
             doc_metadata,
             include_metadata=include_metadata,

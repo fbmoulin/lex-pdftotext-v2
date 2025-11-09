@@ -24,7 +24,7 @@ class ImageDescriptionCache:
     Uses image content hash as key to avoid re-analyzing identical images.
     """
 
-    def __init__(self, cache_dir: Path = None, max_entries: int = 1000):
+    def __init__(self, cache_dir: Path | None = None, max_entries: int = 1000):
         """
         Initialize image description cache.
 
@@ -47,14 +47,14 @@ class ImageDescriptionCache:
 
         logger.info(f"ImageDescriptionCache initialized: {len(self._cache)} entries")
 
-    def _load_cache(self) -> dict:
+    def _load_cache(self) -> dict[Any, Any]:
         """Load cache from disk."""
         if not self.cache_file.exists():
             return {}
 
         try:
             with open(self.cache_file, encoding="utf-8") as f:
-                cache = json.load(f)
+                cache: dict[Any, Any] = json.load(f)
             logger.debug(f"Loaded {len(cache)} entries from cache")
             return cache
         except Exception as e:
@@ -99,7 +99,7 @@ class ImageDescriptionCache:
         # Generate hash
         return hashlib.sha256(img_data).hexdigest()
 
-    def get(self, image: Any, context: str = None) -> str | None:
+    def get(self, image: Any, context: str | None = None) -> str | None:
         """
         Get cached description for image.
 
@@ -117,12 +117,12 @@ class ImageDescriptionCache:
         if cache_key in self._cache:
             entry = self._cache[cache_key]
             logger.debug(f"Cache hit for image {img_hash[:8]}...")
-            return entry["description"]
+            return str(entry["description"])
 
         logger.debug(f"Cache miss for image {img_hash[:8]}...")
         return None
 
-    def set(self, image: Any, description: str, context: str = None) -> None:
+    def set(self, image: Any, description: str, context: str | None = None) -> None:
         """
         Cache image description.
 
@@ -234,7 +234,7 @@ class PerformanceMonitor:
 
         return decorator
 
-    def get_metrics(self, operation: str = None) -> dict:
+    def get_metrics(self, operation: str | None = None) -> dict[str, Any]:
         """
         Get performance metrics.
 
@@ -245,8 +245,8 @@ class PerformanceMonitor:
             Dictionary of metrics
         """
         if operation:
-            return self.metrics.get(operation, {})
-        return self.metrics.copy()
+            return dict(self.metrics.get(operation, {}))
+        return dict(self.metrics.copy())
 
     def reset(self) -> None:
         """Reset all metrics."""
