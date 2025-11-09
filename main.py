@@ -28,6 +28,7 @@ from src.utils.validators import check_disk_space, estimate_output_size, validat
 from src.utils.config import get_config
 from src.utils.exceptions import InvalidPathError
 from src.utils.constants import MAX_SUMMARY_ITEMS, MAX_DETAILED_ITEMS, FILENAME_DISPLAY_LENGTH
+from src.utils.cache import get_performance_monitor
 
 # Load configuration
 config = get_config()
@@ -664,6 +665,51 @@ def info(pdf_path):
     except Exception as e:
         click.echo(f"❌ Erro: {str(e)}", err=True)
         sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    '--reset',
+    is_flag=True,
+    help='Reset performance metrics after displaying report'
+)
+@click.option(
+    '--json',
+    'output_json',
+    is_flag=True,
+    help='Output metrics as JSON'
+)
+def perf_report(reset, output_json):
+    """
+    Show performance metrics report.
+
+    Displays timing statistics for PDF processing operations.
+
+    Example:
+        python main.py perf-report
+        python main.py perf-report --reset
+        python main.py perf-report --json
+    """
+    import json as json_module
+
+    performance = get_performance_monitor()
+    metrics = performance.get_metrics()
+
+    if not metrics:
+        click.echo("📊 No performance metrics collected yet.")
+        click.echo("\n💡 Tip: Run some PDF extraction commands first to collect metrics.")
+        return
+
+    if output_json:
+        # Output as JSON
+        click.echo(json_module.dumps(metrics, indent=2))
+    else:
+        # Output as formatted report
+        click.echo("\n" + performance.report())
+
+    if reset:
+        performance.reset()
+        click.echo("\n✅ Performance metrics have been reset.")
 
 
 if __name__ == '__main__':

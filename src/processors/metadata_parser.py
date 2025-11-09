@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from ..utils.patterns import RegexPatterns
+from ..utils.cache import get_performance_monitor
+
+# Initialize performance monitor
+performance = get_performance_monitor()
 
 
 @dataclass
@@ -55,6 +59,7 @@ class MetadataParser:
         """Initialize metadata parser."""
         self.patterns = RegexPatterns()
 
+    @performance.track("metadata_extraction")
     def parse(self, text: str) -> DocumentMetadata:
         """
         Parse text and extract all metadata.

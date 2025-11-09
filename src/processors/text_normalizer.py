@@ -4,6 +4,10 @@ import re
 from typing import Set
 
 from ..utils.patterns import RegexPatterns
+from ..utils.cache import get_performance_monitor
+
+# Initialize performance monitor
+performance = get_performance_monitor()
 
 
 class TextNormalizer:
@@ -27,6 +31,7 @@ class TextNormalizer:
         self.preserve_acronyms = preserve_acronyms
         self.patterns = RegexPatterns()
 
+    @performance.track("text_normalization")
     def normalize(self, text: str) -> str:
         """
         Apply all normalization steps to text.

@@ -6,9 +6,11 @@ import tempfile
 from pathlib import Path
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
 from ..utils.logger import get_logger
+from ..utils.cache import get_performance_monitor
 
-# Initialize logger
+# Initialize logger and performance monitor
 logger = get_logger(__name__)
+performance = get_performance_monitor()
 
 
 class MarkdownFormatter:
@@ -164,6 +166,7 @@ class MarkdownFormatter:
 
         return text
 
+    @performance.track("rag_chunking")
     def format_for_rag(
         self,
         text: str,
