@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Legal Extractor</title>
     <style>
+        :root {
+            /* Dark theme (default) */
+            --bg-primary: #242424;
+            --bg-overlay-1: rgba(100, 100, 140, 0.08);
+            --bg-overlay-2: rgba(120, 80, 160, 0.06);
+            --bg-overlay-3: rgba(80, 140, 180, 0.05);
+            --container-bg: rgba(36, 36, 40, 0.92);
+            --container-border: rgba(255, 255, 255, 0.06);
+            --container-shadow: rgba(0, 0, 0, 0.6);
+            --text-high: rgba(255, 255, 255, 0.87);
+            --text-medium: rgba(255, 255, 255, 0.60);
+            --text-disabled: rgba(255, 255, 255, 0.38);
+            --accent-primary: #7d8fd9;
+            --accent-secondary: #8d7ab8;
+            --accent-tertiary: #d898e8;
+            --surface-1: rgba(18, 18, 22, 0.5);
+            --surface-2: rgba(18, 18, 22, 0.45);
+            --surface-3: rgba(18, 18, 22, 0.35);
+            --border-subtle: rgba(125, 143, 217, 0.18);
+            --border-normal: rgba(125, 143, 217, 0.25);
+        }
+
+        [data-theme="light"] {
+            /* Light theme */
+            --bg-primary: #f5f5f7;
+            --bg-overlay-1: rgba(100, 100, 140, 0.03);
+            --bg-overlay-2: rgba(120, 80, 160, 0.02);
+            --bg-overlay-3: rgba(80, 140, 180, 0.02);
+            --container-bg: rgba(255, 255, 255, 0.95);
+            --container-border: rgba(0, 0, 0, 0.08);
+            --container-shadow: rgba(0, 0, 0, 0.12);
+            --text-high: rgba(0, 0, 0, 0.87);
+            --text-medium: rgba(0, 0, 0, 0.60);
+            --text-disabled: rgba(0, 0, 0, 0.38);
+            --accent-primary: #5a6fc0;
+            --accent-secondary: #7360a0;
+            --accent-tertiary: #b87dd0;
+            --surface-1: rgba(0, 0, 0, 0.03);
+            --surface-2: rgba(0, 0, 0, 0.04);
+            --surface-3: rgba(0, 0, 0, 0.02);
+            --border-subtle: rgba(92, 111, 192, 0.15);
+            --border-normal: rgba(92, 111, 192, 0.25);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +57,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -21,6 +65,7 @@
             padding: 20px;
             position: relative;
             overflow-x: hidden;
+            transition: background-color 0.3s ease;
         }
 
         body::before {
@@ -31,29 +76,31 @@
             right: 0;
             bottom: 0;
             background:
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(0, 191, 255, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, var(--bg-overlay-1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, var(--bg-overlay-2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, var(--bg-overlay-3) 0%, transparent 50%);
             pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
         .container {
-            background: rgba(30, 30, 46, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--container-bg);
+            backdrop-filter: blur(20px);
             border-radius: 24px;
             box-shadow:
-                0 8px 32px 0 rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+                0 8px 32px 0 var(--container-shadow),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--container-border);
             padding: 40px;
             max-width: 850px;
             width: 100%;
             position: relative;
             z-index: 1;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         h1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #7d8fd9 0%, #8d7ab8 50%, #d898e8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -64,7 +111,7 @@
         }
 
         .subtitle {
-            color: #a1a1c7;
+            color: var(--text-medium);
             margin-bottom: 35px;
             font-size: 0.95em;
             font-weight: 400;
@@ -74,7 +121,7 @@
             display: flex;
             gap: 8px;
             margin-bottom: 30px;
-            background: rgba(20, 20, 35, 0.6);
+            background: var(--surface-1);
             border-radius: 12px;
             padding: 6px;
             backdrop-filter: blur(10px);
@@ -86,7 +133,7 @@
             border: none;
             cursor: pointer;
             font-size: 0.95em;
-            color: #8b8ba7;
+            color: var(--text-medium);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 8px;
             font-weight: 500;
@@ -101,21 +148,21 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            opacity: 0;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            opacity: 0.08;
             transition: opacity 0.3s;
         }
 
         .tab.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: var(--text-high);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            box-shadow: 0 4px 15px rgba(125, 143, 217, 0.35);
             font-weight: 600;
         }
 
         .tab:hover:not(.active) {
-            color: #c5c5d8;
-            background: rgba(102, 126, 234, 0.1);
+            color: var(--text-high);
+            background: rgba(125, 143, 217, 0.1);
         }
 
         .tab:hover::before {
@@ -131,14 +178,14 @@
         }
 
         .drop-zone {
-            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border: 2px dashed var(--border-normal);
             border-radius: 16px;
             padding: 60px 20px;
             text-align: center;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             margin-bottom: 25px;
-            background: rgba(20, 20, 35, 0.4);
+            background: var(--surface-3);
             position: relative;
             overflow: hidden;
         }
@@ -151,7 +198,7 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(125, 143, 217, 0.08) 0%, transparent 70%);
             transform: translate(-50%, -50%);
             transition: all 0.6s;
         }
@@ -162,22 +209,22 @@
         }
 
         .drop-zone:hover, .drop-zone.dragover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: var(--accent-primary);
+            background: rgba(125, 143, 217, 0.05);
+            box-shadow: 0 8px 25px rgba(125, 143, 217, 0.12);
             transform: translateY(-2px);
         }
 
         .drop-zone-icon {
             font-size: 54px;
             margin-bottom: 18px;
-            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+            filter: drop-shadow(0 4px 8px rgba(125, 143, 217, 0.25));
             position: relative;
             z-index: 1;
         }
 
         .drop-zone-text {
-            color: #e1e1eb;
+            color: var(--text-high);
             font-size: 1.15em;
             margin-bottom: 10px;
             font-weight: 600;
@@ -186,7 +233,7 @@
         }
 
         .drop-zone-hint {
-            color: #8b8ba7;
+            color: var(--text-medium);
             font-size: 0.9em;
             position: relative;
             z-index: 1;
@@ -227,14 +274,14 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: var(--text-high);
+            box-shadow: 0 4px 15px rgba(125, 143, 217, 0.35);
         }
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 8px 25px rgba(125, 143, 217, 0.45);
         }
 
         .btn-primary:active:not(:disabled) {
@@ -242,26 +289,26 @@
         }
 
         .btn-primary:disabled {
-            opacity: 0.5;
+            opacity: 0.38;
             cursor: not-allowed;
             transform: none;
         }
 
         .btn-secondary {
-            background: rgba(102, 126, 234, 0.15);
-            color: #c5c5d8;
-            border: 1px solid rgba(102, 126, 234, 0.3);
+            background: rgba(125, 143, 217, 0.12);
+            color: var(--text-high);
+            border: 1px solid var(--border-normal);
         }
 
         .btn-secondary:hover {
-            background: rgba(102, 126, 234, 0.25);
-            color: #ffffff;
-            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(125, 143, 217, 0.20);
+            color: var(--text-high);
+            border-color: rgba(125, 143, 217, 0.40);
         }
 
         .options {
-            background: rgba(20, 20, 35, 0.5);
-            border: 1px solid rgba(102, 126, 234, 0.2);
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
             border-radius: 14px;
             padding: 26px;
             margin-bottom: 25px;
@@ -278,14 +325,14 @@
 
         .option-label {
             display: block;
-            color: #e1e1eb;
+            color: var(--text-high);
             font-weight: 600;
             margin-bottom: 10px;
             font-size: 0.95em;
         }
 
         .option-description {
-            color: #8b8ba7;
+            color: var(--text-medium);
             font-size: 0.85em;
             margin-top: 6px;
             line-height: 1.5;
@@ -298,7 +345,7 @@
         }
 
         .checkbox-group span {
-            color: #c5c5d8;
+            color: var(--text-high);
             font-weight: 500;
         }
 
@@ -306,30 +353,30 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
-            accent-color: #667eea;
+            accent-color: var(--accent-primary);
             border-radius: 4px;
         }
 
         input[type="text"] {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(20, 20, 35, 0.6);
-            border: 1px solid rgba(102, 126, 234, 0.3);
+            background: var(--surface-3);
+            border: 1px solid var(--border-normal);
             border-radius: 10px;
             font-size: 1em;
-            color: #e1e1eb;
+            color: var(--text-high);
             transition: all 0.3s;
         }
 
         input[type="text"]::placeholder {
-            color: #6b6b87;
+            color: var(--text-disabled);
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
-            background: rgba(20, 20, 35, 0.8);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--accent-primary);
+            background: var(--surface-2);
+            box-shadow: 0 0 0 3px rgba(125, 143, 217, 0.1);
         }
 
         .file-list {
@@ -405,24 +452,24 @@
         }
 
         .status.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: #6ee7b7;
-            border-color: rgba(16, 185, 129, 0.3);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+            background: rgba(34, 197, 94, 0.12);
+            color: rgba(134, 239, 172, 0.95);
+            border-color: rgba(34, 197, 94, 0.25);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.15);
         }
 
         .status.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #fca5a5;
-            border-color: rgba(239, 68, 68, 0.3);
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.12);
+            color: rgba(252, 165, 165, 0.95);
+            border-color: rgba(239, 68, 68, 0.25);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
         }
 
         .status.info {
-            background: rgba(59, 130, 246, 0.1);
-            color: #93c5fd;
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            background: rgba(96, 165, 250, 0.12);
+            color: rgba(147, 197, 253, 0.95);
+            border-color: rgba(96, 165, 250, 0.25);
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.15);
         }
 
         .progress {
@@ -432,10 +479,10 @@
 
         .progress-bar {
             height: 10px;
-            background: rgba(20, 20, 35, 0.6);
+            background: var(--surface-3);
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
             position: relative;
         }
 
@@ -448,7 +495,7 @@
             bottom: 0;
             background: linear-gradient(90deg,
                 transparent 0%,
-                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.08) 50%,
                 transparent 100%);
             animation: shimmer 2s infinite;
         }
@@ -460,12 +507,12 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
             background-size: 200% 100%;
             transition: width 0.3s ease-out;
             width: 0%;
             border-radius: 20px;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 10px rgba(125, 143, 217, 0.45);
             animation: gradientMove 2s ease infinite;
             position: relative;
         }
@@ -479,7 +526,7 @@
         .progress-text {
             margin-top: 12px;
             text-align: center;
-            color: #a1a1c7;
+            color: var(--text-medium);
             font-size: 0.9em;
             font-weight: 500;
         }
@@ -497,16 +544,69 @@
 
         .folder-input label {
             display: block;
-            color: #e1e1eb;
+            color: var(--text-high);
             font-weight: 600;
             margin-bottom: 10px;
             font-size: 0.95em;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-normal);
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface-1);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle span {
+            font-size: 0.75em;
+            color: var(--text-medium);
+            font-weight: 500;
+        }
+
+        /* Demo Mode Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-high);
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .demo-banner strong {
+            color: rgba(250, 204, 21, 0.95);
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+            <span id="theme-icon">🌙</span>
+            <span id="theme-text">Escuro</span>
+        </button>
         <h1>📄 PDF Legal Extractor</h1>
+        <div id="demo-banner" class="demo-banner">
+            <strong>ℹ️ Modo Demonstração</strong> - Esta é uma prévia da interface. Para usar todas as funcionalidades, execute a aplicação desktop com <code>python app_ui.py</code>
+        </div>
         <p class="subtitle">Extração inteligente de texto de documentos judiciais brasileiros (PJe)</p>
 
         <div class="tabs">
@@ -742,28 +842,45 @@
             });
         });
 
+        // Check if running in PyWebview or browser
+        const isPyWebview = typeof pywebview !== 'undefined';
+
         async function selectFolder(mode) {
             currentMode = mode;
-            const result = await pywebview.api.select_folder();
-            if (result) {
-                currentFolder = result;
-                document.getElementById('btn' + capitalize(mode)).disabled = false;
-                showStatus('Pasta selecionada: ' + result, 'info');
+            if (isPyWebview) {
+                const result = await pywebview.api.select_folder();
+                if (result) {
+                    currentFolder = result;
+                    document.getElementById('btn' + capitalize(mode)).disabled = false;
+                    showStatus('Pasta selecionada: ' + result, 'info');
+                }
+            } else {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
             }
         }
 
         async function selectFile() {
-            const result = await pywebview.api.select_file();
-            if (result) {
-                currentFile = result;
-                document.getElementById('btnExtract').disabled = false;
-                // Extract filename from path
-                const filename = result.split(/[\\/]/).pop();
-                showStatus('Arquivo selecionado: ' + filename, 'info');
+            if (isPyWebview) {
+                // PyWebview mode - use native file dialog
+                const result = await pywebview.api.select_file();
+                if (result) {
+                    currentFile = result;
+                    document.getElementById('btnExtract').disabled = false;
+                    const filename = result.split(/[\\/]/).pop();
+                    showStatus('Arquivo selecionado: ' + filename, 'info');
+                }
+            } else {
+                // Browser mode - show info message
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
             }
         }
 
         async function extractPDF() {
+            if (!isPyWebview) {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
+                return;
+            }
+
             if (!currentFile) return;
 
             hideStatus();
@@ -811,6 +928,10 @@
         }
 
         async function openOutputFolder() {
+            if (!isPyWebview) {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
+                return;
+            }
             try {
                 const result = await pywebview.api.open_folder();
                 if (result.success) {
@@ -824,6 +945,10 @@
         }
 
         async function saveAs() {
+            if (!isPyWebview) {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
+                return;
+            }
             try {
                 const result = await pywebview.api.save_as();
                 if (result.success) {
@@ -837,6 +962,11 @@
         }
 
         async function batchProcess() {
+            if (!isPyWebview) {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
+                return;
+            }
+
             if (!currentFolder) return;
 
             hideStatus();
@@ -868,6 +998,11 @@
         }
 
         async function mergeProcess() {
+            if (!isPyWebview) {
+                showStatus('Modo demonstração: Funcionalidade disponível apenas na aplicação desktop', 'info');
+                return;
+            }
+
             if (!currentFolder) return;
 
             hideStatus();
@@ -896,6 +1031,55 @@
                 document.getElementById('btnMerge').disabled = false;
             }
         }
+
+        // Theme Toggle Function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update toggle button
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+
+            if (newTheme === 'light') {
+                icon.textContent = '☀️';
+                text.textContent = 'Claro';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Escuro';
+            }
+        }
+
+        // Load saved theme and show demo banner on page load
+        (function() {
+            // Show demo banner if not in PyWebview
+            if (!isPyWebview) {
+                document.getElementById('demo-banner').style.display = 'block';
+            }
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme');
+            const html = document.documentElement;
+
+            if (savedTheme) {
+                html.setAttribute('data-theme', savedTheme);
+
+                const icon = document.getElementById('theme-icon');
+                const text = document.getElementById('theme-text');
+
+                if (savedTheme === 'light') {
+                    icon.textContent = '☀️';
+                    text.textContent = 'Claro';
+                } else {
+                    icon.textContent = '🌙';
+                    text.textContent = 'Escuro';
+                }
+            }
+        })();
     </script>
 </body>
 </html>
