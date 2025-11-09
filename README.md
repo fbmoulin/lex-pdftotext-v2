@@ -1,10 +1,13 @@
 # PDF Legal Text Extractor
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/badge/release-v0.4.0-brightgreen.svg)](https://github.com/fbmoulin/pdftotext/releases/tag/v0.4.0)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://fbmoulin.github.io/pdftotext/)
+[![Coverage](https://img.shields.io/badge/coverage-93.85%25-brightgreen.svg)](https://github.com/fbmoulin/pdftotext)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/fbmoulin/pdftotext)
-[![PyPI](https://img.shields.io/badge/GUI-PyWebview-green.svg)](https://pywebview.flowrl.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
 
 > **Projeto criado por [Lex Intelligentia](https://lexintelligentia.com)** - Soluções inteligentes
 > para análise jurídica
@@ -63,6 +66,27 @@ processo ✅ **Organização automática** - Move PDFs processados para pasta se
 recursiva** - Processa subpastas (processos com múltiplos volumes) ✅ **Exportação flexível** - Abrir
 pasta ou salvar em local personalizado ✅ CLI amigável com comandos intuitivos ✅ **Pacote
 PyPI-ready** - Instalável com pip install
+
+## 📚 Documentação
+
+**📖 [Documentação Completa](https://fbmoulin.github.io/pdftotext/)** disponível no GitHub Pages
+
+A documentação inclui:
+
+- **[Guia de Instalação](https://fbmoulin.github.io/pdftotext/installation.html)** - Instruções detalhadas de setup
+- **[Quick Start](https://fbmoulin.github.io/pdftotext/quickstart.html)** - Comece a usar em 5 minutos
+- **[Guia de Uso](https://fbmoulin.github.io/pdftotext/usage.html)** - Exemplos avançados e casos de uso
+- **[Referência da API](https://fbmoulin.github.io/pdftotext/api/index.html)** - Documentação completa de todas as classes e funções
+- **[Guia de Contribuição](https://fbmoulin.github.io/pdftotext/contributing.html)** - Como contribuir com o projeto
+- **[Changelog](https://fbmoulin.github.io/pdftotext/changelog.html)** - Histórico de versões e métricas de qualidade
+
+### Métricas de Qualidade (v0.4.0)
+
+- ✅ **93.85% de cobertura de testes** (275 testes passando)
+- ✅ **100% de type safety** (0 erros MyPy)
+- ✅ **0 issues de segurança** (Bandit)
+- ✅ **10 módulos com 100% de cobertura**
+- ✅ **10 módulos com 90%+ de cobertura**
 
 ## 📦 Instalação
 
