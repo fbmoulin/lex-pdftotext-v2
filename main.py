@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-PDF Legal Text Extractor - CLI
+"""PDF Legal Text Extractor - CLI.
 
 Extract and structure text from Brazilian legal PDF documents (PJe format).
 """
@@ -36,8 +35,7 @@ logger = get_logger(__name__)
 
 
 def extract_and_normalize_pdf(pdf_path: Path, normalize: bool = True) -> tuple[str, str, object]:
-    """
-    Extract and normalize text from a PDF file.
+    """Extract and normalize text from a PDF file.
 
     Args:
         pdf_path: Path to PDF file
@@ -72,8 +70,7 @@ def format_output_text(
     include_metadata: bool = True,
     structured: bool = False,
 ) -> str:
-    """
-    Format processed text for output.
+    """Format processed text for output.
 
     Args:
         processed_text: Normalized text
@@ -115,8 +112,7 @@ def format_output_text(
 
 
 def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
-    """
-    Safely move a file with error handling.
+    """Safely move a file with error handling.
 
     Args:
         src: Source file path
@@ -163,8 +159,7 @@ def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
 @click.group()
 @click.version_option(version="0.3.0")
 def cli():
-    """
-    PDF Legal Text Extractor
+    """PDF Legal Text Extractor.
 
     Extract and structure text from Brazilian legal PDF documents (PJe format).
     """
@@ -201,8 +196,7 @@ def cli():
     help="Auto-detect and structure sections (default: False)",
 )
 def extract(pdf_path, output, format, normalize, metadata, structured):
-    """
-    Extract text from a single PDF file.
+    """Extract text from a single PDF file.
 
     Example:
         python main.py extract documento.pdf -o output.md
@@ -298,8 +292,7 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
     "--metadata/--no-metadata", default=True, help="Include metadata header (default: True)"
 )
 def batch(input_dir, output_dir, format, normalize, metadata):
-    """
-    Extract text from all PDFs in a directory.
+    """Extract text from all PDFs in a directory.
 
     Example:
         python main.py batch ./data/input -o ./data/output
@@ -418,8 +411,7 @@ def batch(input_dir, output_dir, format, normalize, metadata):
     "--process-number", type=str, help="Merge only PDFs from this specific process number"
 )
 def merge(input_dir, output, normalize, format, process_number):
-    """
-    Merge multiple PDFs of the SAME PROCESS into a single output file.
+    """Merge multiple PDFs of the SAME PROCESS into a single output file.
 
     Groups PDFs by process number and creates one merged file per process.
     Only PDFs with the same process number are merged together.
@@ -578,8 +570,7 @@ def merge(input_dir, output, normalize, format, process_number):
 @cli.command()
 @click.argument("pdf_path", type=click.Path(exists=True))
 def info(pdf_path):
-    """
-    Show metadata information about a PDF without extracting full text.
+    """Show metadata information about a PDF without extracting full text.
 
     Example:
         python main.py info documento.pdf
@@ -661,8 +652,7 @@ def info(pdf_path):
 @click.option("--reset", is_flag=True, help="Reset performance metrics after displaying report")
 @click.option("--json", "output_json", is_flag=True, help="Output metrics as JSON")
 def perf_report(reset, output_json):
-    """
-    Show performance metrics report.
+    """Show performance metrics report.
 
     Displays timing statistics for PDF processing operations.
 
@@ -713,8 +703,7 @@ def perf_report(reset, output_json):
     help="Include table metadata (page number, position) (default: True)",
 )
 def extract_tables(pdf_path, output, format, include_metadata):
-    """
-    Extract tables from a PDF file.
+    """Extract tables from a PDF file.
 
     Detects and extracts all tables from the PDF, outputting them as
     Markdown tables or CSV files.

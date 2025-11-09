@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-PDF Legal Text Extractor - GUI Application
+"""PDF Legal Text Extractor - GUI Application.
 
 Interface gráfica para extração de texto de PDFs judiciais brasileiros.
 """
@@ -34,8 +33,7 @@ logger = get_logger(__name__)
 
 
 def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
-    """
-    Safely move a file with error handling.
+    """Safely move a file with error handling.
 
     Args:
         src: Source file path
@@ -85,8 +83,7 @@ class API:
         self.last_output_path = None  # Store last generated file path
 
     def select_folder(self):
-        """
-        Open folder selection dialog.
+        """Open folder selection dialog.
 
         Returns:
             str: Selected folder path
@@ -100,8 +97,7 @@ class API:
             return None
 
     def select_file(self):
-        """
-        Open file selection dialog.
+        """Open file selection dialog.
 
         Returns:
             str: Selected file path
@@ -117,8 +113,7 @@ class API:
             return None
 
     def open_folder(self, file_path=None):
-        """
-        Open folder containing the file in system file explorer.
+        """Open folder containing the file in system file explorer.
 
         Args:
             file_path: Path to file (optional, uses last_output_path if not provided)
@@ -150,8 +145,7 @@ class API:
             return {"success": False, "message": f"Erro ao abrir pasta: {str(e)}"}
 
     def save_as(self):
-        """
-        Open save dialog to export file to another location.
+        """Open save dialog to export file to another location.
 
         Returns:
             str: Selected save path or None
@@ -178,8 +172,7 @@ class API:
             return {"success": False, "message": f"Erro: {str(e)}"}
 
     def extract_pdf(self, pdf_path, options):
-        """
-        Extract text from a single PDF.
+        """Extract text from a single PDF.
 
         Args:
             pdf_path: Path to PDF file
@@ -283,8 +276,7 @@ class API:
             return {"success": False, "message": f"❌ Erro inesperado: {str(e)}"}
 
     def batch_process(self, input_dir, options):
-        """
-        Process all PDFs in a directory.
+        """Process all PDFs in a directory.
 
         Args:
             input_dir: Input directory path
@@ -374,8 +366,7 @@ class API:
             raise Exception(f"Erro no processamento em lote: {str(e)}") from e
 
     def merge_process(self, input_dir, options):
-        """
-        Merge multiple PDFs of the same process.
+        """Merge multiple PDFs of the same process.
 
         Args:
             input_dir: Input directory path
