@@ -187,6 +187,10 @@ class MarkdownFormatter:
                 - 'metadata': Associated metadata
                 - 'chunk_index': Sequential index
         """
+        # Handle empty or very short text
+        if not text or not text.strip():
+            return []
+
         # Extract metadata if not provided
         if metadata is None:
             metadata = self.metadata_parser.parse(text)
@@ -202,6 +206,19 @@ class MarkdownFormatter:
 
         # Split into chunks (simple paragraph-based splitting for now)
         paragraphs = text.split('\n\n')
+
+        # Handle case where text has no paragraph breaks
+        if not paragraphs or all(not p.strip() for p in paragraphs):
+            # Return entire text as single chunk if it's short enough
+            if len(text.strip()) <= chunk_size:
+                return [{
+                    'text': text.strip(),
+                    'metadata': {**base_metadata, 'chunk_index': 0},
+                    'chunk_index': 0
+                }]
+            # Otherwise split by characters (fallback for malformed text)
+            paragraphs = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
         chunks = []
         current_chunk = ""
         chunk_index = 0

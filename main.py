@@ -24,8 +24,9 @@ from src.extractors import PyMuPDFExtractor
 from src.processors import TextNormalizer, MetadataParser
 from src.formatters import MarkdownFormatter
 from src.utils.logger import setup_logger, get_logger
-from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size
+from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size, sanitize_output_path
 from src.utils.config import get_config
+from src.utils.exceptions import InvalidPathError
 
 # Load configuration
 config = get_config()
@@ -136,7 +137,13 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
         else:
             output = pdf_path.with_suffix('.txt')
     else:
+        # Validate and sanitize user-provided output path
         output = Path(output)
+        try:
+            output = sanitize_output_path(output, pdf_path.parent)
+        except InvalidPathError as e:
+            click.echo(f"❌ Erro: Caminho de saída inválido: {e}", err=True)
+            sys.exit(1)
 
     click.echo(f"📄 Extraindo texto de: {pdf_path.name}")
 
@@ -473,7 +480,13 @@ def merge(input_dir, output, normalize, format, process_number):
 
         # Determine output filename
         if output:
+            # Validate user-provided output path
             output_path = Path(output)
+            try:
+                output_path = sanitize_output_path(output_path, input_dir)
+            except InvalidPathError as e:
+                click.echo(f"❌ Erro: Caminho de saída inválido: {e}", err=True)
+                sys.exit(1)
         else:
             # Auto-generate filename
             safe_proc = proc_num.replace('/', '-')

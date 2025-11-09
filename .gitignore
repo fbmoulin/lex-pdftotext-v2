@@ -59,11 +59,13 @@ data/output/
 !CHANGELOG_SECURITY.md
 !GITHUB_SETUP.md
 !CONTRIBUTING.md
+!UPDATE_SUMMARY.md
 !assets/ICON_CREATION.md
 !.github/**/*.md
 
 *.txt
 !requirements.txt
+!requirements-dev.txt
 
 # Build artifacts
 Output/
@@ -71,6 +73,10 @@ Output/
 
 # Logs
 *.log
+logs/
+
+# Cache
+.cache/
 
 # Environment variables
 .env

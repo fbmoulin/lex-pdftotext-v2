@@ -45,7 +45,7 @@ def timeout(seconds: int = 30):
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(func, *args, **kwargs)
                 try:
-                    result = future.wait(timeout=seconds)
+                    result = future.result(timeout=seconds)
                     return result
                 except FuturesTimeoutError:
                     future.cancel()
