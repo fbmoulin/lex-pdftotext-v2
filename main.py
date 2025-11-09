@@ -20,9 +20,9 @@ load_dotenv(env_path)
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.extractors import PyMuPDFExtractor
+from src.extractors import PyMuPDFExtractor, TableExtractor
 from src.processors import TextNormalizer, MetadataParser
-from src.formatters import MarkdownFormatter, JSONFormatter
+from src.formatters import MarkdownFormatter, JSONFormatter, TableFormatter
 from src.utils.logger import setup_logger, get_logger
 from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size, sanitize_output_path
 from src.utils.config import get_config
@@ -710,6 +710,105 @@ def perf_report(reset, output_json):
     if reset:
         performance.reset()
         click.echo("\n✅ Performance metrics have been reset.")
+
+
+@cli.command()
+@click.argument('pdf_path', type=click.Path(exists=True))
+@click.option(
+    '-o', '--output',
+    type=click.Path(),
+    help='Output file path (default: same name as PDF with _tables.md extension)'
+)
+@click.option(
+    '--format',
+    type=click.Choice(['markdown', 'csv'], case_sensitive=False),
+    default='markdown',
+    help='Output format: markdown tables or separate CSV files (default: markdown)'
+)
+@click.option(
+    '--include-metadata/--no-metadata',
+    default=True,
+    help='Include table metadata (page number, position) (default: True)'
+)
+def extract_tables(pdf_path, output, format, include_metadata):
+    """
+    Extract tables from a PDF file.
+
+    Detects and extracts all tables from the PDF, outputting them as
+    Markdown tables or CSV files.
+
+    Example:
+        python main.py extract-tables documento.pdf
+        python main.py extract-tables documento.pdf --format csv -o tables_dir/
+    """
+    pdf_path = Path(pdf_path)
+
+    click.echo(f"📊 Extraindo tabelas de: {pdf_path.name}")
+
+    try:
+        # Extract tables
+        extractor = TableExtractor(pdf_path)
+        click.echo("   Detectando tabelas...")
+        tables = extractor.extract_tables()
+
+        if not tables:
+            click.echo("ℹ️  Nenhuma tabela encontrada no documento.")
+            return
+
+        click.echo(f"   Encontradas {len(tables)} tabela(s)")
+
+        # Output based on format
+        if format == 'csv':
+            # Determine output directory
+            if output is None:
+                output_dir = pdf_path.parent / f"{pdf_path.stem}_tables"
+            else:
+                output_dir = Path(output)
+
+            click.echo(f"   Salvando CSVs em: {output_dir}")
+            csv_files = extractor.extract_tables_as_csv(output_dir)
+
+            click.echo(f"\n✅ Concluído! {len(csv_files)} arquivos CSV criados:")
+            for csv_file in csv_files:
+                click.echo(f"   - {csv_file.name}")
+
+        else:  # markdown
+            # Determine output path
+            if output is None:
+                output = pdf_path.with_name(f"{pdf_path.stem}_tables.md")
+            else:
+                output = Path(output)
+
+            # Format tables as Markdown
+            click.echo(f"   Formatando como Markdown...")
+            formatter = TableFormatter()
+            markdown_output = formatter.format_all_tables(tables, include_metadata=include_metadata)
+
+            # Add header
+            header = f"# Tabelas Extraídas - {pdf_path.name}\n\n"
+            header += f"**Total de tabelas:** {len(tables)}\n\n"
+            header += "---\n\n"
+            markdown_output = header + markdown_output
+
+            # Save to file
+            click.echo(f"   Salvando em: {output}")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            MarkdownFormatter.save_to_file(markdown_output, str(output))
+
+            click.echo(f"\n✅ Concluído! Tabelas salvas em: {output}")
+
+        # Display summary
+        click.echo("\n📋 Resumo:")
+        for i, table in enumerate(tables[:5], 1):  # Show first 5 tables
+            click.echo(f"   Tabela {i}: Página {table['page'] + 1} - "
+                      f"{table['rows']} linhas × {table['cols']} colunas")
+        if len(tables) > 5:
+            click.echo(f"   ... e mais {len(tables) - 5} tabela(s)")
+
+    except Exception as e:
+        click.echo(f"❌ Erro: {str(e)}", err=True)
+        logger.error(f"Error extracting tables from {pdf_path}: {e}", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
