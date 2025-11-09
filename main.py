@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.extractors import PyMuPDFExtractor
 from src.processors import TextNormalizer, MetadataParser
-from src.formatters import MarkdownFormatter
+from src.formatters import MarkdownFormatter, JSONFormatter
 from src.utils.logger import setup_logger, get_logger
 from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size, sanitize_output_path
 from src.utils.config import get_config
@@ -80,7 +80,7 @@ def format_output_text(
     Args:
         processed_text: Normalized text
         doc_metadata: Extracted metadata
-        format: Output format ('markdown' or 'txt')
+        format: Output format ('markdown', 'txt', or 'json')
         include_metadata: Whether to include metadata header
         structured: Whether to use structured sections (markdown only)
 
@@ -98,6 +98,16 @@ def format_output_text(
                 doc_metadata,
                 include_metadata_header=include_metadata
             )
+    elif format == 'json':
+        # JSON output
+        formatter = JSONFormatter()
+        return formatter.format_to_string(
+            processed_text,
+            doc_metadata,
+            include_metadata=include_metadata,
+            hierarchical=structured,
+            indent=2
+        )
     else:
         # Plain text output
         if include_metadata:
@@ -174,7 +184,7 @@ def cli():
 )
 @click.option(
     '--format',
-    type=click.Choice(['markdown', 'txt'], case_sensitive=False),
+    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
     default='markdown',
     help='Output format (default: markdown)'
 )
@@ -206,6 +216,8 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
     if output is None:
         if format == 'markdown':
             output = pdf_path.with_suffix('.md')
+        elif format == 'json':
+            output = pdf_path.with_suffix('.json')
         else:
             output = pdf_path.with_suffix('.txt')
     else:
@@ -276,7 +288,7 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
 )
 @click.option(
     '--format',
-    type=click.Choice(['markdown', 'txt'], case_sensitive=False),
+    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
     default='markdown',
     help='Output format (default: markdown)'
 )
@@ -357,6 +369,8 @@ def batch(input_dir, output_dir, format, normalize, metadata):
                 # Determine output path
                 if format == 'markdown':
                     output_path = output_dir / pdf_path.with_suffix('.md').name
+                elif format == 'json':
+                    output_path = output_dir / pdf_path.with_suffix('.json').name
                 else:
                     output_path = output_dir / pdf_path.with_suffix('.txt').name
 
@@ -408,7 +422,7 @@ def batch(input_dir, output_dir, format, normalize, metadata):
 )
 @click.option(
     '--format',
-    type=click.Choice(['markdown', 'txt'], case_sensitive=False),
+    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
     default='markdown',
     help='Output format (default: markdown)'
 )

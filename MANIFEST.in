@@ -1,0 +1,42 @@
+# Include documentation files
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CLAUDE.md
+include CONTRIBUTING.md
+
+# Include configuration files
+include config.yaml
+include .env.example
+
+# Include requirements
+include requirements.txt
+include requirements-dev.txt
+
+# Include type information
+recursive-include src *.py
+recursive-include src *.pyi
+include src/py.typed
+
+# Exclude test files and caches
+recursive-exclude tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .pytest_cache
+recursive-exclude * .mypy_cache
+recursive-exclude * .ruff_cache
+
+# Exclude build artifacts
+exclude .gitignore
+exclude .pre-commit-config.yaml
+recursive-exclude .github *
+recursive-exclude docs/_build *
+recursive-exclude htmlcov *
+recursive-exclude dist *
+recursive-exclude build *
+recursive-exclude *.egg-info *
+
+# Exclude data directories (too large for distribution)
+recursive-exclude data *
+recursive-exclude logs *
+recursive-exclude .cache *
