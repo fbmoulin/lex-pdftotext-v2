@@ -2,7 +2,8 @@
 
 ## 🔍 Problema: PDFs Escaneados
 
-PDFs escaneados são imagens de documentos físicos. O texto não está em formato digital, portanto ferramentas como PyMuPDF **não conseguem extrair o texto diretamente**.
+PDFs escaneados são imagens de documentos físicos. O texto não está em formato digital, portanto
+ferramentas como PyMuPDF **não conseguem extrair o texto diretamente**.
 
 ### Como Identificar um PDF Escaneado?
 
@@ -11,6 +12,7 @@ python main.py info seu_documento.pdf
 ```
 
 Se o resultado mostrar:
+
 - **Páginas: X** mas **nenhum texto extraído** ou **muito pouco texto**
 - O PDF foi provavelmente escaneado
 
@@ -23,6 +25,7 @@ Para processar PDFs escaneados, você precisa de **OCR** - tecnologia que "lê" 
 #### 1. Instalar Tesseract
 
 **Linux (Ubuntu/Debian):**
+
 ```bash
 sudo apt-get update
 sudo apt-get install tesseract-ocr tesseract-ocr-por
@@ -30,12 +33,14 @@ sudo apt-get install poppler-utils  # Para converter PDF em imagens
 ```
 
 **MacOS:**
+
 ```bash
 brew install tesseract tesseract-lang
 brew install poppler
 ```
 
 **Windows:**
+
 - Baixe: https://github.com/UB-Mannheim/tesseract/wiki
 - Instale e adicione ao PATH
 
@@ -60,7 +65,8 @@ from pdf2image import convert_from_path
 import pytesseract
 from PIL import Image
 
-def extract_text_with_ocr(pdf_path, language='por'):
+
+def extract_text_with_ocr(pdf_path, language="por"):
     """
     Extrai texto de PDF escaneado usando OCR.
 
@@ -82,7 +88,7 @@ def extract_text_with_ocr(pdf_path, language='por'):
     all_text = []
 
     for i, image in enumerate(images, 1):
-        print(f"   Página {i}/{len(images)}...", end='')
+        print(f"   Página {i}/{len(images)}...", end="")
 
         # Aplicar OCR
         text = pytesseract.image_to_string(image, lang=language)
@@ -90,22 +96,22 @@ def extract_text_with_ocr(pdf_path, language='por'):
 
         print(f" ✓")
 
-    return '\\n\\n'.join(all_text)
+    return "\\n\\n".join(all_text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Uso: python ocr_pdf.py <arquivo.pdf>")
         sys.exit(1)
 
     pdf_path = sys.argv[1]
-    output_path = Path(pdf_path).with_suffix('.txt')
+    output_path = Path(pdf_path).with_suffix(".txt")
 
     # Extrair texto
-    text = extract_text_with_ocr(pdf_path, language='por')
+    text = extract_text_with_ocr(pdf_path, language="por")
 
     # Salvar
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(text)
 
     print(f"\\n✅ Texto salvo em: {output_path}")
@@ -127,7 +133,7 @@ Isso gera um arquivo `.txt` com o texto extraído.
 # Copie o conteúdo do .txt para um novo PDF ou processe diretamente
 ```
 
----
+______________________________________________________________________
 
 ### Opção 2: OCRmyPDF (Automático)
 
@@ -153,28 +159,31 @@ Isso cria `output_ocr.pdf` com texto pesquisável que nosso sistema consegue ler
 python main.py extract output_ocr.pdf
 ```
 
----
+______________________________________________________________________
 
 ### Opção 3: Serviços Cloud (Pago, mas Preciso)
 
 Para documentos críticos ou baixa qualidade:
 
 1. **Google Cloud Vision API**
+
    - Melhor precisão
    - Suporta português
    - Pago (mas tem trial gratuito)
 
-2. **AWS Textract**
+1. **AWS Textract**
+
    - Focado em documentos
    - Extrai tabelas
    - Pago
 
-3. **Azure Computer Vision**
+1. **Azure Computer Vision**
+
    - OCR multilíngue
    - Boa precisão
    - Pago
 
----
+______________________________________________________________________
 
 ## 🔄 Workflow Recomendado para PDFs Escaneados
 
@@ -192,38 +201,38 @@ python main.py extract documento_ocr.pdf
 python main.py merge data/input/ -o processo_completo.md
 ```
 
----
+______________________________________________________________________
 
 ## 📊 Comparação de Ferramentas OCR
 
-| Ferramenta | Custo | Precisão | Velocidade | Português |
-|------------|-------|----------|------------|-----------|
-| **Tesseract** | ✅ Grátis | ⭐⭐⭐ | ⚡⚡ | ✅ Sim |
-| **OCRmyPDF** | ✅ Grátis | ⭐⭐⭐⭐ | ⚡⚡ | ✅ Sim |
-| **Google Vision** | 💰 Pago | ⭐⭐⭐⭐⭐ | ⚡⚡⚡ | ✅ Sim |
-| **AWS Textract** | 💰 Pago | ⭐⭐⭐⭐ | ⚡⚡⚡ | ✅ Sim |
+| Ferramenta        | Custo     | Precisão   | Velocidade | Português |
+| ----------------- | --------- | ---------- | ---------- | --------- |
+| **Tesseract**     | ✅ Grátis | ⭐⭐⭐     | ⚡⚡       | ✅ Sim    |
+| **OCRmyPDF**      | ✅ Grátis | ⭐⭐⭐⭐   | ⚡⚡       | ✅ Sim    |
+| **Google Vision** | 💰 Pago   | ⭐⭐⭐⭐⭐ | ⚡⚡⚡     | ✅ Sim    |
+| **AWS Textract**  | 💰 Pago   | ⭐⭐⭐⭐   | ⚡⚡⚡     | ✅ Sim    |
 
----
+______________________________________________________________________
 
 ## ⚠️ Limitações do OCR
 
 1. **Qualidade da Imagem**: Documentos borrados ou mal escaneados = texto incorreto
-2. **Formatação**: OCR pode perder formatação original
-3. **Tabelas**: Difícil de manter estrutura de tabelas
-4. **Assinaturas**: Não reconhece assinaturas manuscritas
-5. **Tempo**: OCR é mais lento que extração de texto nativo
+1. **Formatação**: OCR pode perder formatação original
+1. **Tabelas**: Difícil de manter estrutura de tabelas
+1. **Assinaturas**: Não reconhece assinaturas manuscritas
+1. **Tempo**: OCR é mais lento que extração de texto nativo
 
----
+______________________________________________________________________
 
 ## 💡 Dicas para Melhor OCR
 
 1. **DPI Alto**: Escanear com 300 DPI ou mais
-2. **Contraste**: Ajustar contraste/brilho antes do OCR
-3. **Deskew**: Corrigir páginas tortas (`--deskew` no ocrmypdf)
-4. **Limpar**: Remover manchas/ruído (`--clean` no ocrmypdf)
-5. **Idioma Correto**: Sempre especificar português (`por` ou `pt-BR`)
+1. **Contraste**: Ajustar contraste/brilho antes do OCR
+1. **Deskew**: Corrigir páginas tortas (`--deskew` no ocrmypdf)
+1. **Limpar**: Remover manchas/ruído (`--clean` no ocrmypdf)
+1. **Idioma Correto**: Sempre especificar português (`por` ou `pt-BR`)
 
----
+______________________________________________________________________
 
 ## 🚀 Integração Futura
 
@@ -236,7 +245,7 @@ python main.py extract documento.pdf --ocr  # Detecta e aplica OCR se necessári
 
 Por enquanto, use o workflow acima! 📄✨
 
----
+______________________________________________________________________
 
-**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
-**Licença**: MIT License - Ver [LICENSE](./LICENSE)
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg
+Moulin **Licença**: MIT License - Ver [LICENSE](./LICENSE)

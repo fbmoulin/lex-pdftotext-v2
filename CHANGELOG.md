@@ -2,12 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.3.0] - 2025-01-09
 
 ### Added
+
 - **Table Extraction**: Complete table extraction feature using pdfplumber
   - `TableExtractor` class for detecting and extracting tables from PDFs
   - `TableFormatter` class for converting tables to Markdown or CSV
@@ -43,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - YAML and Markdown formatting
 
 ### Changed
+
 - **Code Formatting**: Applied black and isort formatting across entire codebase
   - Consistent 100-character line length
   - Black-compatible import sorting
@@ -55,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Other tools updated for compatibility
 
 ### Documentation
+
 - Updated README.md with Sprint 3 features:
   - Table extraction commands and examples
   - JSON export format documentation
@@ -68,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created CHANGELOG.md for version tracking
 
 ### Testing
+
 - Added 24 comprehensive tests for table extraction (test_table_extraction.py)
 - All tests passing: 100% success rate
 - Tests cover:
@@ -78,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Edge cases and error conditions
 
 ### Performance
+
 - Added performance tracking decorators to core operations
 - Zero overhead when metrics aren't being analyzed
 - Detailed timing statistics available through `perf-report` command
@@ -85,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2025-01-01
 
 ### Added
+
 - Sprint 2: High priority improvements
 - Sprint 1: Critical bug fixes and safety improvements
 - Phase 4: Configuration management and production polish
@@ -92,11 +98,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Image analysis with Google Gemini Vision
 
 ### Changed
+
 - Improved error handling and validation
 - Enhanced logging and monitoring
 - Updated dependencies for stability
 
 ### Fixed
+
 - Various bug fixes and stability improvements
 - Security enhancements
 - Performance optimizations
@@ -104,6 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-12-15
 
 ### Added
+
 - Initial release
 - PDF text extraction with PyMuPDF
 - Metadata extraction for Brazilian legal documents
@@ -114,8 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI interface with PyWebView
 - Windows executable support
 
----
+______________________________________________________________________
 
-[0.3.0]: https://github.com/fbmoulin/pdftotext/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/fbmoulin/pdftotext/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fbmoulin/pdftotext/releases/tag/v0.1.0
+[0.2.0]: https://github.com/fbmoulin/pdftotext/compare/v0.1.0...v0.2.0
+[0.3.0]: https://github.com/fbmoulin/pdftotext/compare/v0.2.0...v0.3.0

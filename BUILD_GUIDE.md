@@ -4,29 +4,32 @@
 
 ## 📋 Índice
 
-1. [Pré-requisitos](#pré-requisitos)
-2. [Preparação do Ambiente](#preparação-do-ambiente)
-3. [Criação do Ícone](#criação-do-ícone)
-4. [Build do Executável](#build-do-executável)
-5. [Criação do Instalador](#criação-do-instalador)
-6. [Testes](#testes)
-7. [Distribuição](#distribuição)
-8. [Troubleshooting](#troubleshooting)
+1. [Pré-requisitos](#pr%C3%A9-requisitos)
+1. [Preparação do Ambiente](#prepara%C3%A7%C3%A3o-do-ambiente)
+1. [Criação do Ícone](#cria%C3%A7%C3%A3o-do-%C3%ADcone)
+1. [Build do Executável](#build-do-execut%C3%A1vel)
+1. [Criação do Instalador](#cria%C3%A7%C3%A3o-do-instalador)
+1. [Testes](#testes)
+1. [Distribuição](#distribui%C3%A7%C3%A3o)
+1. [Troubleshooting](#troubleshooting)
 
----
+______________________________________________________________________
 
 ## 🔧 Pré-requisitos
 
 ### Software Necessário
 
 1. **Python 3.8+** instalado no Windows
+
    - Download: https://www.python.org/downloads/
 
-2. **Inno Setup 6** (para criar instalador)
+1. **Inno Setup 6** (para criar instalador)
+
    - Download: https://jrsoftware.org/isdl.php
    - Instale a versão padrão
 
-3. **Git** (opcional, para controle de versão)
+1. **Git** (opcional, para controle de versão)
+
    - Download: https://git-scm.com/download/win
 
 ### Verificar Instalações
@@ -42,7 +45,7 @@ pip --version
 git --version
 ```
 
----
+______________________________________________________________________
 
 ## 🛠️ Preparação do Ambiente
 
@@ -79,6 +82,7 @@ pip list
 ```
 
 Dependências principais:
+
 - `pywebview` - Interface gráfica
 - `pymupdf` - Extração de PDF
 - `pyinstaller` - Empacotamento
@@ -97,17 +101,17 @@ python main.py --help
 
 Se tudo funcionar, prossiga para o build.
 
----
+______________________________________________________________________
 
 ## 🎨 Criação do Ícone
 
 ### Opção 1: Ferramenta Online (Recomendado)
 
 1. Acesse https://icoconvert.com/
-2. Faça upload de imagem PNG (512x512 ou maior)
-3. Selecione resoluções: 16, 32, 48, 64, 128, 256
-4. Baixe `logo.ico`
-5. Salve em `/assets/logo.ico`
+1. Faça upload de imagem PNG (512x512 ou maior)
+1. Selecione resoluções: 16, 32, 48, 64, 128, 256
+1. Baixe `logo.ico`
+1. Salve em `/assets/logo.ico`
 
 ### Opção 2: Usar Emoji Temporário
 
@@ -130,7 +134,7 @@ Get-ItemProperty assets\logo.ico | Select-Object *
 start assets\logo.ico
 ```
 
----
+______________________________________________________________________
 
 ## 🏗️ Build do Executável
 
@@ -142,11 +146,12 @@ python build_exe.py
 ```
 
 O script irá:
+
 1. ✅ Verificar PyInstaller
-2. 🧹 Limpar builds anteriores
-3. 🔨 Construir executável
-4. ✅ Verificar build
-5. 📦 Criar pacote portável (ZIP)
+1. 🧹 Limpar builds anteriores
+1. 🔨 Construir executável
+1. ✅ Verificar build
+1. 📦 Criar pacote portável (ZIP)
 
 ### Método Manual (Avançado)
 
@@ -183,7 +188,7 @@ dist/
 .\dist\PDF2MD.exe --debug
 ```
 
----
+______________________________________________________________________
 
 ## 📦 Criação do Instalador
 
@@ -205,8 +210,8 @@ Edite `installer.iss` se necessário:
 ### 3. Compilar Instalador
 
 1. No Inno Setup, clique em **Build → Compile** (ou F9)
-2. Aguarde compilação (30-60 segundos)
-3. Verifique mensagem "Successful compile"
+1. Aguarde compilação (30-60 segundos)
+1. Verifique mensagem "Successful compile"
 
 ### 4. Localizar Instalador
 
@@ -236,7 +241,7 @@ Output/
 - Clique em "Desinstalar"
 - Verifique remoção completa
 
----
+______________________________________________________________________
 
 ## 🧪 Testes
 
@@ -276,11 +281,11 @@ Output/
 **Importante**: Teste em máquina sem Python instalado!
 
 1. Use máquina virtual (VirtualBox, VMware)
-2. Ou computador de colega/amigo
-3. Execute instalador
-4. Verifique todas as funcionalidades
+1. Ou computador de colega/amigo
+1. Execute instalador
+1. Verifique todas as funcionalidades
 
----
+______________________________________________________________________
 
 ## 📤 Distribuição
 
@@ -291,11 +296,13 @@ Output/
 **Arquivo**: `dist/PDF2MD.exe`
 
 **Uso**:
+
 - Copiar para qualquer pasta
 - Executar diretamente
 - Nenhuma instalação necessária
 
 **Ideal para**:
+
 - Uso pessoal
 - Pendrive
 - Compartilhamento rápido
@@ -305,16 +312,19 @@ Output/
 **Arquivo**: `dist/PDF2MD_Portable.zip`
 
 **Conteúdo**:
+
 - PDF2MD.exe
 - LEIA-ME.txt
 - README.md (opcional)
 
 **Uso**:
+
 - Extrair em qualquer pasta
 - Executar PDF2MD.exe
 - Criar atalho manualmente
 
 **Ideal para**:
+
 - Distribuição em rede interna
 - Email/WhatsApp (se tamanho permitir)
 
@@ -323,11 +333,13 @@ Output/
 **Arquivo**: `Output/PDF2MD_Setup.exe`
 
 **Uso**:
+
 - Executar instalador
 - Seguir assistente
 - Aplicativo instalado no sistema
 
 **Ideal para**:
+
 - Distribuição profissional
 - Múltiplos usuários
 - Tribunal/escritório
@@ -359,7 +371,7 @@ copy Output\PDF2MD_Setup.exe E:\Instaladores\
 - Gerar link de compartilhamento
 - Enviar link por email/WhatsApp
 
----
+______________________________________________________________________
 
 ## 🐛 Troubleshooting
 
@@ -386,12 +398,14 @@ Ou edite `build_exe.py` e adicione à lista `hidden_imports`.
 **Causa**: Executável não assinado digitalmente
 
 **Solução temporária**:
+
 1. Windows Defender → Proteção contra vírus e ameaças
-2. Gerenciar configurações
-3. Adicionar exclusão → Arquivo
-4. Selecione `PDF2MD.exe`
+1. Gerenciar configurações
+1. Adicionar exclusão → Arquivo
+1. Selecione `PDF2MD.exe`
 
 **Solução profissional**:
+
 - Adquirir certificado de assinatura de código (Code Signing)
 - Assinar executável com `signtool.exe`
 
@@ -400,6 +414,7 @@ Ou edite `build_exe.py` e adicione à lista `hidden_imports`.
 **Causa**: Assets não incluídos no build
 
 **Solução**:
+
 ```powershell
 # Reconstruir com assets
 pyinstaller --onefile --windowed --icon=assets\logo.ico --name=PDF2MD `
@@ -413,26 +428,29 @@ pyinstaller --onefile --windowed --icon=assets\logo.ico --name=PDF2MD `
 **Causa**: Microsoft Visual C++ Redistributable ausente
 
 **Solução**:
+
 1. Baixe: https://aka.ms/vs/17/release/vc_redist.x64.exe
-2. Instale no computador destino
+1. Instale no computador destino
 
 ### Problema: Tamanho do executável muito grande
 
 **Causas**:
+
 - Inclusão de bibliotecas desnecessárias
 - Assets muito grandes
 
 **Soluções**:
+
 1. Use `--exclude-module` para remover módulos não usados
-2. Otimize imagens em `assets/`
-3. Use compressão UPX:
+1. Otimize imagens em `assets/`
+1. Use compressão UPX:
 
 ```powershell
 pip install upx
 pyinstaller --onefile --windowed --upx-dir=caminho\upx app_ui.py
 ```
 
----
+______________________________________________________________________
 
 ## 📊 Resumo de Comandos
 
@@ -455,25 +473,29 @@ python build_exe.py
 copy Output\PDF2MD_Setup.exe <destino>
 ```
 
----
+______________________________________________________________________
 
 ## 📚 Próximos Passos
 
 ### Melhorias Futuras
 
 1. **Assinatura Digital**
+
    - Adquirir certificado EV
    - Assinar executável e instalador
 
-2. **Auto-Update**
+1. **Auto-Update**
+
    - Implementar verificação de versão
    - Download automático de atualizações
 
-3. **Multi-Plataforma**
+1. **Multi-Plataforma**
+
    - Build para macOS (.app, .dmg)
    - Build para Linux (AppImage, .deb)
 
-4. **CI/CD**
+1. **CI/CD**
+
    - GitHub Actions para build automático
    - Release automático no GitHub
 
@@ -483,18 +505,18 @@ copy Output\PDF2MD_Setup.exe <destino>
 - [Inno Setup Docs](https://jrsoftware.org/ishelp/)
 - [Code Signing Guide](https://learn.microsoft.com/en-us/windows/win32/seccrypto/cryptography-tools)
 
----
+______________________________________________________________________
 
 ## 📝 Changelog
 
 ### Versão 1.0.0 (2025-11-01)
+
 - Lançamento inicial
 - Interface gráfica completa
 - Processamento de PDFs judiciais
 - Instalador Windows
 
----
+______________________________________________________________________
 
-**Desenvolvido por**: Felipe Bertrand Sardenberg Moulin
-**Licença**: MIT License - Ver arquivo [LICENSE](./LICENSE)
-**Suporte**: [GitHub Issues](https://github.com/fbmoulin/pdftotext/issues)
+**Desenvolvido por**: Felipe Bertrand Sardenberg Moulin **Licença**: MIT License - Ver arquivo
+[LICENSE](./LICENSE) **Suporte**: [GitHub Issues](https://github.com/fbmoulin/pdftotext/issues)

@@ -7,7 +7,7 @@ from PIL import Image
 from ratelimit import limits, sleep_and_retry
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from ..utils.cache import get_image_cache
+from ..utils.cache import ImageDescriptionCache, get_image_cache
 from ..utils.config import get_config
 from ..utils.logger import get_logger
 
@@ -41,6 +41,7 @@ class ImageAnalyzer:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.max_image_size_mb = max_image_size_mb
         self.enable_cache = enable_cache
+        self.cache: ImageDescriptionCache | None
 
         # Initialize cache if enabled
         if self.enable_cache:
@@ -69,7 +70,7 @@ class ImageAnalyzer:
             logger.error(f"Failed to import google-generativeai: {e}")
             raise ImportError(
                 "google-generativeai not installed. Install with: pip install google-generativeai"
-            )
+            ) from e
 
     def _resize_image_if_needed(self, image: Image.Image) -> Image.Image:
         """
@@ -144,7 +145,7 @@ class ImageAnalyzer:
                 raise ValueError("Empty response from Gemini API")
 
             logger.debug("Successfully received Gemini API response")
-            return response.text.strip()
+            return str(response.text.strip())
 
         except Exception as e:
             logger.error(f"Gemini API call failed: {type(e).__name__}: {str(e)}")
@@ -193,10 +194,9 @@ class ImageAnalyzer:
                 self.cache.set(image, description, context)
 
             logger.info("Image analysis completed successfully")
-            return description
+            return str(description)
 
         except Exception as e:
-            error_msg = f"[Erro ao analisar imagem: {type(e).__name__}]"
             logger.error(f"Failed to analyze image: {type(e).__name__}: {str(e)}", exc_info=True)
             raise  # Raise exception instead of returning error string
 

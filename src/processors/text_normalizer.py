@@ -78,7 +78,7 @@ class TextNormalizer:
         lines = text.split("\n")
 
         # Count line frequencies (ignoring empty lines and very short lines)
-        line_counts = {}
+        line_counts: dict[str, int] = {}
         for line in lines:
             stripped = line.strip()
             # Only count substantial lines (more than 10 chars)
@@ -210,7 +210,7 @@ class TextNormalizer:
             str: Line in sentence case
         """
         # Temporarily replace acronyms with placeholders (do this before lowercasing)
-        acronym_map = {}
+        acronym_map: dict[str, str] = {}
         if self.preserve_acronyms:
             # Find all acronyms and replace them with unique placeholders
             def replace_acronym(match):

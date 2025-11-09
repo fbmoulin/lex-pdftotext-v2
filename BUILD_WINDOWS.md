@@ -24,6 +24,7 @@ cd \\wsl.localhost\Ubuntu\home\fbmoulin\projetos2\pdftotext
 ```
 
 **Nota:** Se receber erro de execução de scripts, execute primeiro:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
@@ -72,28 +73,32 @@ Para criar um instalador profissional:
 
 1. **Baixe Inno Setup**: [jrsoftware.org/isdl.php](https://jrsoftware.org/isdl.php)
 
-2. **Compile o instalador**:
+1. **Compile o instalador**:
+
    - Abra `installer.iss` no Inno Setup Compiler
    - Pressione **F9** ou clique em **Build → Compile**
 
-3. **Resultado**: `Output\PDF2MD_Setup.exe`
+1. **Resultado**: `Output\PDF2MD_Setup.exe`
 
 ## Distribuição
 
 Você pode distribuir de 3 formas:
 
 ### 1. Executável Stand-Alone
+
 - **Arquivo**: `dist\PDF2MD.exe`
 - **Uso**: Copiar e executar diretamente
 - **Vantagem**: Mais simples, sem instalação
 
 ### 2. Pacote Portável
+
 - **Arquivo**: `dist\PDF2MD_Portable.zip`
 - **Conteúdo**: Executável + README + instruções
 - **Uso**: Extrair e executar
 - **Vantagem**: Incluí documentação
 
 ### 3. Instalador Windows
+
 - **Arquivo**: `Output\PDF2MD_Setup.exe`
 - **Uso**: Executar instalador, cria ícones no menu iniciar e desktop
 - **Vantagem**: Instalação profissional, integração com Windows
@@ -101,20 +106,24 @@ Você pode distribuir de 3 formas:
 ## Solução de Problemas
 
 ### Erro: "Python não encontrado"
+
 - Instale Python de [python.org](https://www.python.org/downloads/)
 - Durante instalação, marque "Add Python to PATH"
 - Reinicie o terminal/PowerShell
 
 ### Erro: "Executável muito grande (>500MB)"
+
 - Certifique-se de usar o script automático que cria ambiente virtual limpo
 - **NÃO** execute o build no ambiente conda/anaconda global
 
 ### Erro: Windows Defender bloqueia executável
+
 - Normal para executáveis não assinados
 - Clique "Mais informações" → "Executar assim mesmo"
 - Para distribuição profissional: considere assinar digitalmente (Code Signing)
 
 ### Erro: PyInstaller não gera .exe
+
 - Verifique se está rodando no Windows (não no WSL)
 - No WSL, PyInstaller gera executável Linux
 
@@ -149,10 +158,11 @@ python build_exe.py
 ## Suporte
 
 Para problemas, consulte:
+
 - [BUILD_GUIDE.md](BUILD_GUIDE.md) - Guia completo de build
 - [README.md](README.md) - Documentação do projeto
 
----
+______________________________________________________________________
 
-**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
-**Licença**: MIT License - Ver [LICENSE](./LICENSE)
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg
+Moulin **Licença**: MIT License - Ver [LICENSE](./LICENSE)

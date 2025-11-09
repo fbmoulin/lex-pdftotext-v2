@@ -2,7 +2,8 @@
 
 ## Ícone Necessário
 
-Para o empacotamento do aplicativo, precisamos de um ícone no formato `.ico` com múltiplas resoluções.
+Para o empacotamento do aplicativo, precisamos de um ícone no formato `.ico` com múltiplas
+resoluções.
 
 ### Especificações Recomendadas
 
@@ -15,52 +16,57 @@ Para o empacotamento do aplicativo, precisamos de um ícone no formato `.ico` co
 ### 1. Ferramenta Online (Mais Fácil)
 
 **ICO Convert** - https://icoconvert.com/
+
 1. Faça upload de uma imagem PNG de alta qualidade (512x512 ou maior)
-2. Selecione "Custom sizes"
-3. Marque: 16, 32, 48, 64, 128, 256
-4. Clique em "Convert ICO"
-5. Baixe o arquivo `logo.ico`
+1. Selecione "Custom sizes"
+1. Marque: 16, 32, 48, 64, 128, 256
+1. Clique em "Convert ICO"
+1. Baixe o arquivo `logo.ico`
 
 **Favicon.io** - https://favicon.io/
+
 - Converte emoji ou texto em ícone
 - Suporta geração automática de múltiplas resoluções
 
 ### 2. GIMP (Gratuito)
 
 1. Abra GIMP
-2. Crie ou abra uma imagem quadrada (512x512)
-3. **Arquivo → Exportar Como**
-4. Salve como `logo.ico`
-5. Na caixa de diálogo, selecione múltiplas resoluções
-6. Clique em "Exportar"
+1. Crie ou abra uma imagem quadrada (512x512)
+1. **Arquivo → Exportar Como**
+1. Salve como `logo.ico`
+1. Na caixa de diálogo, selecione múltiplas resoluções
+1. Clique em "Exportar"
 
 ### 3. Photoshop / Illustrator
 
 1. Crie design em 512x512
-2. Use plugin ICO para exportar:
+1. Use plugin ICO para exportar:
    - Photoshop: ICO (Windows Icon) Format Plugin
    - Illustrator: Export for Screens → ICO
 
 ### 4. Inkscape (Vetor, Gratuito)
 
 1. Crie design vetorial
-2. **Arquivo → Exportar PNG**
-3. Exporte como 512x512
-4. Use ferramenta online para converter PNG → ICO
+1. **Arquivo → Exportar PNG**
+1. Exporte como 512x512
+1. Use ferramenta online para converter PNG → ICO
 
 ## Design Sugerido para PDF Extractor
 
 ### Conceito 1: Documento com Engrenagem
+
 - Símbolo de documento (📄) + engrenagem (⚙️)
 - Cores: Azul (#667eea) e Roxo (#764ba2) - gradiente do app
 - Representa automação de extração de PDFs
 
 ### Conceito 2: PDF → MD
+
 - Seta transformando PDF em MD
 - Minimalista e direto
 - Cores corporativas
 
 ### Conceito 3: Documento Jurídico
+
 - Balança da justiça (⚖️) + documento
 - Representa contexto jurídico/legal
 - Cores sóbrias (azul escuro, dourado)
@@ -80,13 +86,14 @@ Fundo: #f7fafc (Cinza claro)
 Se precisar de um ícone rapidamente para testes:
 
 1. Acesse https://emoji-favicon.vercel.app/
-2. Escolha emoji 📄 ou ⚖️
-3. Baixe como `.ico`
-4. Renomeie para `logo.ico`
+1. Escolha emoji 📄 ou ⚖️
+1. Baixe como `.ico`
+1. Renomeie para `logo.ico`
 
 ## Localização do Ícone
 
 Após criar, salve em:
+
 ```
 /assets/logo.ico
 ```
@@ -96,16 +103,19 @@ Após criar, salve em:
 Verifique se o ícone tem múltiplas resoluções:
 
 **Windows**:
+
 ```powershell
 Get-ItemProperty assets\logo.ico | Select-Object *
 ```
 
 **Linux**:
+
 ```bash
 identify assets/logo.ico
 ```
 
 Deve mostrar algo como:
+
 ```
 logo.ico[0] ICO 256x256
 logo.ico[1] ICO 128x128

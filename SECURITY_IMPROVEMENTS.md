@@ -1,6 +1,7 @@
 # Melhorias de Segurança e Estabilidade
 
-Baseado nas melhores práticas do **Docling** (IBM Research) e padrões da indústria para aplicações Python de processamento de documentos.
+Baseado nas melhores práticas do **Docling** (IBM Research) e padrões da indústria para aplicações
+Python de processamento de documentos.
 
 ## 🔒 Segurança
 
@@ -15,13 +16,15 @@ from pydantic import BaseModel, Field, validator
 from pathlib import Path
 from typing import Optional
 
+
 class PDFInputConfig(BaseModel):
     """Validação de entrada para PDFs."""
+
     pdf_path: Path
     max_file_size_mb: int = Field(default=500, ge=1, le=1000)
-    allowed_extensions: list[str] = ['.pdf']
+    allowed_extensions: list[str] = [".pdf"]
 
-    @validator('pdf_path')
+    @validator("pdf_path")
     def validate_pdf_path(cls, v):
         if not v.exists():
             raise ValueError(f"Arquivo não encontrado: {v}")
@@ -37,9 +40,13 @@ class PDFInputConfig(BaseModel):
 
         return v
 
+
 class DocumentMetadataValidated(BaseModel):
     """Metadados validados."""
-    process_number: Optional[str] = Field(None, regex=r'^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$')
+
+    process_number: Optional[str] = Field(
+        None, regex=r"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$"
+    )
     author: Optional[str] = Field(None, max_length=500)
     defendant: Optional[str] = Field(None, max_length=500)
     document_ids: list[str] = Field(default_factory=list)
@@ -51,6 +58,7 @@ class DocumentMetadataValidated(BaseModel):
 
 ```python
 from pathlib import Path
+
 
 def sanitize_output_path(user_input: str, base_dir: Path) -> Path:
     """Sanitiza caminho de saída para prevenir path traversal."""
@@ -72,6 +80,7 @@ def sanitize_output_path(user_input: str, base_dir: Path) -> Path:
 import resource
 import signal
 from contextlib import contextmanager
+
 
 @contextmanager
 def resource_limit(max_memory_mb=1024, max_time_seconds=300):
@@ -105,13 +114,12 @@ import hashlib
 from pathlib import Path
 
 # Configurar logger de auditoria
-audit_logger = logging.getLogger('audit')
+audit_logger = logging.getLogger("audit")
 audit_logger.setLevel(logging.INFO)
-handler = logging.FileHandler('audit.log')
-handler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(levelname)s - %(message)s'
-))
+handler = logging.FileHandler("audit.log")
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 audit_logger.addHandler(handler)
+
 
 def audit_file_access(pdf_path: Path, user: str = "system"):
     """Registra acesso a arquivos para auditoria."""
@@ -133,12 +141,14 @@ import time
 from functools import wraps
 from typing import Callable, Type
 
+
 def retry(
     max_attempts: int = 3,
     backoff_factor: float = 2.0,
-    exceptions: tuple[Type[Exception], ...] = (Exception,)
+    exceptions: tuple[Type[Exception], ...] = (Exception,),
 ):
     """Decorator para retry com exponential backoff."""
+
     def decorator(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -150,7 +160,7 @@ def retry(
                 except exceptions as e:
                     last_exception = e
                     if attempt < max_attempts - 1:
-                        wait_time = backoff_factor ** attempt
+                        wait_time = backoff_factor**attempt
                         time.sleep(wait_time)
                         continue
                     raise
@@ -158,7 +168,9 @@ def retry(
             raise last_exception
 
         return wrapper
+
     return decorator
+
 
 # Uso
 @retry(max_attempts=3, exceptions=(IOError, OSError))
@@ -173,10 +185,12 @@ def extract_pdf_with_retry(pdf_path):
 from datetime import datetime, timedelta
 from enum import Enum
 
+
 class CircuitState(Enum):
     CLOSED = "closed"  # Normal
-    OPEN = "open"      # Falhas detectadas
+    OPEN = "open"  # Falhas detectadas
     HALF_OPEN = "half_open"  # Testando recuperação
+
 
 class CircuitBreaker:
     """Previne cascata de falhas."""
@@ -220,6 +234,7 @@ class CircuitBreaker:
 ```python
 import fitz  # PyMuPDF
 
+
 def validate_pdf_integrity(pdf_path: Path) -> tuple[bool, str]:
     """Valida integridade do PDF antes de processar."""
     try:
@@ -253,19 +268,27 @@ def validate_pdf_integrity(pdf_path: Path) -> tuple[bool, str]:
 ```python
 class PDFExtractionError(Exception):
     """Erro base para extração de PDF."""
+
     pass
+
 
 class PDFCorruptedError(PDFExtractionError):
     """PDF corrompido ou ilegível."""
+
     pass
+
 
 class PDFEncryptedError(PDFExtractionError):
     """PDF criptografado."""
+
     pass
+
 
 class PDFTooLargeError(PDFExtractionError):
     """PDF excede tamanho máximo."""
+
     pass
+
 
 # Uso no extractor
 class PyMuPDFExtractorSecure(PyMuPDFExtractor):
@@ -295,9 +318,11 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class ExtractionMetrics:
     """Métricas de extração."""
+
     pdf_path: str
     page_count: int
     file_size_mb: float
@@ -308,14 +333,15 @@ class ExtractionMetrics:
 
     def to_dict(self):
         return {
-            'pdf_path': self.pdf_path,
-            'page_count': self.page_count,
-            'file_size_mb': self.file_size_mb,
-            'extraction_time_seconds': self.extraction_time_seconds,
-            'text_length': self.text_length,
-            'success': self.success,
-            'error': self.error
+            "pdf_path": self.pdf_path,
+            "page_count": self.page_count,
+            "file_size_mb": self.file_size_mb,
+            "extraction_time_seconds": self.extraction_time_seconds,
+            "text_length": self.text_length,
+            "success": self.success,
+            "error": self.error,
         }
+
 
 def extract_with_metrics(pdf_path: Path) -> tuple[str, ExtractionMetrics]:
     """Extrai texto e coleta métricas."""
@@ -342,7 +368,7 @@ def extract_with_metrics(pdf_path: Path) -> tuple[str, ExtractionMetrics]:
             extraction_time_seconds=elapsed,
             text_length=len(text),
             success=success,
-            error=error
+            error=error,
         )
 
     return text, metrics
@@ -354,20 +380,22 @@ def extract_with_metrics(pdf_path: Path) -> tuple[str, ExtractionMetrics]:
 import psutil
 from pathlib import Path
 
+
 def health_check() -> dict:
     """Verifica saúde do sistema."""
     return {
-        'status': 'healthy',
-        'memory_percent': psutil.virtual_memory().percent,
-        'disk_percent': psutil.disk_usage('/').percent,
-        'cpu_percent': psutil.cpu_percent(interval=1),
-        'temp_dir_writable': Path('/tmp').is_dir() and os.access('/tmp', os.W_OK)
+        "status": "healthy",
+        "memory_percent": psutil.virtual_memory().percent,
+        "disk_percent": psutil.disk_usage("/").percent,
+        "cpu_percent": psutil.cpu_percent(interval=1),
+        "temp_dir_writable": Path("/tmp").is_dir() and os.access("/tmp", os.W_OK),
     }
 ```
 
 ## 📝 Checklist de Implementação
 
 ### Fase 1 - Crítico (Semana 1)
+
 - [ ] Adicionar Pydantic para validação de entrada
 - [ ] Implementar sanitização de caminhos
 - [ ] Validar integridade de PDFs antes de processar
@@ -375,6 +403,7 @@ def health_check() -> dict:
 - [ ] Tratar PDFs criptografados/corrompidos
 
 ### Fase 2 - Importante (Semana 2)
+
 - [ ] Implementar limite de tamanho de arquivo
 - [ ] Adicionar timeout para processamento
 - [ ] Retry com exponential backoff
@@ -382,6 +411,7 @@ def health_check() -> dict:
 - [ ] Testes de segurança (fuzzing básico)
 
 ### Fase 3 - Desejável (Semana 3)
+
 - [ ] Circuit breaker para batch processing
 - [ ] Health check endpoint (se API)
 - [ ] Rate limiting (se API)

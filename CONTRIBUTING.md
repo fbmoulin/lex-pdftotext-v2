@@ -30,34 +30,40 @@ Abra uma [issue](https://github.com/fbmoulin/pdftotext/issues) com tag `enhancem
 ### Pull Requests
 
 1. **Fork** o repositório
-2. **Clone** seu fork:
+
+1. **Clone** seu fork:
+
    ```bash
    git clone https://github.com/SEU_USUARIO/pdftotext.git
    ```
 
-3. **Crie uma branch** para sua feature:
+1. **Crie uma branch** para sua feature:
+
    ```bash
    git checkout -b feature/minha-feature
    ```
 
-4. **Faça suas alterações** seguindo o guia de estilo
+1. **Faça suas alterações** seguindo o guia de estilo
 
-5. **Execute os testes**:
+1. **Execute os testes**:
+
    ```bash
    pytest tests/
    ```
 
-6. **Commit** suas mudanças:
+1. **Commit** suas mudanças:
+
    ```bash
    git commit -m "feat: Adiciona nova funcionalidade"
    ```
 
-7. **Push** para seu fork:
+1. **Push** para seu fork:
+
    ```bash
    git push origin feature/minha-feature
    ```
 
-8. **Abra um Pull Request** no repositório original
+1. **Abra um Pull Request** no repositório original
 
 ## 📝 Guia de Estilo
 
@@ -159,6 +165,7 @@ Abra uma [discussão](https://github.com/fbmoulin/pdftotext/discussions) ou issu
 
 ## 📄 Licença
 
-Este projeto é licenciado sob a **MIT License**. Ao contribuir, você concorda que suas contribuições serão licenciadas sob a mesma licença MIT.
+Este projeto é licenciado sob a **MIT License**. Ao contribuir, você concorda que suas contribuições
+serão licenciadas sob a mesma licença MIT.
 
 Veja o arquivo [LICENSE](./LICENSE) para detalhes completos.

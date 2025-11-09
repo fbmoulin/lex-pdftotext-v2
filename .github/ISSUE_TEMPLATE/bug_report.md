@@ -1,10 +1,6 @@
----
-name: Bug Report
-about: Reportar um bug ou problema
-title: '[BUG] '
-labels: bug
-assignees: ''
----
+______________________________________________________________________
+
+## name: Bug Report about: Reportar um bug ou problema title: '[BUG] ' labels: bug assignees: ''
 
 ## 🐛 Descrição do Bug
 
@@ -13,9 +9,9 @@ Descreva claramente o bug encontrado.
 ## 📋 Passos para Reproduzir
 
 1. Vá para '...'
-2. Clique em '....'
-3. Execute '....'
-4. Veja o erro
+1. Clique em '....'
+1. Execute '....'
+1. Veja o erro
 
 ## ✅ Comportamento Esperado
 

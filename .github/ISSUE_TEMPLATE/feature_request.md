@@ -1,10 +1,6 @@
----
-name: Feature Request
-about: Sugerir uma nova funcionalidade
-title: '[FEATURE] '
-labels: enhancement
-assignees: ''
----
+______________________________________________________________________
+
+## name: Feature Request about: Sugerir uma nova funcionalidade title: '[FEATURE] ' labels: enhancement assignees: ''
 
 ## 🚀 Descrição da Funcionalidade
 

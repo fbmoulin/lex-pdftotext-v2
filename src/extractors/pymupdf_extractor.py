@@ -91,7 +91,7 @@ class PyMuPDFExtractor(PDFExtractor):
                 future.cancel()
                 error_msg = f"PDF opening exceeded timeout of {self.open_timeout} seconds"
                 logger.error(error_msg)
-                raise TimeoutError(error_msg)
+                raise TimeoutError(error_msg) from None
 
     def __enter__(self):
         """Context manager entry."""
@@ -122,6 +122,7 @@ class PyMuPDFExtractor(PDFExtractor):
             TimeoutError: If text extraction takes too long
         """
         self._ensure_document_open()
+        assert self.doc is not None
 
         logger.info(f"Extracting text from {len(self.doc)} pages")
         pages = []
@@ -166,6 +167,7 @@ class PyMuPDFExtractor(PDFExtractor):
             list[str]: List of text strings, one per page
         """
         self._ensure_document_open()
+        assert self.doc is not None
 
         pages = []
         for page_num in range(len(self.doc)):
@@ -183,6 +185,7 @@ class PyMuPDFExtractor(PDFExtractor):
             dict: PDF metadata including title, author, creation date, etc.
         """
         self._ensure_document_open()
+        assert self.doc is not None
 
         metadata = self.doc.metadata
         return {
@@ -205,6 +208,7 @@ class PyMuPDFExtractor(PDFExtractor):
             int: Number of pages in the PDF
         """
         self._ensure_document_open()
+        assert self.doc is not None
         return len(self.doc)
 
     def extract_text_with_formatting(self) -> str:
@@ -215,6 +219,7 @@ class PyMuPDFExtractor(PDFExtractor):
             str: Text with basic formatting preserved
         """
         self._ensure_document_open()
+        assert self.doc is not None
 
         pages = []
         for page_num in range(len(self.doc)):
@@ -235,9 +240,15 @@ class PyMuPDFExtractor(PDFExtractor):
 
             pages.append("\n".join(page_text))
 
-        return "\n\n--- PÁGINA {} ---\n\n".join(
+        # Build page-separated text
+        result = "\n\n--- PÁGINA {} ---\n\n".join(
             [f"\n\n--- PÁGINA {i + 1} ---\n\n{text}" for i, text in enumerate(pages)]
-        ).lstrip("\n\n--- PÁGINA 1 ---\n\n")
+        )
+        # Remove first page marker prefix
+        prefix = "\n\n--- PÁGINA 1 ---\n\n"
+        if result.startswith(prefix):
+            result = result[len(prefix) :]
+        return result
 
     def extract_images(self) -> list[dict[str, Any]]:
         """
@@ -253,6 +264,7 @@ class PyMuPDFExtractor(PDFExtractor):
                 - xref: Internal PDF reference number
         """
         self._ensure_document_open()
+        assert self.doc is not None
 
         images = []
         for page_num in range(len(self.doc)):

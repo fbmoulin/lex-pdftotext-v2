@@ -6,17 +6,21 @@
 [![PyPI](https://img.shields.io/badge/GUI-PyWebview-green.svg)](https://pywebview.flowrl.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-> **Projeto criado por [Lex Intelligentia](https://lexintelligentia.com)** - Soluções inteligentes para análise jurídica
+> **Projeto criado por [Lex Intelligentia](https://lexintelligentia.com)** - Soluções inteligentes
+> para análise jurídica
 
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
 **Disponível em duas versões**:
+
 - 🖥️ **Interface Gráfica (GUI)** - Aplicativo Windows stand-alone com design moderno dark theme
 - ⌨️ **Interface de Linha de Comando (CLI)** - Terminal/script
 
 ## 🎯 Objetivo
 
-Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, removendo elementos irrelevantes (logos, números de página) e estruturando o conteúdo em formato Markdown hierárquico com metadados, otimizado para:
+Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, removendo elementos
+irrelevantes (logos, números de página) e estruturando o conteúdo em formato Markdown hierárquico
+com metadados, otimizado para:
 
 - **Pipelines RAG** (Retrieval Augmented Generation)
 - **Sistemas de análise jurídica** (Lex Intelligentia, FIRAC+)
@@ -26,38 +30,39 @@ Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, r
 ## ✨ Funcionalidades
 
 ### Extração e Processamento
-✅ Extração rápida e precisa de texto (PyMuPDF - 60x mais rápido)
-✅ **Análise de imagens com IA** - Detecta e descreve imagens usando Google Gemini Vision
-✅ **Extração de tabelas** - Detecta e extrai tabelas estruturadas do PDF (Markdown ou CSV)
-✅ Remoção automática de ruído:
-  - Logos, URLs, códigos de verificação
-  - Rodapés repetitivos de escritórios de advocacia
-  - Endereços, telefones, emails duplicados
-✅ Normalização de texto (conversão de UPPERCASE excessivo para sentence case)
+
+✅ Extração rápida e precisa de texto (PyMuPDF - 60x mais rápido) ✅ **Análise de imagens com IA** -
+Detecta e descreve imagens usando Google Gemini Vision ✅ **Extração de tabelas** - Detecta e extrai
+tabelas estruturadas do PDF (Markdown ou CSV) ✅ Remoção automática de ruído:
+
+- Logos, URLs, códigos de verificação
+- Rodapés repetitivos de escritórios de advocacia
+- Endereços, telefones, emails duplicados ✅ Normalização de texto (conversão de UPPERCASE excessivo
+  para sentence case)
 
 ### Extração de Metadados
+
 ✅ Extração inteligente de metadados jurídicos:
-  - Números de processo (formato CNJ)
-  - IDs de documentos (Num. XXXXXXXX)
-  - Partes (autor, réu)
-  - Advogados e OABs
-  - Juízes
-  - Datas de assinatura digital
-  - Vara/tribunal
-  - Valor da causa
+
+- Números de processo (formato CNJ)
+- IDs de documentos (Num. XXXXXXXX)
+- Partes (autor, réu)
+- Advogados e OABs
+- Juízes
+- Datas de assinatura digital
+- Vara/tribunal
+- Valor da causa
 
 ### Interface e Organização
-✅ **Interface moderna dark theme** - Design sofisticado com glassmorphism e animações
-✅ Detecção automática de tipo de documento (petição inicial, decisão, certidão)
-✅ Saída estruturada em Markdown hierárquico ou JSON
-✅ **Monitoramento de performance** - Rastreamento de métricas de processamento
-✅ Processamento em lote (batch)
-✅ **Merge inteligente** - Mescla automaticamente PDFs do mesmo processo
-✅ **Organização automática** - Move PDFs processados para pasta separada
-✅ **Busca recursiva** - Processa subpastas (processos com múltiplos volumes)
-✅ **Exportação flexível** - Abrir pasta ou salvar em local personalizado
-✅ CLI amigável com comandos intuitivos
-✅ **Pacote PyPI-ready** - Instalável com pip install
+
+✅ **Interface moderna dark theme** - Design sofisticado com glassmorphism e animações ✅ Detecção
+automática de tipo de documento (petição inicial, decisão, certidão) ✅ Saída estruturada em Markdown
+hierárquico ou JSON ✅ **Monitoramento de performance** - Rastreamento de métricas de processamento ✅
+Processamento em lote (batch) ✅ **Merge inteligente** - Mescla automaticamente PDFs do mesmo
+processo ✅ **Organização automática** - Move PDFs processados para pasta separada ✅ **Busca
+recursiva** - Processa subpastas (processos com múltiplos volumes) ✅ **Exportação flexível** - Abrir
+pasta ou salvar em local personalizado ✅ CLI amigável com comandos intuitivos ✅ **Pacote
+PyPI-ready** - Instalável com pip install
 
 ## 📦 Instalação
 
@@ -96,19 +101,21 @@ export GEMINI_API_KEY='sua-chave-aqui'
 ```
 
 **Obter chave da API:**
-1. Acesse [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Crie uma API key gratuita
-3. Configure a variável de ambiente acima
 
-**Nota:** A análise de imagens é opcional. Se não configurada, o app funcionará normalmente sem esta feature.
+1. Acesse [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. Crie uma API key gratuita
+1. Configure a variável de ambiente acima
+
+**Nota:** A análise de imagens é opcional. Se não configurada, o app funcionará normalmente sem esta
+feature.
 
 ## ⚙️ Configuração
 
 O aplicativo suporta configuração através de três fontes (em ordem de precedência):
 
 1. **Variáveis de ambiente** (.env ou sistema)
-2. **Arquivo config.yaml** (raiz do projeto)
-3. **Valores padrão** (configuração interna)
+1. **Arquivo config.yaml** (raiz do projeto)
+1. **Valores padrão** (configuração interna)
 
 ### Arquivo config.yaml
 
@@ -178,6 +185,7 @@ Variáveis de Ambiente > config.yaml > Valores Padrão
 ```
 
 **Exemplo:**
+
 - `config.yaml` define `chunk_size: 1000`
 - `.env` define `CHUNK_SIZE=5000`
 - **Resultado:** Usa `5000` (env tem prioridade)
@@ -185,6 +193,7 @@ Variáveis de Ambiente > config.yaml > Valores Padrão
 ### Validação Automática
 
 O sistema valida e ajusta automaticamente:
+
 - **chunk_size**: Forçado entre `min_chunk_size` e `max_chunk_size`
 - **log_level**: Deve ser DEBUG, INFO, WARNING, ERROR ou CRITICAL
 - Valores inválidos são corrigidos para defaults com aviso no log
@@ -207,21 +216,22 @@ print(config.to_dict())  # Mostra toda configuração carregada
 Se você tem o executável `PDF2MD.exe`:
 
 1. Execute `PDF2MD.exe`
-2. **Aprecie a interface moderna dark theme** com efeitos de glassmorphism
-3. Escolha uma das abas:
+1. **Aprecie a interface moderna dark theme** com efeitos de glassmorphism
+1. Escolha uma das abas:
    - **Extrair PDF**: Processa um único PDF
    - **Processamento em Lote**: Processa múltiplos PDFs
    - **Mesclar Processos**: Agrupa PDFs do mesmo processo
-4. Selecione arquivos/pasta
-5. Configure opções:
+1. Selecione arquivos/pasta
+1. Configure opções:
    - ✅ Normalizar texto
    - ✅ Incluir metadados
    - ✅ Estruturar seções
    - 🤖 **Analisar imagens (Gemini)** - Descreve imagens encontradas no PDF
-6. Clique no botão para processar
-7. Use os botões de exportação para abrir pasta ou salvar em outro local
+1. Clique no botão para processar
+1. Use os botões de exportação para abrir pasta ou salvar em outro local
 
 **Vantagens da GUI**:
+
 - ✅ Design moderno dark theme com animações suaves
 - ✅ Não requer Python instalado
 - ✅ Interface visual intuitiva e responsiva
@@ -241,7 +251,7 @@ python build_exe.py
 
 Veja [BUILD_GUIDE.md](BUILD_GUIDE.md) para instruções completas de empacotamento.
 
----
+______________________________________________________________________
 
 ### Interface de Linha de Comando (CLI)
 
@@ -299,10 +309,11 @@ python main.py merge ./data/input --process-number 0000865-32.2016.8.08.0012
 ```
 
 **Como funciona:**
+
 1. Busca PDFs recursivamente em `data/input/` e subpastas
-2. Agrupa automaticamente por número de processo (extraído do conteúdo ou nome)
-3. Cria um arquivo mesclado por processo (apenas se tiver 2+ PDFs)
-4. Move PDFs processados para `data/input/processado/` preservando estrutura
+1. Agrupa automaticamente por número de processo (extraído do conteúdo ou nome)
+1. Cria um arquivo mesclado por processo (apenas se tiver 2+ PDFs)
+1. Move PDFs processados para `data/input/processado/` preservando estrutura
 
 ### Extrair tabelas de PDFs
 
@@ -321,6 +332,7 @@ python main.py extract-tables documento.pdf --no-metadata
 ```
 
 **O que extrai:**
+
 - Detecta automaticamente tabelas estruturadas no PDF
 - Formato Markdown: uma tabela por página com metadados
 - Formato CSV: um arquivo por tabela
@@ -340,12 +352,14 @@ python main.py perf-report --reset
 ```
 
 **Métricas rastreadas:**
+
 - Tempo de normalização de texto
 - Tempo de extração de metadados
 - Tempo de chunking para RAG
 - Tempo de extração de tabelas
 
 **Exemplo de saída:**
+
 ```
 📊 Encontrados 3 processo(s) diferente(s):
    • Processo 0000865-32.2016.8.08.0012: 2 arquivo(s)
@@ -366,6 +380,7 @@ python main.py info documento.pdf
 ```
 
 Mostra:
+
 - Metadados do PDF (páginas, autor, data)
 - Número do processo
 - Partes
@@ -489,8 +504,8 @@ chunks = formatter.format_for_rag(clean_text, metadata, chunk_size=1000)
 
 for chunk in chunks:
     print(f"Chunk {chunk['chunk_index']}:")
-    print(chunk['text'][:100])
-    print(chunk['metadata'])
+    print(chunk["text"][:100])
+    print(chunk["metadata"])
 ```
 
 ## 📋 Exemplo de Saída
@@ -553,14 +568,15 @@ O projeto detecta automaticamente:
 O formato Markdown gerado é otimizado para:
 
 1. **Chunking semântico** - Seções hierárquicas facilitam divisão em chunks
-2. **Preservação de contexto** - Metadados mantidos com o texto
-3. **Tokenização limpa** - Texto normalizado melhora embeddings
-4. **Indexação** - Estrutura clara para busca vetorial
+1. **Preservação de contexto** - Metadados mantidos com o texto
+1. **Tokenização limpa** - Texto normalizado melhora embeddings
+1. **Indexação** - Estrutura clara para busca vetorial
 
 ### Exemplo de Pipeline RAG
 
 ```python
 from src import PyMuPDFExtractor, TextNormalizer, MetadataParser, MarkdownFormatter
+
 
 # Pipeline completo
 def process_for_rag(pdf_path):
@@ -582,6 +598,7 @@ def process_for_rag(pdf_path):
 
     return chunks
 
+
 # Usar com LangChain, LlamaIndex, etc.
 chunks = process_for_rag("processo.pdf")
 # → ingerir em vector store
@@ -590,27 +607,33 @@ chunks = process_for_rag("processo.pdf")
 ## 📚 Bibliotecas Utilizadas
 
 **Core:**
+
 - **PyMuPDF (fitz)** - Extração rápida e precisa de texto (60x mais rápido)
 - **Pillow (PIL)** - Processamento de imagens extraídas
 - **google-generativeai** - Análise de imagens com Gemini Vision API
 
 **Interface:**
+
 - **pywebview** - Interface gráfica moderna com HTML/CSS/JS
 - **click** - Interface CLI elegante
 
 **Utilidades:**
+
 - **tqdm** - Barras de progresso
 - **python-dotenv** - Gerenciamento de variáveis de ambiente
 
 **Build:**
+
 - **pyinstaller** - Empacotamento como executável Windows
 
 **Desenvolvimento:**
+
 - **pytest** - Framework de testes
 
 ## 🛠️ Melhorias Futuras
 
-- [ ] Suporte nativo a OCR para PDFs escaneados (veja [OCR_GUIDE.md](./OCR_GUIDE.md) para soluções atuais)
+- [ ] Suporte nativo a OCR para PDFs escaneados (veja [OCR_GUIDE.md](./OCR_GUIDE.md) para soluções
+  atuais)
 - [ ] Extração de tabelas estruturadas
 - [ ] Detecção automática de seções (NLP)
 - [ ] Cache de análises de imagens
@@ -626,19 +649,19 @@ chunks = process_for_rag("processo.pdf")
 
 Este projeto é licenciado sob a **MIT License**.
 
-Copyright (c) 2025 Lex Intelligentia
-Desenvolvido por Felipe Bertrand Sardenberg Moulin
+Copyright (c) 2025 Lex Intelligentia Desenvolvido por Felipe Bertrand Sardenberg Moulin
 
-Você tem permissão para usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias deste software, sujeito às condições da licença MIT.
+Você tem permissão para usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou
+vender cópias deste software, sujeito às condições da licença MIT.
 
 Veja o arquivo [LICENSE](./LICENSE) para o texto completo da licença.
 
 ## 👤 Autoria
 
-**Criado por**: [Lex Intelligentia](https://lexintelligentia.com)
-**Desenvolvedor**: Felipe Bertrand Sardenberg Moulin
+**Criado por**: [Lex Intelligentia](https://lexintelligentia.com) **Desenvolvedor**: Felipe Bertrand
+Sardenberg Moulin
 
----
+______________________________________________________________________
 
 ## 📦 Build e Distribuição
 
@@ -660,23 +683,25 @@ python build_exe.py
 ### Criar Instalador Windows
 
 1. Instale [Inno Setup](https://jrsoftware.org/isdl.php)
-2. Abra `installer.iss` no Inno Setup Compiler
-3. Clique em **Build → Compile** (F9)
+1. Abra `installer.iss` no Inno Setup Compiler
+1. Clique em **Build → Compile** (F9)
 
 **Resultado**: `Output/PDF2MD_Setup.exe` (instalador completo)
 
 ### Distribuição
 
 **Opções disponíveis**:
+
 1. **Executável**: `dist/PDF2MD.exe` - Stand-alone, copiar e executar
-2. **Portável**: `dist/PDF2MD_Portable.zip` - Pacote ZIP com docs
-3. **Instalador**: `Output/PDF2MD_Setup.exe` - Instalação completa
+1. **Portável**: `dist/PDF2MD_Portable.zip` - Pacote ZIP com docs
+1. **Instalador**: `Output/PDF2MD_Setup.exe` - Instalação completa
 
 **Guia completo**: Ver [BUILD_GUIDE.md](./BUILD_GUIDE.md)
 
----
+______________________________________________________________________
 
 **Documentação complementar:**
+
 - [BUILD_GUIDE.md](./BUILD_GUIDE.md) - **Build, empacotamento e distribuição**
 - [WORKFLOW.md](./WORKFLOW.md) - Guia completo de uso CLI
 - [OCR_GUIDE.md](./OCR_GUIDE.md) - Como processar PDFs escaneados

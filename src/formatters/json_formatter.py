@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
 from ..utils.logger import get_logger
@@ -32,7 +33,7 @@ class JSONFormatter:
         metadata: DocumentMetadata | None = None,
         include_metadata: bool = True,
         hierarchical: bool = False,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Format text as structured JSON dictionary.
 
@@ -50,7 +51,10 @@ class JSONFormatter:
             metadata = self.metadata_parser.parse(text)
 
         # Build base structure
-        result = {"format_version": "1.0", "document_type": self._determine_document_type(metadata)}
+        result: dict[str, Any] = {
+            "format_version": "1.0",
+            "document_type": self._determine_document_type(metadata),
+        }
 
         # Add metadata
         if include_metadata:
@@ -92,7 +96,7 @@ class JSONFormatter:
         data = self.format(text, metadata, include_metadata, hierarchical)
         return json.dumps(data, ensure_ascii=False, indent=indent)
 
-    def _format_metadata(self, metadata: DocumentMetadata) -> dict:
+    def _format_metadata(self, metadata: DocumentMetadata) -> dict[str, Any]:
         """
         Convert metadata to JSON-serializable dictionary.
 
@@ -140,7 +144,7 @@ class JSONFormatter:
         else:
             return "legal_document"
 
-    def _format_hierarchical(self, text: str, metadata: DocumentMetadata) -> dict:
+    def _format_hierarchical(self, text: str, metadata: DocumentMetadata) -> dict[str, Any]:
         """
         Format content with hierarchical structure (experimental).
 
@@ -156,7 +160,7 @@ class JSONFormatter:
         # Split into paragraphs
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
 
-        result = {
+        result: dict[str, Any] = {
             "text": text,
             "character_count": len(text),
             "word_count": len(text.split()),
@@ -171,7 +175,7 @@ class JSONFormatter:
         return result
 
     @staticmethod
-    def save_to_file(data: dict, output_path: str, indent: int | None = 2) -> None:
+    def save_to_file(data: dict, output_path: str | Path, indent: int | None = 2) -> None:
         """
         Save JSON data to file.
 
@@ -183,7 +187,7 @@ class JSONFormatter:
         Raises:
             OSError: If file write fails
         """
-        output_path = Path(output_path)
+        output_path = Path(output_path) if isinstance(output_path, str) else output_path
         logger.info(f"Saving JSON to: {output_path}")
 
         # Create output directory if needed

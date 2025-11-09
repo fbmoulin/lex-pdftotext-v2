@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
 from ..utils.cache import get_performance_monitor
@@ -160,7 +161,7 @@ class MarkdownFormatter:
     @performance.track("rag_chunking")
     def format_for_rag(
         self, text: str, metadata: DocumentMetadata | None = None, chunk_size: int = 1000
-    ) -> list[dict[str, str]]:
+    ) -> list[dict[str, Any]]:
         """
         Format document optimized for RAG ingestion.
 
@@ -226,7 +227,7 @@ class MarkdownFormatter:
 
     def _create_chunk(
         self, text: str, base_metadata: dict[str, str], chunk_index: int
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         """Create a chunk dictionary with metadata."""
         return {
             "text": text,
@@ -236,7 +237,7 @@ class MarkdownFormatter:
 
     def _build_chunks_from_sentences(
         self, sentences: list[str], base_metadata: dict[str, str], chunk_size: int
-    ) -> list[dict[str, str]]:
+    ) -> list[dict[str, Any]]:
         """Build chunks from sentences, respecting size limits."""
         chunks = []
         current_chunk = ""
@@ -299,7 +300,7 @@ class MarkdownFormatter:
         return word_chunk, chunk_index
 
     @staticmethod
-    def save_to_file(content: str, output_path: str) -> None:
+    def save_to_file(content: str, output_path: str | Path) -> None:
         """
         Save formatted content to file using atomic write.
 
@@ -313,7 +314,7 @@ class MarkdownFormatter:
         Raises:
             OSError: If file write or rename fails
         """
-        output_path = Path(output_path)
+        output_path = Path(output_path) if isinstance(output_path, str) else output_path
         logger.info(f"Saving content to: {output_path}")
 
         # Create output directory if it doesn't exist

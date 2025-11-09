@@ -1,10 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+repository.
 
 ## Project Overview
 
-This project extracts and structures text from Brazilian judicial PDF documents (PJe format), removing irrelevant elements (logos, page numbers) and organizing content into hierarchical Markdown format with metadata, optimized for RAG pipelines, legal analysis systems, and automation tools.
+This project extracts and structures text from Brazilian judicial PDF documents (PJe format),
+removing irrelevant elements (logos, page numbers) and organizing content into hierarchical Markdown
+format with metadata, optimized for RAG pipelines, legal analysis systems, and automation tools.
 
 ## Development Setup
 
@@ -59,28 +62,33 @@ PDF Input → Extractor → Normalizer → MetadataParser → Formatter → Outp
 ### Module Responsibilities
 
 1. **`src/extractors/`** - PDF extraction layer
+
    - `base.py`: Abstract interface (PDFExtractor) defining extraction contract
    - `pymupdf_extractor.py`: PyMuPDF implementation (context manager pattern)
    - `table_extractor.py`: Table detection and extraction using pdfplumber
    - Responsibility: Raw text and table extraction with page breaks
 
-2. **`src/processors/`** - Text processing layer
+1. **`src/processors/`** - Text processing layer
+
    - `text_normalizer.py`: UPPERCASE → sentence case conversion, noise removal
    - `metadata_parser.py`: Extract structured metadata using regex patterns
    - Responsibility: Clean and analyze raw text
 
-3. **`src/formatters/`** - Output formatting layer
+1. **`src/formatters/`** - Output formatting layer
+
    - `markdown_formatter.py`: Generate hierarchical Markdown, RAG chunks
    - `json_formatter.py`: Export structured data as JSON
    - `table_formatter.py`: Format tables as Markdown or CSV
    - Responsibility: Structure output for different use cases
 
-4. **`src/utils/`** - Shared utilities
+1. **`src/utils/`** - Shared utilities
+
    - `patterns.py`: 15+ regex patterns for PJe document parsing
    - `cache.py`: Performance monitoring and image description caching
    - Responsibility: Domain-specific pattern matching and caching
 
-5. **`main.py`** - CLI interface (Click-based)
+1. **`main.py`** - CLI interface (Click-based)
+
    - Commands: `extract`, `batch`, `merge`, `extract-tables`, `perf-report`, `info`
    - Orchestrates the full pipeline
 
@@ -104,6 +112,7 @@ PDF Input → Extractor → Normalizer → MetadataParser → Formatter → Outp
 ### Metadata Extraction (src/processors/metadata_parser.py)
 
 Automatically detects from text:
+
 - **Process numbers**: CNJ format `NNNNNNN-DD.AAAA.J.TT.OOOO`
 - **Document IDs**: `Num. XXXXXXXX` (8 digits)
 - **Lawyers**: `Name – OAB/ST 12345`
@@ -160,16 +169,17 @@ Automatically detects from text:
 All patterns are in `src/utils/patterns.py`:
 
 ```python
-RegexPatterns.DOC_ID           # Num. 12345678
-RegexPatterns.PROCESS_NUMBER   # NNNNNNN-DD.AAAA.J.TT.OOOO
-RegexPatterns.LAWYER_OAB       # Name – OAB/UF 12345
-RegexPatterns.SIGNATURE_DATE   # assinado eletronicamente em DD/MM/AAAA
-RegexPatterns.LEGAL_ACRONYMS   # OAB|STF|STJ|CPC|... (preserve in UPPERCASE)
+RegexPatterns.DOC_ID  # Num. 12345678
+RegexPatterns.PROCESS_NUMBER  # NNNNNNN-DD.AAAA.J.TT.OOOO
+RegexPatterns.LAWYER_OAB  # Name – OAB/UF 12345
+RegexPatterns.SIGNATURE_DATE  # assinado eletronicamente em DD/MM/AAAA
+RegexPatterns.LEGAL_ACRONYMS  # OAB|STF|STJ|CPC|... (preserve in UPPERCASE)
 ```
 
 ## Integration Context
 
 Output is designed for:
+
 - **RAG pipelines**: Markdown format optimized for semantic chunking
 - **Legal AI systems**: Lex Intelligentia FIRAC+ analysis
 - **Automation**: n8n, Zapier workflows
@@ -185,6 +195,7 @@ Output is designed for:
 ## Testing Strategy
 
 Located in `tests/test_extraction.py`:
+
 - Unit tests for regex patterns
 - Text normalization validation
 - Metadata extraction verification

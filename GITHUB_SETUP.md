@@ -3,18 +3,24 @@
 ## 📋 Passo 1: Criar Repositório no GitHub
 
 1. Acesse https://github.com
-2. Faça login na sua conta
-3. Clique no botão **"+"** no canto superior direito
-4. Selecione **"New repository"**
+1. Faça login na sua conta
+1. Clique no botão **"+"** no canto superior direito
+1. Selecione **"New repository"**
 
 ### Configurações do Repositório
 
 - **Repository name**: `pdftotext` ou `pdf-legal-extractor`
-- **Description**: `Extração inteligente de texto de documentos judiciais brasileiros (PJe) - Interface GUI e CLI`
+
+- **Description**:
+  `Extração inteligente de texto de documentos judiciais brasileiros (PJe) - Interface GUI e CLI`
+
 - **Visibility**:
+
   - ✅ **Public** (recomendado) - Compartilhar com comunidade
   - ou **Private** - Apenas você tem acesso
+
 - **Initialize repository**:
+
   - ❌ **NÃO** marque "Add a README file"
   - ❌ **NÃO** marque "Add .gitignore"
   - ❌ **NÃO** marque "Choose a license"
@@ -26,13 +32,14 @@
 ### Copie a URL do Repositório
 
 Após criar, você verá a URL, algo como:
+
 ```
 https://github.com/fbmoulin/pdftotext.git
 ```
 
 **COPIE ESSA URL!** Vamos usá-la nos próximos passos.
 
----
+______________________________________________________________________
 
 ## 📋 Passo 2: Configurar Git Localmente (Se Necessário)
 
@@ -46,7 +53,7 @@ git config --global user.name
 git config --global user.email
 ```
 
----
+______________________________________________________________________
 
 ## 📋 Passo 3: Inicializar e Fazer Commit Inicial
 
@@ -86,9 +93,10 @@ git remote -v
 git push -u origin main
 ```
 
-**IMPORTANTE**: Substitua `https://github.com/fbmoulin/pdftotext.git` pela URL que você copiou no Passo 1!
+**IMPORTANTE**: Substitua `https://github.com/fbmoulin/pdftotext.git` pela URL que você copiou no
+Passo 1!
 
----
+______________________________________________________________________
 
 ## 📋 Passo 4: Autenticação
 
@@ -97,12 +105,12 @@ git push -u origin main
 Se aparecer pedindo senha, **NÃO use sua senha do GitHub** (não funciona mais).
 
 1. Acesse https://github.com/settings/tokens
-2. Clique em **"Generate new token"** → **"Generate new token (classic)"**
-3. Dê um nome: `pdftotext-repo`
-4. Marque os escopos: `repo` (todos)
-5. Clique em **"Generate token"**
-6. **COPIE O TOKEN** (só aparece uma vez!)
-7. Quando pedir senha no terminal, **cole o token**
+1. Clique em **"Generate new token"** → **"Generate new token (classic)"**
+1. Dê um nome: `pdftotext-repo`
+1. Marque os escopos: `repo` (todos)
+1. Clique em **"Generate token"**
+1. **COPIE O TOKEN** (só aparece uma vez!)
+1. Quando pedir senha no terminal, **cole o token**
 
 ### Opção 2: SSH (Alternativa)
 
@@ -118,19 +126,20 @@ cat ~/.ssh/id_ed25519.pub
 ```
 
 Depois, use URL SSH ao invés de HTTPS:
+
 ```bash
 git remote set-url origin git@github.com:fbmoulin/pdftotext.git
 ```
 
----
+______________________________________________________________________
 
 ## 📋 Passo 5: Verificar no GitHub
 
 1. Acesse `https://github.com/seu-usuario/pdftotext`
-2. Você deve ver todos os arquivos
-3. O README.md será exibido automaticamente na página principal
+1. Você deve ver todos os arquivos
+1. O README.md será exibido automaticamente na página principal
 
----
+______________________________________________________________________
 
 ## 🏷️ Passo 6: Criar Tags de Versão (Opcional)
 
@@ -152,7 +161,7 @@ git push origin v1.0.0
 git push --tags
 ```
 
----
+______________________________________________________________________
 
 ## 📝 Comandos Futuros (Após Mudanças)
 
@@ -181,7 +190,7 @@ git commit -m "test: Adição de testes"
 git commit -m "chore: Tarefas de manutenção"
 ```
 
----
+______________________________________________________________________
 
 ## 🎨 Adicionar Badge ao README (Opcional)
 
@@ -193,7 +202,7 @@ Adicione ao topo do README.md:
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 ```
 
----
+______________________________________________________________________
 
 ## 🔧 Troubleshooting
 
@@ -223,7 +232,7 @@ git pull origin main --rebase
 git push origin main
 ```
 
----
+______________________________________________________________________
 
 ## 📊 Depois de Publicar
 
@@ -234,22 +243,23 @@ Adicione screenshots, GIFs, exemplos visuais.
 ### GitHub Pages
 
 Se quiser hospedar documentação:
+
 ```bash
 # Settings → Pages → Source: main branch / docs folder
 ```
 
 ### GitHub Actions
 
-Criar workflow de CI/CD para testes automáticos:
-`.github/workflows/test.yml`
+Criar workflow de CI/CD para testes automáticos: `.github/workflows/test.yml`
 
 ### Issues e Discussions
 
 Habilite:
+
 - Settings → Features → ✅ Issues
 - Settings → Features → ✅ Discussions
 
----
+______________________________________________________________________
 
 ## 📚 Recursos Adicionais
 
@@ -257,6 +267,6 @@ Habilite:
 - [Git Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 
----
+______________________________________________________________________
 
 **Pronto!** Seu projeto estará no GitHub e disponível para a comunidade. 🎉

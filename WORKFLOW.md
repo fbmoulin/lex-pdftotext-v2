@@ -20,7 +20,8 @@ data/
 
 ### Processo com Múltiplos Volumes
 
-Quando um processo tem múltiplos PDFs (volumes, anexos, etc.), organize-os em uma **subpasta** com o número do processo:
+Quando um processo tem múltiplos PDFs (volumes, anexos, etc.), organize-os em uma **subpasta** com o
+número do processo:
 
 ```bash
 mkdir -p data/input/0000865-32.2016.8.08.0012
@@ -49,6 +50,7 @@ python main.py extract data/input/processo.pdf -o saida.md --no-normalize
 ```
 
 **Resultado:**
+
 - Cria: `processo.md`
 - Move: `data/input/processo.pdf` → `data/input/processado/processo.pdf`
 
@@ -64,6 +66,7 @@ python main.py batch data/input --format txt --no-metadata
 ```
 
 **Resultado:**
+
 - Cria: `data/output/*.md` (um por PDF)
 - Move: Todos PDFs → `data/input/processado/`
 
@@ -81,13 +84,15 @@ python main.py merge data/input --process-number 0000865-32.2016.8.08.0012
 ```
 
 **Comportamento:**
+
 1. Busca PDFs em `data/input/` e subpastas
-2. Agrupa por número de processo (extraído do conteúdo ou nome do arquivo)
-3. Cria um arquivo mesclado por processo (apenas se tiver 2+ PDFs)
-4. **Move PDFs processados** para `processado/` preservando estrutura de subpastas
-5. Pula processos com apenas 1 PDF (a menos que use `--process-number`)
+1. Agrupa por número de processo (extraído do conteúdo ou nome do arquivo)
+1. Cria um arquivo mesclado por processo (apenas se tiver 2+ PDFs)
+1. **Move PDFs processados** para `processado/` preservando estrutura de subpastas
+1. Pula processos com apenas 1 PDF (a menos que use `--process-number`)
 
 **Resultado:**
+
 ```
 📊 Encontrados 3 processo(s) diferente(s):
    • Processo 0000865-32.2016.8.08.0012: 2 arquivo(s)
@@ -156,8 +161,8 @@ python main.py extract data/input/processo.pdf
 ### Por Que Mover PDFs?
 
 1. **Organização**: Separar PDFs já processados dos pendentes
-2. **Segurança**: Evitar reprocessamento acidental
-3. **Limpeza**: Após validar os .md, pode deletar PDFs processados para economizar espaço
+1. **Segurança**: Evitar reprocessamento acidental
+1. **Limpeza**: Após validar os .md, pode deletar PDFs processados para economizar espaço
 
 ### Estrutura Preservada
 
@@ -196,8 +201,8 @@ rm -rf data/input/processado/0000865-32.2016.8.08.0012
 O sistema detecta o número do processo em ordem de prioridade:
 
 1. **Conteúdo do PDF**: Regex CNJ `NNNNNNN-DD.AAAA.J.TT.OOOO`
-2. **Nome do arquivo**: Se não encontrar no conteúdo
-3. **"UNKNOWN"**: Se não encontrar em nenhum lugar (ainda assim mescla)
+1. **Nome do arquivo**: Se não encontrar no conteúdo
+1. **"UNKNOWN"**: Se não encontrar em nenhum lugar (ainda assim mescla)
 
 ### Formato CNJ Esperado
 
@@ -295,11 +300,11 @@ python main.py extract documento.pdf --no-normalize --no-metadata -o raw.txt
 Após gerar os .md:
 
 1. **Validar**: Revisar arquivos gerados em `data/output/`
-2. **RAG**: Importar para pipeline de IA (Qdrant, Pinecone, etc.)
-3. **Limpar**: Deletar PDFs em `processado/` se confirmado OK
-4. **Organizar**: Mover .md para repositório de documentos
+1. **RAG**: Importar para pipeline de IA (Qdrant, Pinecone, etc.)
+1. **Limpar**: Deletar PDFs em `processado/` se confirmado OK
+1. **Organizar**: Mover .md para repositório de documentos
 
----
+______________________________________________________________________
 
-**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg Moulin
-**Licença**: MIT License - Ver [LICENSE](./LICENSE)
+**Desenvolvido por**: [Lex Intelligentia](https://lexintelligentia.com) - Felipe Bertrand Sardenberg
+Moulin **Licença**: MIT License - Ver [LICENSE](./LICENSE)
