@@ -29,7 +29,12 @@ pytest tests/test_extraction.py::TestRegexPatterns::test_extract_document_ids -v
 ```bash
 # CLI Usage
 python main.py extract documento.pdf              # Extract single PDF
+python main.py extract documento.pdf --format json # Export as JSON
 python main.py batch ./data/input                 # Batch process directory
+python main.py merge ./data/input                 # Merge PDFs by process number
+python main.py extract-tables documento.pdf       # Extract tables from PDF
+python main.py extract-tables doc.pdf --format csv # Extract tables as CSV
+python main.py perf-report                        # Show performance metrics
 python main.py info documento.pdf                 # Show metadata only
 
 # Programmatic Usage Examples
@@ -38,6 +43,7 @@ python example.py data/input/processo.pdf         # Run all examples
 # Testing
 pytest tests/ -v                                  # Run all tests
 pytest tests/test_extraction.py -v               # Run specific test file
+pytest tests/test_table_extraction.py -v         # Run table extraction tests
 ```
 
 ## Architecture Overview
@@ -52,10 +58,11 @@ PDF Input → Extractor → Normalizer → MetadataParser → Formatter → Outp
 
 ### Module Responsibilities
 
-1. **`src/extractors/`** - PDF text extraction layer
+1. **`src/extractors/`** - PDF extraction layer
    - `base.py`: Abstract interface (PDFExtractor) defining extraction contract
    - `pymupdf_extractor.py`: PyMuPDF implementation (context manager pattern)
-   - Responsibility: Raw text extraction with page breaks
+   - `table_extractor.py`: Table detection and extraction using pdfplumber
+   - Responsibility: Raw text and table extraction with page breaks
 
 2. **`src/processors/`** - Text processing layer
    - `text_normalizer.py`: UPPERCASE → sentence case conversion, noise removal
@@ -64,14 +71,17 @@ PDF Input → Extractor → Normalizer → MetadataParser → Formatter → Outp
 
 3. **`src/formatters/`** - Output formatting layer
    - `markdown_formatter.py`: Generate hierarchical Markdown, RAG chunks
+   - `json_formatter.py`: Export structured data as JSON
+   - `table_formatter.py`: Format tables as Markdown or CSV
    - Responsibility: Structure output for different use cases
 
 4. **`src/utils/`** - Shared utilities
    - `patterns.py`: 15+ regex patterns for PJe document parsing
-   - Responsibility: Domain-specific pattern matching
+   - `cache.py`: Performance monitoring and image description caching
+   - Responsibility: Domain-specific pattern matching and caching
 
 5. **`main.py`** - CLI interface (Click-based)
-   - Three commands: `extract`, `batch`, `info`
+   - Commands: `extract`, `batch`, `merge`, `extract-tables`, `perf-report`, `info`
    - Orchestrates the full pipeline
 
 ### Key Design Patterns
@@ -109,6 +119,41 @@ Automatically detects from text:
   - Default chunk size: 1000 characters
   - Paragraph-aware splitting
   - Each chunk includes: `{text, metadata, chunk_index}`
+
+### Table Extraction (src/extractors/table_extractor.py)
+
+- `extract_tables()`: Extract all tables from PDF with pdfplumber
+  - Returns list of tables with metadata: page, bbox, data, rows, cols
+  - Configurable table detection settings
+- `extract_tables_as_csv()`: Export tables to separate CSV files
+- `has_tables()`: Check if PDF contains tables
+- Performance tracked with `@performance.track("table_extraction")`
+
+### Table Formatting (src/formatters/table_formatter.py)
+
+- `format_table()`: Convert table data to Markdown tables
+  - Supports custom alignment (left/right/center)
+  - Handles None values, uneven rows, pipe escaping
+- `format_table_with_caption()`: Add captions and metadata
+- `detect_alignment()`: Auto-detect numeric columns for right-alignment
+- `format_all_tables()`: Batch format multiple tables
+
+### JSON Export (src/formatters/json_formatter.py)
+
+- `format()`: Convert processed text to structured JSON
+  - Hierarchical or flat mode
+  - Includes metadata, document type, sections
+- `format_to_string()`: JSON export with custom indentation
+- Used by CLI `--format json` option
+
+### Performance Monitoring (src/utils/cache.py)
+
+- `PerformanceMonitor`: Track operation timing
+  - Decorator pattern: `@performance.track("operation_name")`
+  - Tracks: text_normalization, metadata_extraction, rag_chunking, table_extraction
+- `get_metrics()`: Get performance statistics
+- `report()`: Generate human-readable performance report
+- Used by `perf-report` CLI command
 
 ## Important Regex Patterns
 

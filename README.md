@@ -28,6 +28,7 @@ Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, r
 ### Extração e Processamento
 ✅ Extração rápida e precisa de texto (PyMuPDF - 60x mais rápido)
 ✅ **Análise de imagens com IA** - Detecta e descreve imagens usando Google Gemini Vision
+✅ **Extração de tabelas** - Detecta e extrai tabelas estruturadas do PDF (Markdown ou CSV)
 ✅ Remoção automática de ruído:
   - Logos, URLs, códigos de verificação
   - Rodapés repetitivos de escritórios de advocacia
@@ -48,13 +49,15 @@ Este projeto extrai texto completo de PDFs de processos judiciais brasileiros, r
 ### Interface e Organização
 ✅ **Interface moderna dark theme** - Design sofisticado com glassmorphism e animações
 ✅ Detecção automática de tipo de documento (petição inicial, decisão, certidão)
-✅ Saída estruturada em Markdown hierárquico
+✅ Saída estruturada em Markdown hierárquico ou JSON
+✅ **Monitoramento de performance** - Rastreamento de métricas de processamento
 ✅ Processamento em lote (batch)
 ✅ **Merge inteligente** - Mescla automaticamente PDFs do mesmo processo
 ✅ **Organização automática** - Move PDFs processados para pasta separada
 ✅ **Busca recursiva** - Processa subpastas (processos com múltiplos volumes)
 ✅ **Exportação flexível** - Abrir pasta ou salvar em local personalizado
 ✅ CLI amigável com comandos intuitivos
+✅ **Pacote PyPI-ready** - Instalável com pip install
 
 ## 📦 Instalação
 
@@ -262,6 +265,9 @@ python main.py extract documento.pdf -o saida.md
 # Saída em texto plano (sem Markdown)
 python main.py extract documento.pdf --format txt
 
+# Saída em JSON estruturado
+python main.py extract documento.pdf --format json
+
 # Sem normalização de texto (preservar UPPERCASE)
 python main.py extract documento.pdf --no-normalize
 
@@ -297,6 +303,47 @@ python main.py merge ./data/input --process-number 0000865-32.2016.8.08.0012
 2. Agrupa automaticamente por número de processo (extraído do conteúdo ou nome)
 3. Cria um arquivo mesclado por processo (apenas se tiver 2+ PDFs)
 4. Move PDFs processados para `data/input/processado/` preservando estrutura
+
+### Extrair tabelas de PDFs
+
+```bash
+# Extrair todas as tabelas como Markdown
+python main.py extract-tables documento.pdf
+
+# Extrair tabelas como arquivos CSV separados
+python main.py extract-tables documento.pdf --format csv
+
+# Especificar pasta de saída para CSVs
+python main.py extract-tables documento.pdf --format csv -o ./tabelas/
+
+# Sem metadados das tabelas (página, posição)
+python main.py extract-tables documento.pdf --no-metadata
+```
+
+**O que extrai:**
+- Detecta automaticamente tabelas estruturadas no PDF
+- Formato Markdown: uma tabela por página com metadados
+- Formato CSV: um arquivo por tabela
+- Alinhamento automático de colunas numéricas
+
+### Ver métricas de performance
+
+```bash
+# Mostrar estatísticas de processamento
+python main.py perf-report
+
+# Exportar métricas como JSON
+python main.py perf-report --json
+
+# Resetar métricas após visualizar
+python main.py perf-report --reset
+```
+
+**Métricas rastreadas:**
+- Tempo de normalização de texto
+- Tempo de extração de metadados
+- Tempo de chunking para RAG
+- Tempo de extração de tabelas
 
 **Exemplo de saída:**
 ```
