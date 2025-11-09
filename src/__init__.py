@@ -3,12 +3,7 @@
 __version__ = "0.1.0"
 
 from .extractors import PyMuPDFExtractor
-from .processors import TextNormalizer, MetadataParser
 from .formatters import MarkdownFormatter
+from .processors import MetadataParser, TextNormalizer
 
-__all__ = [
-    'PyMuPDFExtractor',
-    'TextNormalizer',
-    'MetadataParser',
-    'MarkdownFormatter'
-]
+__all__ = ["PyMuPDFExtractor", "TextNormalizer", "MetadataParser", "MarkdownFormatter"]

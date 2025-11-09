@@ -5,26 +5,32 @@ PDF Legal Text Extractor - GUI Application
 Interface gráfica para extração de texto de PDFs judiciais brasileiros.
 """
 
-import sys
 import os
-from pathlib import Path
-import webview
 import shutil
+import sys
+from pathlib import Path
+
+import webview
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-env_path = Path(__file__).parent / '.env'
+env_path = Path(__file__).parent / ".env"
 load_dotenv(env_path)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.extractors import PyMuPDFExtractor
-from src.processors import TextNormalizer, MetadataParser, ImageAnalyzer, format_image_description_markdown
 from src.formatters import MarkdownFormatter
-from src.utils.exceptions import PDFExtractionError
-from src.utils.logger import setup_logger, get_logger
+from src.processors import (
+    ImageAnalyzer,
+    MetadataParser,
+    TextNormalizer,
+    format_image_description_markdown,
+)
 from src.utils.config import get_config
+from src.utils.exceptions import PDFExtractionError
+from src.utils.logger import get_logger, setup_logger
 
 # Load configuration
 config = get_config()
@@ -53,7 +59,7 @@ def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
         # Handle existing destination
         if dest.exists():
             if create_backup:
-                backup_path = dest.with_suffix(dest.suffix + '.bak')
+                backup_path = dest.with_suffix(dest.suffix + ".bak")
                 logger.warning(f"Destination exists, creating backup: {backup_path}")
                 shutil.copy2(str(dest), str(backup_path))
             else:
@@ -92,14 +98,11 @@ class API:
             str: Selected folder path
         """
         try:
-            result = self.window.create_file_dialog(
-                webview.FOLDER_DIALOG,
-                allow_multiple=False
-            )
+            result = self.window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
             if result and len(result) > 0:
                 return result[0]
             return None
-        except Exception as e:
+        except Exception:
             return None
 
     def select_file(self):
@@ -111,14 +114,12 @@ class API:
         """
         try:
             result = self.window.create_file_dialog(
-                webview.OPEN_DIALOG,
-                file_types=('PDF Files (*.pdf)',),
-                allow_multiple=False
+                webview.OPEN_DIALOG, file_types=("PDF Files (*.pdf)",), allow_multiple=False
             )
             if result and len(result) > 0:
                 return result[0]
             return None
-        except Exception as e:
+        except Exception:
             return None
 
     def open_folder(self, file_path=None):
@@ -132,8 +133,8 @@ class API:
             dict: Success status
         """
         try:
-            import subprocess
             import platform
+            import subprocess
 
             # Use provided path or last output path
             if file_path is None:
@@ -143,16 +144,16 @@ class API:
 
             folder_path = Path(file_path).parent
 
-            if platform.system() == 'Windows':
+            if platform.system() == "Windows":
                 os.startfile(folder_path)
-            elif platform.system() == 'Darwin':  # macOS
-                subprocess.run(['open', folder_path])
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.run(["open", folder_path])
             else:  # Linux
-                subprocess.run(['xdg-open', folder_path])
+                subprocess.run(["xdg-open", folder_path])
 
-            return {'success': True, 'message': f'Pasta aberta: {folder_path}'}
+            return {"success": True, "message": f"Pasta aberta: {folder_path}"}
         except Exception as e:
-            return {'success': False, 'message': f'Erro ao abrir pasta: {str(e)}'}
+            return {"success": False, "message": f"Erro ao abrir pasta: {str(e)}"}
 
     def save_as(self):
         """
@@ -168,18 +169,19 @@ class API:
             result = self.window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=Path(self.last_output_path).name,
-                file_types=('Markdown Files (*.md)',)
+                file_types=("Markdown Files (*.md)",),
             )
 
             if result:
                 # Copy file to new location
                 import shutil
-                shutil.copy2(self.last_output_path, result)
-                return {'success': True, 'path': result, 'message': f'Arquivo salvo em: {result}'}
 
-            return {'success': False, 'message': 'Operação cancelada'}
+                shutil.copy2(self.last_output_path, result)
+                return {"success": True, "path": result, "message": f"Arquivo salvo em: {result}"}
+
+            return {"success": False, "message": "Operação cancelada"}
         except Exception as e:
-            return {'success': False, 'message': f'Erro: {str(e)}'}
+            return {"success": False, "message": f"Erro: {str(e)}"}
 
     def extract_pdf(self, pdf_path, options):
         """
@@ -196,7 +198,7 @@ class API:
             pdf_path = Path(pdf_path)
 
             # Generate output path
-            output_path = pdf_path.with_suffix('.md')
+            output_path = pdf_path.with_suffix(".md")
 
             # Extract text and images
             with PyMuPDFExtractor(pdf_path) as extractor:
@@ -205,11 +207,11 @@ class API:
 
                 # Extract images if option is enabled
                 images = []
-                if options.get('analyze_images', False):
+                if options.get("analyze_images", False):
                     images = extractor.extract_images()
 
             # Process text
-            if options.get('normalize', True):
+            if options.get("normalize", True):
                 normalizer = TextNormalizer()
                 processed_text = normalizer.normalize(raw_text)
                 processed_text = normalizer.remove_page_markers(processed_text)
@@ -222,12 +224,11 @@ class API:
 
             # Analyze images if any were found and option is enabled
             image_descriptions = ""
-            if images and options.get('analyze_images', False):
+            if images and options.get("analyze_images", False):
                 try:
                     analyzer = ImageAnalyzer()
                     analyzed_images = analyzer.describe_images_batch(
-                        images,
-                        context="documento judicial brasileiro"
+                        images, context="documento judicial brasileiro"
                     )
 
                     # Format image descriptions
@@ -235,7 +236,7 @@ class API:
                     for idx, img_data in enumerate(analyzed_images, 1):
                         image_descriptions += format_image_description_markdown(img_data, idx)
 
-                except ValueError as e:
+                except ValueError:
                     # API key not configured - skip image analysis
                     image_descriptions = f"\n\n## ⚠️ Imagens Detectadas\n\n{len(images)} imagem(ns) encontrada(s), mas análise não foi possível (configure GEMINI_API_KEY).\n\n"
                 except Exception as e:
@@ -245,16 +246,13 @@ class API:
             # Format output
             formatter = MarkdownFormatter()
 
-            if options.get('structured', False):
-                output_text = formatter.format_with_sections(
-                    processed_text,
-                    doc_metadata
-                )
+            if options.get("structured", False):
+                output_text = formatter.format_with_sections(processed_text, doc_metadata)
             else:
                 output_text = formatter.format(
                     processed_text,
                     doc_metadata,
-                    include_metadata_header=options.get('metadata', True)
+                    include_metadata_header=options.get("metadata", True),
                 )
 
             # Append image descriptions
@@ -268,7 +266,7 @@ class API:
             self.last_output_path = str(output_path)
 
             # Move to processed
-            processado_dir = pdf_path.parent / 'processado'
+            processado_dir = pdf_path.parent / "processado"
             new_pdf_path = processado_dir / pdf_path.name
 
             # Build success message
@@ -280,16 +278,16 @@ class API:
                 message += f"\n🖼️ {len(images)} imagem(ns) processada(s)"
 
             return {
-                'success': True,
-                'output_path': str(output_path),
-                'pdf_moved': str(new_pdf_path),
-                'message': message
+                "success": True,
+                "output_path": str(output_path),
+                "pdf_moved": str(new_pdf_path),
+                "message": message,
             }
 
         except PDFExtractionError as e:
-            return {'success': False, 'message': f"❌ Erro ao processar PDF: {str(e)}"}
+            return {"success": False, "message": f"❌ Erro ao processar PDF: {str(e)}"}
         except Exception as e:
-            return {'success': False, 'message': f"❌ Erro inesperado: {str(e)}"}
+            return {"success": False, "message": f"❌ Erro inesperado: {str(e)}"}
 
     def batch_process(self, input_dir, options):
         """
@@ -306,16 +304,16 @@ class API:
             input_dir = Path(input_dir)
 
             # Determine output directory
-            output_dir = options.get('output_dir')
+            output_dir = options.get("output_dir")
             if output_dir:
                 output_dir = Path(output_dir)
             else:
-                output_dir = input_dir / 'output'
+                output_dir = input_dir / "output"
 
             output_dir.mkdir(parents=True, exist_ok=True)
 
             # Find all PDFs
-            pdf_files = list(input_dir.glob('*.pdf'))
+            pdf_files = list(input_dir.glob("*.pdf"))
 
             if not pdf_files:
                 raise Exception(f"Nenhum arquivo PDF encontrado em: {input_dir}")
@@ -332,7 +330,7 @@ class API:
                         raw_text = extractor.extract_text()
 
                     # Process text
-                    if options.get('normalize', True):
+                    if options.get("normalize", True):
                         normalizer = TextNormalizer()
                         processed_text = normalizer.normalize(raw_text)
                         processed_text = normalizer.remove_page_markers(processed_text)
@@ -348,15 +346,15 @@ class API:
                     output_text = formatter.format(
                         processed_text,
                         doc_metadata,
-                        include_metadata_header=options.get('metadata', True)
+                        include_metadata_header=options.get("metadata", True),
                     )
 
                     # Save to file
-                    output_path = output_dir / pdf_path.with_suffix('.md').name
+                    output_path = output_dir / pdf_path.with_suffix(".md").name
                     MarkdownFormatter.save_to_file(output_text, str(output_path))
 
                     # Move processed PDF
-                    processado_dir = input_dir / 'processado'
+                    processado_dir = input_dir / "processado"
                     new_pdf_path = processado_dir / pdf_path.name
 
                     if not safe_move_file(pdf_path, new_pdf_path):
@@ -369,7 +367,7 @@ class API:
                     errors.append(f"{pdf_path.name}: {str(e)}")
 
             # Summary
-            message = f"✅ Concluído!\n"
+            message = "✅ Concluído!\n"
             message += f"   Sucesso: {success_count} arquivo(s)\n"
             if error_count > 0:
                 message += f"   Erros: {error_count} arquivo(s)\n"
@@ -396,20 +394,19 @@ class API:
         try:
             input_dir = Path(input_dir)
             import re
-            import shutil
 
             # Find all PDFs recursively
-            pdf_files = sorted(list(input_dir.rglob('*.pdf')))
+            pdf_files = sorted(list(input_dir.rglob("*.pdf")))
 
             # Exclude PDFs in processado folder
-            pdf_files = [f for f in pdf_files if 'processado' not in f.parts]
+            pdf_files = [f for f in pdf_files if "processado" not in f.parts]
 
             if not pdf_files:
                 raise Exception(f"Nenhum arquivo PDF encontrado em: {input_dir}")
 
             # Group PDFs by process number
             metadata_parser = MetadataParser()
-            normalizer = TextNormalizer() if options.get('normalize', True) else None
+            normalizer = TextNormalizer() if options.get("normalize", True) else None
             process_groups = {}
 
             for pdf_path in pdf_files:
@@ -432,7 +429,7 @@ class API:
                     proc_num = doc_metadata.process_number
                     if not proc_num:
                         # Try to extract from filename
-                        match = re.search(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}', pdf_path.name)
+                        match = re.search(r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}", pdf_path.name)
                         proc_num = match.group(0) if match else "UNKNOWN"
 
                     # Group by process number
@@ -441,11 +438,11 @@ class API:
 
                     process_groups[proc_num].append((pdf_path, processed_text, doc_metadata))
 
-                except Exception as e:
+                except Exception:
                     continue
 
             # Filter by process number if specified
-            process_number = options.get('process_number')
+            process_number = options.get("process_number")
             if process_number:
                 if process_number in process_groups:
                     process_groups = {process_number: process_groups[process_number]}
@@ -477,10 +474,10 @@ class API:
                     section_parts.append("\n### Conteúdo\n")
                     section_parts.append(text)
 
-                    combined_sections.append('\n'.join(section_parts))
+                    combined_sections.append("\n".join(section_parts))
 
                 # Build final document
-                safe_proc = proc_num.replace('/', '-')
+                safe_proc = proc_num.replace("/", "-")
                 output_path = input_dir / f"processo_{safe_proc}_merged.md"
 
                 final_content = f"# Processo {proc_num} - Consolidado\n\n"
@@ -495,7 +492,7 @@ class API:
                 files_created.append((proc_num, len(files), output_path))
 
                 # Move processed PDFs
-                processado_dir = input_dir / 'processado'
+                processado_dir = input_dir / "processado"
 
                 for pdf_path, _, _ in files:
                     relative_path = pdf_path.relative_to(input_dir)
@@ -523,7 +520,7 @@ def main():
     api = API()
 
     # Get HTML path
-    html_path = Path(__file__).parent / 'assets' / 'html' / 'index.html'
+    html_path = Path(__file__).parent / "assets" / "html" / "index.html"
 
     if not html_path.exists():
         print(f"❌ Erro: Arquivo HTML não encontrado: {html_path}")
@@ -531,13 +528,13 @@ def main():
 
     # Create window
     window = webview.create_window(
-        'PDF Legal Extractor',
+        "PDF Legal Extractor",
         html_path.as_uri(),
         js_api=api,
         width=900,
         height=750,
         resizable=True,
-        min_size=(800, 600)
+        min_size=(800, 600),
     )
 
     # Store window reference in API
@@ -547,5 +544,5 @@ def main():
     webview.start(debug=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

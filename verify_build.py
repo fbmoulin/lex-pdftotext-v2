@@ -5,25 +5,24 @@ Build verification script for PDF Text Extractor.
 Runs smoke tests on the built executable to ensure it works correctly.
 """
 
-import sys
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
-import shutil
 
 # ANSI color codes for output
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
 
 
 def print_header(text):
     """Print formatted header."""
-    print(f"\n{BLUE}{'='*60}{RESET}")
+    print(f"\n{BLUE}{'=' * 60}{RESET}")
     print(f"{BLUE}{text}{RESET}")
-    print(f"{BLUE}{'='*60}{RESET}\n")
+    print(f"{BLUE}{'=' * 60}{RESET}\n")
 
 
 def print_success(text):
@@ -55,10 +54,7 @@ def check_executable_runs(exe_path: Path) -> bool:
     """Check if executable runs and shows help."""
     try:
         result = subprocess.run(
-            [str(exe_path), '--help'],
-            capture_output=True,
-            text=True,
-            timeout=10
+            [str(exe_path), "--help"], capture_output=True, text=True, timeout=10
         )
 
         if result.returncode == 0:
@@ -81,10 +77,7 @@ def check_version_command(exe_path: Path) -> bool:
     """Check version command works."""
     try:
         result = subprocess.run(
-            [str(exe_path), '--version'],
-            capture_output=True,
-            text=True,
-            timeout=5
+            [str(exe_path), "--version"], capture_output=True, text=True, timeout=5
         )
 
         if result.returncode == 0:
@@ -108,16 +101,16 @@ def check_sample_pdf_processing(exe_path: Path, sample_pdf: Path) -> bool:
 
     try:
         # Create temp output file
-        with tempfile.NamedTemporaryFile(suffix='.md', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tf:
             output_path = Path(tf.name)
 
         try:
             # Run extraction
             result = subprocess.run(
-                [str(exe_path), 'extract', str(sample_pdf), '-o', str(output_path)],
+                [str(exe_path), "extract", str(sample_pdf), "-o", str(output_path)],
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
 
             if result.returncode == 0:
@@ -206,18 +199,12 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Verify PDF Text Extractor build"
-    )
+    parser = argparse.ArgumentParser(description="Verify PDF Text Extractor build")
+    parser.add_argument("executable", type=Path, help="Path to executable to verify")
     parser.add_argument(
-        'executable',
+        "--sample-pdf",
         type=Path,
-        help='Path to executable to verify'
-    )
-    parser.add_argument(
-        '--sample-pdf',
-        type=Path,
-        help='Optional sample PDF for testing (default: find one automatically)'
+        help="Optional sample PDF for testing (default: find one automatically)",
     )
 
     args = parser.parse_args()
@@ -226,9 +213,9 @@ def main():
     sample_pdf = args.sample_pdf
     if not sample_pdf:
         # Look for sample PDF in data/input
-        data_input = Path('data/input')
+        data_input = Path("data/input")
         if data_input.exists():
-            pdfs = list(data_input.rglob('*.pdf'))
+            pdfs = list(data_input.rglob("*.pdf"))
             if pdfs:
                 sample_pdf = pdfs[0]
                 print(f"Using sample PDF: {sample_pdf}")
@@ -239,5 +226,5 @@ def main():
     sys.exit(0 if success else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

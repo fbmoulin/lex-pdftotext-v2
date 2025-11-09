@@ -6,10 +6,11 @@ Environment variables take precedence over config file values.
 """
 
 import os
-import yaml
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-from dataclasses import dataclass, field
+from typing import Optional
+
+import yaml
 
 from .logger import get_logger
 
@@ -36,7 +37,7 @@ class Config:
     enable_image_analysis: bool = False
 
     # API Configuration
-    gemini_api_key: Optional[str] = None
+    gemini_api_key: str | None = None
     gemini_rate_limit: int = 60  # requests per minute
     gemini_api_timeout: int = 30  # API call timeout in seconds
 
@@ -65,25 +66,22 @@ class Config:
         # Validate chunk size
         if not (self.min_chunk_size <= self.chunk_size <= self.max_chunk_size):
             logger.warning(
-                f"chunk_size {self.chunk_size} out of bounds, "
-                f"setting to {self.min_chunk_size}"
+                f"chunk_size {self.chunk_size} out of bounds, setting to {self.min_chunk_size}"
             )
             self.chunk_size = max(self.min_chunk_size, min(self.chunk_size, self.max_chunk_size))
 
         # Validate log level
-        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if self.log_level.upper() not in valid_levels:
-            logger.warning(
-                f"Invalid log level '{self.log_level}', using INFO"
-            )
-            self.log_level = 'INFO'
+            logger.warning(f"Invalid log level '{self.log_level}', using INFO")
+            self.log_level = "INFO"
         else:
             self.log_level = self.log_level.upper()
 
         logger.debug(f"Configuration initialized: {self}")
 
     @classmethod
-    def from_file(cls, config_path: Path) -> 'Config':
+    def from_file(cls, config_path: Path) -> "Config":
         """
         Load configuration from YAML file.
 
@@ -98,7 +96,7 @@ class Config:
             return cls()
 
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, encoding="utf-8") as f:
                 config_dict = yaml.safe_load(f) or {}
 
             logger.info(f"Loaded configuration from: {config_path}")
@@ -115,7 +113,7 @@ class Config:
             return cls()
 
     @classmethod
-    def from_env(cls, base_config: Optional['Config'] = None) -> 'Config':
+    def from_env(cls, base_config: Optional["Config"] = None) -> "Config":
         """
         Load configuration from environment variables.
 
@@ -135,28 +133,28 @@ class Config:
 
         # Override with environment variables
         env_mappings = {
-            'MAX_PDF_SIZE_MB': ('max_pdf_size_mb', int),
-            'MAX_PDF_PAGES': ('max_pdf_pages', int),
-            'PDF_OPEN_TIMEOUT': ('pdf_open_timeout', int),
-            'PAGE_EXTRACTION_TIMEOUT': ('page_extraction_timeout', int),
-            'CHUNK_SIZE': ('chunk_size', int),
-            'MIN_CHUNK_SIZE': ('min_chunk_size', int),
-            'MAX_CHUNK_SIZE': ('max_chunk_size', int),
-            'MAX_IMAGE_SIZE_MB': ('max_image_size_mb', int),
-            'ENABLE_IMAGE_ANALYSIS': ('enable_image_analysis', lambda x: x.lower() == 'true'),
-            'GEMINI_API_KEY': ('gemini_api_key', str),
-            'GEMINI_RATE_LIMIT': ('gemini_rate_limit', int),
-            'GEMINI_API_TIMEOUT': ('gemini_api_timeout', int),
-            'OUTPUT_DIR': ('output_dir', str),
-            'DEFAULT_FORMAT': ('default_format', str),
-            'LOG_LEVEL': ('log_level', str),
-            'LOG_FILE': ('log_file', str),
-            'LOG_MAX_BYTES': ('log_max_bytes', int),
-            'LOG_BACKUP_COUNT': ('log_backup_count', int),
-            'MIN_DISK_SPACE_MB': ('min_disk_space_mb', int),
-            'VALIDATE_PDFS': ('validate_pdfs', lambda x: x.lower() == 'true'),
-            'VALIDATE_OUTPUT_PATHS': ('validate_output_paths', lambda x: x.lower() == 'true'),
-            'BATCH_SIZE': ('batch_size', int),
+            "MAX_PDF_SIZE_MB": ("max_pdf_size_mb", int),
+            "MAX_PDF_PAGES": ("max_pdf_pages", int),
+            "PDF_OPEN_TIMEOUT": ("pdf_open_timeout", int),
+            "PAGE_EXTRACTION_TIMEOUT": ("page_extraction_timeout", int),
+            "CHUNK_SIZE": ("chunk_size", int),
+            "MIN_CHUNK_SIZE": ("min_chunk_size", int),
+            "MAX_CHUNK_SIZE": ("max_chunk_size", int),
+            "MAX_IMAGE_SIZE_MB": ("max_image_size_mb", int),
+            "ENABLE_IMAGE_ANALYSIS": ("enable_image_analysis", lambda x: x.lower() == "true"),
+            "GEMINI_API_KEY": ("gemini_api_key", str),
+            "GEMINI_RATE_LIMIT": ("gemini_rate_limit", int),
+            "GEMINI_API_TIMEOUT": ("gemini_api_timeout", int),
+            "OUTPUT_DIR": ("output_dir", str),
+            "DEFAULT_FORMAT": ("default_format", str),
+            "LOG_LEVEL": ("log_level", str),
+            "LOG_FILE": ("log_file", str),
+            "LOG_MAX_BYTES": ("log_max_bytes", int),
+            "LOG_BACKUP_COUNT": ("log_backup_count", int),
+            "MIN_DISK_SPACE_MB": ("min_disk_space_mb", int),
+            "VALIDATE_PDFS": ("validate_pdfs", lambda x: x.lower() == "true"),
+            "VALIDATE_OUTPUT_PATHS": ("validate_output_paths", lambda x: x.lower() == "true"),
+            "BATCH_SIZE": ("batch_size", int),
         }
 
         for env_var, (config_key, converter) in env_mappings.items():
@@ -164,7 +162,9 @@ class Config:
             if value is not None:
                 try:
                     config_dict[config_key] = converter(value)
-                    logger.debug(f"Config overridden from env: {config_key} = {config_dict[config_key]}")
+                    logger.debug(
+                        f"Config overridden from env: {config_key} = {config_dict[config_key]}"
+                    )
                 except (ValueError, TypeError) as e:
                     logger.warning(
                         f"Invalid value for {env_var}='{value}': {e}. "
@@ -174,7 +174,7 @@ class Config:
         return cls(**config_dict)
 
     @classmethod
-    def load(cls, config_path: Optional[Path] = None) -> 'Config':
+    def load(cls, config_path: Path | None = None) -> "Config":
         """
         Load configuration from file and environment.
 
@@ -187,7 +187,7 @@ class Config:
             Config instance
         """
         if config_path is None:
-            config_path = Path.cwd() / 'config.yaml'
+            config_path = Path.cwd() / "config.yaml"
 
         # Load from file first
         file_config = cls.from_file(config_path)
@@ -216,7 +216,7 @@ class Config:
             # Convert to dict and remove None values
             config_dict = {k: v for k, v in self.to_dict().items() if v is not None}
 
-            with open(config_path, 'w', encoding='utf-8') as f:
+            with open(config_path, "w", encoding="utf-8") as f:
                 yaml.safe_dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
             logger.info(f"Configuration saved to: {config_path}")
@@ -227,7 +227,7 @@ class Config:
 
 
 # Global configuration instance
-_config: Optional[Config] = None
+_config: Config | None = None
 
 
 def get_config() -> Config:
@@ -243,7 +243,7 @@ def get_config() -> Config:
     return _config
 
 
-def reload_config(config_path: Optional[Path] = None) -> Config:
+def reload_config(config_path: Path | None = None) -> Config:
     """
     Reload configuration from file and environment.
 

@@ -5,30 +5,34 @@ PDF Legal Text Extractor - CLI
 Extract and structure text from Brazilian legal PDF documents (PJe format).
 """
 
-import sys
-import os
-from pathlib import Path
 import shutil
+import sys
+from pathlib import Path
+
 import click
-from tqdm import tqdm
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 # Load environment variables from .env file
-env_path = Path(__file__).parent / '.env'
+env_path = Path(__file__).parent / ".env"
 load_dotenv(env_path)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.extractors import PyMuPDFExtractor, TableExtractor
-from src.processors import TextNormalizer, MetadataParser
-from src.formatters import MarkdownFormatter, JSONFormatter, TableFormatter
-from src.utils.logger import setup_logger, get_logger
-from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size, sanitize_output_path
-from src.utils.config import get_config
-from src.utils.exceptions import InvalidPathError
-from src.utils.constants import MAX_SUMMARY_ITEMS, MAX_DETAILED_ITEMS, FILENAME_DISPLAY_LENGTH
+from src.formatters import JSONFormatter, MarkdownFormatter, TableFormatter
+from src.processors import MetadataParser, TextNormalizer
 from src.utils.cache import get_performance_monitor
+from src.utils.config import get_config
+from src.utils.constants import FILENAME_DISPLAY_LENGTH, MAX_DETAILED_ITEMS, MAX_SUMMARY_ITEMS
+from src.utils.exceptions import InvalidPathError
+from src.utils.logger import get_logger, setup_logger
+from src.utils.validators import (
+    check_disk_space,
+    estimate_output_size,
+    sanitize_output_path,
+)
 
 # Load configuration
 config = get_config()
@@ -71,9 +75,9 @@ def extract_and_normalize_pdf(pdf_path: Path, normalize: bool = True) -> tuple[s
 def format_output_text(
     processed_text: str,
     doc_metadata: object,
-    format: str = 'markdown',
+    format: str = "markdown",
     include_metadata: bool = True,
-    structured: bool = False
+    structured: bool = False,
 ) -> str:
     """
     Format processed text for output.
@@ -88,18 +92,16 @@ def format_output_text(
     Returns:
         Formatted output text
     """
-    if format == 'markdown':
+    if format == "markdown":
         formatter = MarkdownFormatter()
 
         if structured:
             return formatter.format_with_sections(processed_text, doc_metadata)
         else:
             return formatter.format(
-                processed_text,
-                doc_metadata,
-                include_metadata_header=include_metadata
+                processed_text, doc_metadata, include_metadata_header=include_metadata
             )
-    elif format == 'json':
+    elif format == "json":
         # JSON output
         formatter = JSONFormatter()
         return formatter.format_to_string(
@@ -107,7 +109,7 @@ def format_output_text(
             doc_metadata,
             include_metadata=include_metadata,
             hierarchical=structured,
-            indent=2
+            indent=2,
         )
     else:
         # Plain text output
@@ -138,7 +140,7 @@ def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
         # Handle existing destination
         if dest.exists():
             if create_backup:
-                backup_path = dest.with_suffix(dest.suffix + '.bak')
+                backup_path = dest.with_suffix(dest.suffix + ".bak")
                 logger.warning(f"Destination exists, creating backup: {backup_path}")
                 shutil.copy2(str(dest), str(backup_path))
             else:
@@ -177,32 +179,31 @@ def cli():
 
 
 @cli.command()
-@click.argument('pdf_path', type=click.Path(exists=True))
+@click.argument("pdf_path", type=click.Path(exists=True))
 @click.option(
-    '-o', '--output',
+    "-o",
+    "--output",
     type=click.Path(),
-    help='Output file path (default: same name as PDF with .md extension)'
+    help="Output file path (default: same name as PDF with .md extension)",
 )
 @click.option(
-    '--format',
-    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
-    default='markdown',
-    help='Output format (default: markdown)'
+    "--format",
+    type=click.Choice(["markdown", "txt", "json"], case_sensitive=False),
+    default="markdown",
+    help="Output format (default: markdown)",
 )
 @click.option(
-    '--normalize/--no-normalize',
+    "--normalize/--no-normalize",
     default=True,
-    help='Normalize text (convert UPPERCASE, clean noise) (default: True)'
+    help="Normalize text (convert UPPERCASE, clean noise) (default: True)",
 )
 @click.option(
-    '--metadata/--no-metadata',
-    default=True,
-    help='Include metadata header (default: True)'
+    "--metadata/--no-metadata", default=True, help="Include metadata header (default: True)"
 )
 @click.option(
-    '--structured/--no-structured',
+    "--structured/--no-structured",
     default=False,
-    help='Auto-detect and structure sections (default: False)'
+    help="Auto-detect and structure sections (default: False)",
 )
 def extract(pdf_path, output, format, normalize, metadata, structured):
     """
@@ -215,12 +216,12 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
 
     # Determine output path
     if output is None:
-        if format == 'markdown':
-            output = pdf_path.with_suffix('.md')
-        elif format == 'json':
-            output = pdf_path.with_suffix('.json')
+        if format == "markdown":
+            output = pdf_path.with_suffix(".md")
+        elif format == "json":
+            output = pdf_path.with_suffix(".json")
         else:
-            output = pdf_path.with_suffix('.txt')
+            output = pdf_path.with_suffix(".txt")
     else:
         # Validate and sanitize user-provided output path
         output = Path(output)
@@ -249,7 +250,7 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
             doc_metadata,
             format=format,
             include_metadata=metadata,
-            structured=structured
+            structured=structured,
         )
 
         # Save to file
@@ -263,11 +264,17 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
         if doc_metadata.process_number:
             click.echo(f"\n📋 Processo: {doc_metadata.process_number}")
         if doc_metadata.document_ids:
-            click.echo(f"   IDs: {', '.join(doc_metadata.document_ids[:MAX_SUMMARY_ITEMS])}" +
-                      (f" (+{len(doc_metadata.document_ids)-MAX_SUMMARY_ITEMS} mais)" if len(doc_metadata.document_ids) > MAX_SUMMARY_ITEMS else ""))
+            click.echo(
+                f"   IDs: {', '.join(doc_metadata.document_ids[:MAX_SUMMARY_ITEMS])}"
+                + (
+                    f" (+{len(doc_metadata.document_ids) - MAX_SUMMARY_ITEMS} mais)"
+                    if len(doc_metadata.document_ids) > MAX_SUMMARY_ITEMS
+                    else ""
+                )
+            )
 
         # Move processed PDF to 'processado' folder
-        processado_dir = pdf_path.parent / 'processado'
+        processado_dir = pdf_path.parent / "processado"
         new_pdf_path = processado_dir / pdf_path.name
 
         if safe_move_file(pdf_path, new_pdf_path):
@@ -281,27 +288,19 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
 
 
 @cli.command()
-@click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
+@click.argument("input_dir", type=click.Path(exists=True, file_okay=False))
 @click.option(
-    '-o', '--output-dir',
-    type=click.Path(),
-    help='Output directory (default: input_dir/output)'
+    "-o", "--output-dir", type=click.Path(), help="Output directory (default: input_dir/output)"
 )
 @click.option(
-    '--format',
-    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
-    default='markdown',
-    help='Output format (default: markdown)'
+    "--format",
+    type=click.Choice(["markdown", "txt", "json"], case_sensitive=False),
+    default="markdown",
+    help="Output format (default: markdown)",
 )
+@click.option("--normalize/--no-normalize", default=True, help="Normalize text (default: True)")
 @click.option(
-    '--normalize/--no-normalize',
-    default=True,
-    help='Normalize text (default: True)'
-)
-@click.option(
-    '--metadata/--no-metadata',
-    default=True,
-    help='Include metadata header (default: True)'
+    "--metadata/--no-metadata", default=True, help="Include metadata header (default: True)"
 )
 def batch(input_dir, output_dir, format, normalize, metadata):
     """
@@ -314,14 +313,14 @@ def batch(input_dir, output_dir, format, normalize, metadata):
 
     # Determine output directory
     if output_dir is None:
-        output_dir = input_dir / 'output'
+        output_dir = input_dir / "output"
     else:
         output_dir = Path(output_dir)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all PDFs
-    pdf_files = list(input_dir.glob('*.pdf'))
+    pdf_files = list(input_dir.glob("*.pdf"))
 
     if not pdf_files:
         click.echo(f"❌ Nenhum arquivo PDF encontrado em: {input_dir}")
@@ -343,7 +342,7 @@ def batch(input_dir, output_dir, format, normalize, metadata):
                 f"   Disponível: {available_mb}MB\n"
                 f"   Estimado: {total_estimated_mb}MB\n"
                 f"   Recomendado: {required_mb}MB",
-                err=True
+                err=True,
             )
 
             if not click.confirm("Deseja continuar mesmo assim?"):
@@ -368,29 +367,28 @@ def batch(input_dir, output_dir, format, normalize, metadata):
 
             try:
                 # Determine output path
-                if format == 'markdown':
-                    output_path = output_dir / pdf_path.with_suffix('.md').name
-                elif format == 'json':
-                    output_path = output_dir / pdf_path.with_suffix('.json').name
+                if format == "markdown":
+                    output_path = output_dir / pdf_path.with_suffix(".md").name
+                elif format == "json":
+                    output_path = output_dir / pdf_path.with_suffix(".json").name
                 else:
-                    output_path = output_dir / pdf_path.with_suffix('.txt').name
+                    output_path = output_dir / pdf_path.with_suffix(".txt").name
 
                 # Extract and normalize text
-                raw_text, processed_text, doc_metadata = extract_and_normalize_pdf(pdf_path, normalize)
+                raw_text, processed_text, doc_metadata = extract_and_normalize_pdf(
+                    pdf_path, normalize
+                )
 
                 # Format output
                 output_text = format_output_text(
-                    processed_text,
-                    doc_metadata,
-                    format=format,
-                    include_metadata=metadata
+                    processed_text, doc_metadata, format=format, include_metadata=metadata
                 )
 
                 # Save to file
                 MarkdownFormatter.save_to_file(output_text, str(output_path))
 
                 # Move processed PDF to 'processado' folder
-                processado_dir = input_dir / 'processado'
+                processado_dir = input_dir / "processado"
                 new_pdf_path = processado_dir / pdf_path.name
 
                 if not safe_move_file(pdf_path, new_pdf_path):
@@ -403,34 +401,26 @@ def batch(input_dir, output_dir, format, normalize, metadata):
                 tqdm.write(f"❌ Erro em {pdf_path.name}: {str(e)}")
 
     # Summary
-    click.echo(f"\n✅ Concluído!")
+    click.echo("\n✅ Concluído!")
     click.echo(f"   Sucesso: {success_count} arquivos")
     if error_count > 0:
         click.echo(f"   Erros: {error_count} arquivos")
 
 
 @cli.command()
-@click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
+@click.argument("input_dir", type=click.Path(exists=True, file_okay=False))
 @click.option(
-    '-o', '--output',
-    type=click.Path(),
-    help='Output file path (auto-generated if not specified)'
+    "-o", "--output", type=click.Path(), help="Output file path (auto-generated if not specified)"
+)
+@click.option("--normalize/--no-normalize", default=True, help="Normalize text (default: True)")
+@click.option(
+    "--format",
+    type=click.Choice(["markdown", "txt", "json"], case_sensitive=False),
+    default="markdown",
+    help="Output format (default: markdown)",
 )
 @click.option(
-    '--normalize/--no-normalize',
-    default=True,
-    help='Normalize text (default: True)'
-)
-@click.option(
-    '--format',
-    type=click.Choice(['markdown', 'txt', 'json'], case_sensitive=False),
-    default='markdown',
-    help='Output format (default: markdown)'
-)
-@click.option(
-    '--process-number',
-    type=str,
-    help='Merge only PDFs from this specific process number'
+    "--process-number", type=str, help="Merge only PDFs from this specific process number"
 )
 def merge(input_dir, output, normalize, format, process_number):
     """
@@ -446,17 +436,17 @@ def merge(input_dir, output, normalize, format, process_number):
     input_dir = Path(input_dir)
 
     # Find all PDFs recursively (including subdirectories)
-    pdf_files = sorted(list(input_dir.rglob('*.pdf')))
+    pdf_files = sorted(list(input_dir.rglob("*.pdf")))
 
     # Exclude PDFs already in 'processado' folder
-    pdf_files = [f for f in pdf_files if 'processado' not in f.parts]
+    pdf_files = [f for f in pdf_files if "processado" not in f.parts]
 
     if not pdf_files:
         click.echo(f"❌ Nenhum arquivo PDF encontrado em: {input_dir}")
         sys.exit(1)
 
     click.echo(f"📁 Encontrados {len(pdf_files)} arquivos PDF (incluindo subpastas)")
-    click.echo(f"🔍 Agrupando por número de processo...\n")
+    click.echo("🔍 Agrupando por número de processo...\n")
 
     # Group PDFs by process number
     metadata_parser = MetadataParser()
@@ -473,7 +463,8 @@ def merge(input_dir, output, normalize, format, process_number):
             if not proc_num:
                 # Try to extract from filename
                 import re
-                match = re.search(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}', pdf_path.name)
+
+                match = re.search(r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}", pdf_path.name)
                 proc_num = match.group(0) if match else "UNKNOWN"
 
             # Group by process number
@@ -520,7 +511,7 @@ def merge(input_dir, output, normalize, format, process_number):
                 sys.exit(1)
         else:
             # Auto-generate filename
-            safe_proc = proc_num.replace('/', '-')
+            safe_proc = proc_num.replace("/", "-")
             output_path = input_dir / f"processo_{safe_proc}_merged.md"
 
         click.echo(f"📝 Mesclando {len(files)} arquivo(s) do processo {proc_num}...")
@@ -535,7 +526,7 @@ def merge(input_dir, output, normalize, format, process_number):
             section_parts.append(f"## Documento {i}: {pdf_path.name}")
 
             # Metadata
-            if format == 'markdown':
+            if format == "markdown":
                 metadata_md = metadata_parser.format_metadata_as_markdown(metadata)
                 if metadata_md:
                     section_parts.append("\n**Metadados:**\n")
@@ -545,10 +536,10 @@ def merge(input_dir, output, normalize, format, process_number):
             section_parts.append("\n### Conteúdo\n")
             section_parts.append(text)
 
-            combined_sections.append('\n'.join(section_parts))
+            combined_sections.append("\n".join(section_parts))
 
         # Build final document
-        if format == 'markdown':
+        if format == "markdown":
             final_content = f"# Processo {proc_num} - Consolidado\n\n"
             final_content += f"*Mesclado a partir de {len(files)} arquivo(s) PDF*\n\n"
             final_content += "---\n\n"
@@ -567,7 +558,7 @@ def merge(input_dir, output, normalize, format, process_number):
         files_created.append(output_path)
 
         # Move processed PDFs to 'processado' folder
-        processado_dir = input_dir / 'processado'
+        processado_dir = input_dir / "processado"
         moved_count = 0
 
         for pdf_path, _, _ in files:
@@ -590,7 +581,7 @@ def merge(input_dir, output, normalize, format, process_number):
 
 
 @cli.command()
-@click.argument('pdf_path', type=click.Path(exists=True))
+@click.argument("pdf_path", type=click.Path(exists=True))
 def info(pdf_path):
     """
     Show metadata information about a PDF without extracting full text.
@@ -614,12 +605,12 @@ def info(pdf_path):
 
         # Display PDF metadata
         click.echo("📋 Metadados do PDF:")
-        if pdf_metadata['title']:
+        if pdf_metadata["title"]:
             click.echo(f"   Título: {pdf_metadata['title']}")
-        if pdf_metadata['author']:
+        if pdf_metadata["author"]:
             click.echo(f"   Autor: {pdf_metadata['author']}")
         click.echo(f"   Páginas: {pdf_metadata['page_count']}")
-        if pdf_metadata['creation_date']:
+        if pdf_metadata["creation_date"]:
             click.echo(f"   Criado em: {pdf_metadata['creation_date']}")
 
         # Display legal metadata
@@ -640,7 +631,9 @@ def info(pdf_path):
             for doc_id in doc_metadata.document_ids[:MAX_DETAILED_ITEMS]:
                 click.echo(f"      - {doc_id}")
             if len(doc_metadata.document_ids) > MAX_DETAILED_ITEMS:
-                click.echo(f"      ... e mais {len(doc_metadata.document_ids) - MAX_DETAILED_ITEMS}")
+                click.echo(
+                    f"      ... e mais {len(doc_metadata.document_ids) - MAX_DETAILED_ITEMS}"
+                )
 
         if doc_metadata.lawyers:
             click.echo(f"\n   Advogados ({len(doc_metadata.lawyers)}):")
@@ -648,7 +641,9 @@ def info(pdf_path):
                 click.echo(f"      - {lawyer['name']} (OAB/{lawyer['state']} {lawyer['oab']})")
 
         if doc_metadata.signature_dates:
-            click.echo(f"\n   Assinaturas: {', '.join(doc_metadata.signature_dates[:MAX_SUMMARY_ITEMS])}")
+            click.echo(
+                f"\n   Assinaturas: {', '.join(doc_metadata.signature_dates[:MAX_SUMMARY_ITEMS])}"
+            )
 
         # Document type
         doc_types = []
@@ -668,17 +663,8 @@ def info(pdf_path):
 
 
 @cli.command()
-@click.option(
-    '--reset',
-    is_flag=True,
-    help='Reset performance metrics after displaying report'
-)
-@click.option(
-    '--json',
-    'output_json',
-    is_flag=True,
-    help='Output metrics as JSON'
-)
+@click.option("--reset", is_flag=True, help="Reset performance metrics after displaying report")
+@click.option("--json", "output_json", is_flag=True, help="Output metrics as JSON")
 def perf_report(reset, output_json):
     """
     Show performance metrics report.
@@ -713,22 +699,23 @@ def perf_report(reset, output_json):
 
 
 @cli.command()
-@click.argument('pdf_path', type=click.Path(exists=True))
+@click.argument("pdf_path", type=click.Path(exists=True))
 @click.option(
-    '-o', '--output',
+    "-o",
+    "--output",
     type=click.Path(),
-    help='Output file path (default: same name as PDF with _tables.md extension)'
+    help="Output file path (default: same name as PDF with _tables.md extension)",
 )
 @click.option(
-    '--format',
-    type=click.Choice(['markdown', 'csv'], case_sensitive=False),
-    default='markdown',
-    help='Output format: markdown tables or separate CSV files (default: markdown)'
+    "--format",
+    type=click.Choice(["markdown", "csv"], case_sensitive=False),
+    default="markdown",
+    help="Output format: markdown tables or separate CSV files (default: markdown)",
 )
 @click.option(
-    '--include-metadata/--no-metadata',
+    "--include-metadata/--no-metadata",
     default=True,
-    help='Include table metadata (page number, position) (default: True)'
+    help="Include table metadata (page number, position) (default: True)",
 )
 def extract_tables(pdf_path, output, format, include_metadata):
     """
@@ -758,7 +745,7 @@ def extract_tables(pdf_path, output, format, include_metadata):
         click.echo(f"   Encontradas {len(tables)} tabela(s)")
 
         # Output based on format
-        if format == 'csv':
+        if format == "csv":
             # Determine output directory
             if output is None:
                 output_dir = pdf_path.parent / f"{pdf_path.stem}_tables"
@@ -780,7 +767,7 @@ def extract_tables(pdf_path, output, format, include_metadata):
                 output = Path(output)
 
             # Format tables as Markdown
-            click.echo(f"   Formatando como Markdown...")
+            click.echo("   Formatando como Markdown...")
             formatter = TableFormatter()
             markdown_output = formatter.format_all_tables(tables, include_metadata=include_metadata)
 
@@ -800,8 +787,10 @@ def extract_tables(pdf_path, output, format, include_metadata):
         # Display summary
         click.echo("\n📋 Resumo:")
         for i, table in enumerate(tables[:5], 1):  # Show first 5 tables
-            click.echo(f"   Tabela {i}: Página {table['page'] + 1} - "
-                      f"{table['rows']} linhas × {table['cols']} colunas")
+            click.echo(
+                f"   Tabela {i}: Página {table['page'] + 1} - "
+                f"{table['rows']} linhas × {table['cols']} colunas"
+            )
         if len(tables) > 5:
             click.echo(f"   ... e mais {len(tables) - 5} tabela(s)")
 
@@ -811,5 +800,5 @@ def extract_tables(pdf_path, output, format, include_metadata):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

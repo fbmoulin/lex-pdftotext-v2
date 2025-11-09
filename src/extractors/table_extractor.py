@@ -1,12 +1,12 @@
 """Table extraction from PDF documents using pdfplumber."""
 
 from pathlib import Path
-from typing import Optional
+
 import pdfplumber
 
+from ..utils.cache import get_performance_monitor
 from ..utils.exceptions import InvalidPathError
 from ..utils.logger import get_logger
-from ..utils.cache import get_performance_monitor
 
 # Initialize logger and performance monitor
 logger = get_logger(__name__)
@@ -34,14 +34,12 @@ class TableExtractor:
         self.pdf_path = Path(pdf_path)
         if not self.pdf_path.exists():
             raise InvalidPathError(f"Arquivo não encontrado: {pdf_path}")
-        if not self.pdf_path.suffix.lower() == '.pdf':
+        if not self.pdf_path.suffix.lower() == ".pdf":
             raise InvalidPathError(f"Arquivo deve ser PDF: {pdf_path}")
 
     @performance.track("table_extraction")
     def extract_tables(
-        self,
-        table_settings: Optional[dict] = None,
-        extract_text: bool = True
+        self, table_settings: dict | None = None, extract_text: bool = True
     ) -> list[dict]:
         """
         Extract all tables from the PDF.
@@ -102,18 +100,17 @@ class TableExtractor:
 
                         # Create table metadata
                         table_info = {
-                            'page': page_num,
-                            'table_index': table_index,
-                            'bbox': table.bbox,  # (x0, top, x1, bottom)
-                            'data': table_data,
-                            'rows': rows,
-                            'cols': cols,
+                            "page": page_num,
+                            "table_index": table_index,
+                            "bbox": table.bbox,  # (x0, top, x1, bottom)
+                            "data": table_data,
+                            "rows": rows,
+                            "cols": cols,
                         }
 
                         tables.append(table_info)
                         logger.debug(
-                            f"Found table on page {page_num + 1}: "
-                            f"{rows}x{cols} at {table.bbox}"
+                            f"Found table on page {page_num + 1}: {rows}x{cols} at {table.bbox}"
                         )
 
             logger.info(f"Extracted {len(tables)} tables from {self.pdf_path.name}")
@@ -124,9 +121,7 @@ class TableExtractor:
             raise
 
     def extract_tables_by_page(
-        self,
-        page_number: int,
-        table_settings: Optional[dict] = None
+        self, page_number: int, table_settings: dict | None = None
     ) -> list[dict]:
         """
         Extract tables from a specific page.
@@ -139,7 +134,7 @@ class TableExtractor:
             list[dict]: List of tables found on the specified page
         """
         all_tables = self.extract_tables(table_settings=table_settings)
-        return [t for t in all_tables if t['page'] == page_number]
+        return [t for t in all_tables if t["page"] == page_number]
 
     def has_tables(self) -> bool:
         """
@@ -197,9 +192,9 @@ class TableExtractor:
             csv_path = output_dir / filename
 
             # Write table data to CSV
-            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerows(table['data'])
+                writer.writerows(table["data"])
 
             csv_files.append(csv_path)
             logger.info(f"Saved table to {csv_path}")

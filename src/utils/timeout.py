@@ -5,20 +5,22 @@ Provides timeout decorators and context managers to prevent infinite hangs.
 """
 
 import functools
-import signal
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-from typing import Any, Callable, Optional, TypeVar
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
+from typing import TypeVar
 
 from .exceptions import PDFExtractionError
 
 
 class TimeoutError(PDFExtractionError):
     """Raised when operation exceeds timeout."""
+
     pass
 
 
 # Type variable for generic function return type
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def timeout(seconds: int = 30):
@@ -39,6 +41,7 @@ def timeout(seconds: int = 30):
             # This will timeout after 10 seconds
             pass
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
@@ -52,7 +55,9 @@ def timeout(seconds: int = 30):
                     raise TimeoutError(
                         f"Operation '{func.__name__}' exceeded timeout of {seconds} seconds"
                     )
+
         return wrapper
+
     return decorator
 
 
@@ -88,7 +93,7 @@ class timeout_context:
         return False
 
 
-def run_with_timeout(func: Callable[..., T], timeout_seconds: int, *args, **kwargs) -> Optional[T]:
+def run_with_timeout(func: Callable[..., T], timeout_seconds: int, *args, **kwargs) -> T | None:
     """
     Run function with timeout and return result or None.
 

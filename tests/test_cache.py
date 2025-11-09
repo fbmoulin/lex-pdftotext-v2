@@ -4,14 +4,15 @@ Tests for caching and performance monitoring utilities.
 To run: pytest tests/test_cache.py -v
 """
 
-import pytest
-from pathlib import Path
-import tempfile
-import time
-from PIL import Image
-
 # Add src to path
 import sys
+import tempfile
+import time
+from pathlib import Path
+
+import pytest
+from PIL import Image
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.utils.cache import ImageDescriptionCache, PerformanceMonitor
@@ -27,12 +28,13 @@ class TestImageDescriptionCache:
         yield temp_dir
         # Cleanup
         import shutil
+
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     @pytest.fixture
     def test_image(self):
         """Create a test PIL image."""
-        img = Image.new('RGB', (100, 100), color='red')
+        img = Image.new("RGB", (100, 100), color="red")
         return img
 
     @pytest.fixture
@@ -46,7 +48,7 @@ class TestImageDescriptionCache:
 
         assert cache.cache_dir == temp_cache_dir
         assert cache.cache_dir.exists()
-        assert cache.cache_file == temp_cache_dir / 'descriptions.json'
+        assert cache.cache_file == temp_cache_dir / "descriptions.json"
 
     def test_cache_miss(self, cache, test_image):
         """Test cache miss returns None."""
@@ -96,7 +98,7 @@ class TestImageDescriptionCache:
         # Add more entries than max
         for i in range(10):
             # Create slightly different images
-            img = Image.new('RGB', (100, 100), color=(i*25, 0, 0))
+            img = Image.new("RGB", (100, 100), color=(i * 25, 0, 0))
             cache.set(img, f"Description {i}")
 
         # Cache should be trimmed to max_entries
@@ -119,15 +121,15 @@ class TestImageDescriptionCache:
         stats = cache.stats()
 
         assert isinstance(stats, dict)
-        assert 'total_entries' in stats
-        assert 'cache_dir' in stats
-        assert 'max_entries' in stats
-        assert stats['total_entries'] >= 1
+        assert "total_entries" in stats
+        assert "cache_dir" in stats
+        assert "max_entries" in stats
+        assert stats["total_entries"] >= 1
 
     def test_identical_images_same_hash(self, cache):
         """Test that identical images produce same cache key."""
-        img1 = Image.new('RGB', (50, 50), color='blue')
-        img2 = Image.new('RGB', (50, 50), color='blue')
+        img1 = Image.new("RGB", (50, 50), color="blue")
+        img2 = Image.new("RGB", (50, 50), color="blue")
 
         description = "Blue square"
         cache.set(img1, description)
@@ -138,8 +140,8 @@ class TestImageDescriptionCache:
 
     def test_different_images_different_hash(self, cache):
         """Test that different images don't share cache entries."""
-        img1 = Image.new('RGB', (50, 50), color='red')
-        img2 = Image.new('RGB', (50, 50), color='blue')
+        img1 = Image.new("RGB", (50, 50), color="red")
+        img2 = Image.new("RGB", (50, 50), color="blue")
 
         cache.set(img1, "Red square")
 
@@ -165,6 +167,7 @@ class TestPerformanceMonitor:
 
     def test_track_decorator(self, monitor):
         """Test performance tracking decorator."""
+
         @monitor.track("test_operation")
         def test_function():
             time.sleep(0.01)  # Small delay
@@ -176,14 +179,15 @@ class TestPerformanceMonitor:
         assert "test_operation" in monitor.metrics
 
         metrics = monitor.metrics["test_operation"]
-        assert metrics['count'] == 1
-        assert metrics['total_time'] > 0
-        assert metrics['avg_time'] > 0
-        assert metrics['min_time'] > 0
-        assert metrics['max_time'] > 0
+        assert metrics["count"] == 1
+        assert metrics["total_time"] > 0
+        assert metrics["avg_time"] > 0
+        assert metrics["min_time"] > 0
+        assert metrics["max_time"] > 0
 
     def test_track_multiple_calls(self, monitor):
         """Test tracking multiple calls to same operation."""
+
         @monitor.track("multi_call")
         def test_function():
             time.sleep(0.001)
@@ -193,11 +197,12 @@ class TestPerformanceMonitor:
             test_function()
 
         metrics = monitor.metrics["multi_call"]
-        assert metrics['count'] == 5
-        assert metrics['avg_time'] > 0
+        assert metrics["count"] == 5
+        assert metrics["avg_time"] > 0
 
     def test_track_with_exception(self, monitor):
         """Test that decorator handles exceptions."""
+
         @monitor.track("failing_operation")
         def failing_function():
             raise ValueError("Test error")
@@ -210,6 +215,7 @@ class TestPerformanceMonitor:
 
     def test_get_metrics(self, monitor):
         """Test retrieving metrics."""
+
         @monitor.track("operation1")
         def func1():
             pass
@@ -228,10 +234,11 @@ class TestPerformanceMonitor:
 
         # Get specific operation
         op1_metrics = monitor.get_metrics("operation1")
-        assert op1_metrics['count'] == 1
+        assert op1_metrics["count"] == 1
 
     def test_reset_metrics(self, monitor):
         """Test resetting metrics."""
+
         @monitor.track("test_op")
         def test_function():
             pass
@@ -244,6 +251,7 @@ class TestPerformanceMonitor:
 
     def test_performance_report(self, monitor):
         """Test generating performance report."""
+
         @monitor.track("report_test")
         def test_function():
             time.sleep(0.001)
@@ -266,6 +274,7 @@ class TestPerformanceMonitor:
 
     def test_min_max_times(self, monitor):
         """Test that min/max times are tracked correctly."""
+
         @monitor.track("varying_time")
         def test_function(duration):
             time.sleep(duration)
@@ -276,9 +285,9 @@ class TestPerformanceMonitor:
         test_function(0.002)
 
         metrics = monitor.metrics["varying_time"]
-        assert metrics['min_time'] < metrics['max_time']
-        assert metrics['count'] == 3
+        assert metrics["min_time"] < metrics["max_time"]
+        assert metrics["count"] == 3
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

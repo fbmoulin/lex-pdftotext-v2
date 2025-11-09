@@ -1,20 +1,22 @@
 """PyMuPDF (fitz) implementation of PDF text extractor."""
 
-import fitz  # PyMuPDF
+import io
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from pathlib import Path
 from typing import Any
-import io
-from PIL import Image
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
-from .base import PDFExtractor
-from ..utils.validators import PDFValidator
-from ..utils.exceptions import PDFExtractionError
-from ..utils.logger import get_logger
-from ..utils.timeout import TimeoutError
+import fitz  # PyMuPDF
+from PIL import Image
+
 from ..utils.cache import get_performance_monitor
 from ..utils.config import get_config
 from ..utils.constants import PAGE_LOG_INTERVAL
+from ..utils.exceptions import PDFExtractionError
+from ..utils.logger import get_logger
+from ..utils.timeout import TimeoutError
+from ..utils.validators import PDFValidator
+from .base import PDFExtractor
 
 # Initialize logger, performance monitor, and config
 logger = get_logger(__name__)
@@ -32,7 +34,13 @@ class PyMuPDFExtractor(PDFExtractor):
     - Good handling of whitespace and formatting
     """
 
-    def __init__(self, pdf_path: str | Path, validate: bool = True, max_size_mb: int = 500, open_timeout: int = 30):
+    def __init__(
+        self,
+        pdf_path: str | Path,
+        validate: bool = True,
+        max_size_mb: int = 500,
+        open_timeout: int = 30,
+    ):
         """
         Initialize PyMuPDF extractor.
 
@@ -128,7 +136,9 @@ class PyMuPDFExtractor(PDFExtractor):
                     try:
                         text = future.result(timeout=config.page_extraction_timeout)
                     except FuturesTimeoutError:
-                        logger.warning(f"Page {page_num + 1} extraction timed out after {config.page_extraction_timeout}s, skipping")
+                        logger.warning(
+                            f"Page {page_num + 1} extraction timed out after {config.page_extraction_timeout}s, skipping"
+                        )
                         continue
 
                 # Skip completely empty or whitespace-only pages
@@ -176,15 +186,15 @@ class PyMuPDFExtractor(PDFExtractor):
 
         metadata = self.doc.metadata
         return {
-            'title': metadata.get('title', ''),
-            'author': metadata.get('author', ''),
-            'subject': metadata.get('subject', ''),
-            'keywords': metadata.get('keywords', ''),
-            'creator': metadata.get('creator', ''),
-            'producer': metadata.get('producer', ''),
-            'creation_date': metadata.get('creationDate', ''),
-            'modification_date': metadata.get('modDate', ''),
-            'page_count': len(self.doc)
+            "title": metadata.get("title", ""),
+            "author": metadata.get("author", ""),
+            "subject": metadata.get("subject", ""),
+            "keywords": metadata.get("keywords", ""),
+            "creator": metadata.get("creator", ""),
+            "producer": metadata.get("producer", ""),
+            "creation_date": metadata.get("creationDate", ""),
+            "modification_date": metadata.get("modDate", ""),
+            "page_count": len(self.doc),
         }
 
     def get_page_count(self) -> int:
@@ -226,7 +236,7 @@ class PyMuPDFExtractor(PDFExtractor):
             pages.append("\n".join(page_text))
 
         return "\n\n--- PÁGINA {} ---\n\n".join(
-            [f"\n\n--- PÁGINA {i+1} ---\n\n{text}" for i, text in enumerate(pages)]
+            [f"\n\n--- PÁGINA {i + 1} ---\n\n{text}" for i, text in enumerate(pages)]
         ).lstrip("\n\n--- PÁGINA 1 ---\n\n")
 
     def extract_images(self) -> list[dict[str, Any]]:
@@ -261,17 +271,19 @@ class PyMuPDFExtractor(PDFExtractor):
                     pil_image = Image.open(io.BytesIO(image_bytes))
 
                     # Store image info
-                    images.append({
-                        'page_num': page_num + 1,  # 1-indexed for users
-                        'image_index': img_index,
-                        'image': pil_image,
-                        'width': pil_image.width,
-                        'height': pil_image.height,
-                        'xref': xref,
-                        'format': base_image.get("ext", "unknown")
-                    })
+                    images.append(
+                        {
+                            "page_num": page_num + 1,  # 1-indexed for users
+                            "image_index": img_index,
+                            "image": pil_image,
+                            "width": pil_image.width,
+                            "height": pil_image.height,
+                            "xref": xref,
+                            "format": base_image.get("ext", "unknown"),
+                        }
+                    )
 
-                except Exception as e:
+                except Exception:
                     # Skip images that can't be extracted (e.g., inline images, forms)
                     continue
 

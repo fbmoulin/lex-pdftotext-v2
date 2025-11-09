@@ -6,10 +6,11 @@ infinite hangs during PDF processing.
 """
 
 import time
-import pytest
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 
-from src.utils.timeout import timeout, timeout_context, run_with_timeout, TimeoutError
+import pytest
+
+from src.utils.timeout import TimeoutError, run_with_timeout, timeout, timeout_context
 
 
 class TestTimeoutDecorator:

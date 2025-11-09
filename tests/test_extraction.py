@@ -4,16 +4,17 @@ Basic tests for PDF extraction functionality.
 To run: pytest tests/
 """
 
-import pytest
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.utils.patterns import RegexPatterns
-from src.processors.text_normalizer import TextNormalizer
 from src.processors.metadata_parser import MetadataParser
+from src.processors.text_normalizer import TextNormalizer
+from src.utils.patterns import RegexPatterns
 
 
 class TestRegexPatterns:
@@ -38,9 +39,9 @@ class TestRegexPatterns:
         text = "Edvaldo Souza de Oliveira – OAB/ES 43.156"
         lawyers = RegexPatterns.extract_lawyers(text)
         assert len(lawyers) == 1
-        assert lawyers[0]['name'] == "Edvaldo Souza de Oliveira"
-        assert lawyers[0]['state'] == "ES"
-        assert lawyers[0]['oab'] == "43.156"
+        assert lawyers[0]["name"] == "Edvaldo Souza de Oliveira"
+        assert lawyers[0]["state"] == "ES"
+        assert lawyers[0]["oab"] == "43.156"
 
     def test_signature_date_extraction(self):
         """Test signature date extraction."""
@@ -120,5 +121,5 @@ class TestMetadataParser:
         assert metadata.is_certificate
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

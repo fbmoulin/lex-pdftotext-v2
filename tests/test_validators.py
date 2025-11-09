@@ -4,22 +4,22 @@ Comprehensive tests for validation utilities.
 To run: pytest tests/test_validators.py -v
 """
 
-import pytest
-from pathlib import Path
-import tempfile
-import shutil
-
 # Add src to path
 import sys
+import tempfile
+from pathlib import Path
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.utils.validators import (
-    validate_process_number,
-    validate_filename,
-    validate_chunk_size,
     check_disk_space,
     estimate_output_size,
-    sanitize_output_path
+    sanitize_output_path,
+    validate_chunk_size,
+    validate_filename,
+    validate_process_number,
 )
 
 
@@ -203,8 +203,8 @@ class TestOutputSizeEstimation:
     def test_estimate_output_size(self):
         """Test estimation of output file size."""
         # Create a temp file of known size (1MB)
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-            tf.write(b'x' * (1024 * 1024))  # 1MB
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tf:
+            tf.write(b"x" * (1024 * 1024))  # 1MB
             temp_path = Path(tf.name)
 
         try:
@@ -218,8 +218,8 @@ class TestOutputSizeEstimation:
 
     def test_estimate_with_custom_multiplier(self):
         """Test estimation with custom multiplier."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-            tf.write(b'x' * (2 * 1024 * 1024))  # 2MB
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tf:
+            tf.write(b"x" * (2 * 1024 * 1024))  # 2MB
             temp_path = Path(tf.name)
 
         try:
@@ -256,5 +256,5 @@ class TestPathSanitization:
             sanitize_output_path("/etc/passwd", base_dir)
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -5,10 +5,10 @@ Handles file locking, process management, and cleanup
 """
 
 import os
-import sys
-import time
 import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
 
 
@@ -22,21 +22,19 @@ def kill_process_by_name(process_name):
     Returns:
         bool: True if successful or no process found
     """
-    if sys.platform != 'win32':
+    if sys.platform != "win32":
         return True
 
     try:
         # Use taskkill on Windows
         result = subprocess.run(
-            ['taskkill', '/F', '/IM', process_name],
-            capture_output=True,
-            text=True
+            ["taskkill", "/F", "/IM", process_name], capture_output=True, text=True
         )
 
         if result.returncode == 0:
             print(f"   ✓ Processo {process_name} encerrado")
             return True
-        elif 'not found' in result.stderr.lower() or 'não encontrado' in result.stderr.lower():
+        elif "not found" in result.stderr.lower() or "não encontrado" in result.stderr.lower():
             # Process not running - that's fine
             return True
         else:
@@ -67,12 +65,14 @@ def wait_for_file_release(file_path, max_attempts=5, delay=1):
     for attempt in range(max_attempts):
         try:
             # Try to open file exclusively
-            with open(file_path, 'a'):
+            with open(file_path, "a"):
                 pass
             return True
         except PermissionError:
             if attempt < max_attempts - 1:
-                print(f"   ⏳ Aguardando liberação de {file_path.name}... ({attempt + 1}/{max_attempts})")
+                print(
+                    f"   ⏳ Aguardando liberação de {file_path.name}... ({attempt + 1}/{max_attempts})"
+                )
                 time.sleep(delay)
             else:
                 return False
@@ -140,12 +140,12 @@ def pre_build_cleanup():
 
     # 1. Kill any running PDF2MD processes
     print("   [1/3] Encerrando processos...")
-    kill_process_by_name('PDF2MD.exe')
+    kill_process_by_name("PDF2MD.exe")
     time.sleep(1)
 
     # 2. Wait for files to be released
     print("   [2/3] Aguardando liberação de arquivos...")
-    dist_exe = Path('dist/PDF2MD.exe')
+    dist_exe = Path("dist/PDF2MD.exe")
     if dist_exe.exists():
         if not wait_for_file_release(dist_exe, max_attempts=3):
             print("   ⚠️  Arquivo ainda bloqueado - continuando mesmo assim...")
@@ -154,7 +154,7 @@ def pre_build_cleanup():
     # 3. Remove build directories
     print("   [3/3] Removendo diretórios de build...")
 
-    dirs_to_clean = ['build', 'dist', '__pycache__']
+    dirs_to_clean = ["build", "dist", "__pycache__"]
     for dir_name in dirs_to_clean:
         if Path(dir_name).exists():
             print(f"      Removendo {dir_name}/")
@@ -162,7 +162,7 @@ def pre_build_cleanup():
                 success = False
 
     # Remove spec files
-    for spec_file in Path('.').glob('*.spec'):
+    for spec_file in Path(".").glob("*.spec"):
         try:
             spec_file.unlink()
             print(f"      Removendo {spec_file}")
@@ -185,8 +185,8 @@ def verify_build_result():
     Returns:
         bool: True if build successful
     """
-    exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
-    exe_path = Path('dist') / exe_name
+    exe_name = "PDF2MD.exe" if sys.platform == "win32" else "PDF2MD"
+    exe_path = Path("dist") / exe_name
 
     if not exe_path.exists():
         print(f"\n❌ Executável não encontrado: {exe_path}")
@@ -195,12 +195,12 @@ def verify_build_result():
     # Check file size
     size_mb = exe_path.stat().st_size / (1024 * 1024)
 
-    print(f"\n✅ Build concluído com sucesso!")
+    print("\n✅ Build concluído com sucesso!")
     print(f"   📍 Local: {exe_path}")
     print(f"   📦 Tamanho: {size_mb:.2f} MB")
 
     # Check for portable package
-    portable_zip = Path('dist/PDF2MD_Portable.zip')
+    portable_zip = Path("dist/PDF2MD_Portable.zip")
     if portable_zip.exists():
         zip_size = portable_zip.stat().st_size / (1024 * 1024)
         print(f"   📦 Pacote portável: {portable_zip} ({zip_size:.2f} MB)")
@@ -208,7 +208,7 @@ def verify_build_result():
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Build Utils - Test Mode")
     print("=" * 50)
     pre_build_cleanup()

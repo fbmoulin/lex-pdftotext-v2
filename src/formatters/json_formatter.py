@@ -1,7 +1,6 @@
 """JSON formatter for legal document text."""
 
 import json
-from typing import Optional
 from pathlib import Path
 
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
@@ -30,9 +29,9 @@ class JSONFormatter:
     def format(
         self,
         text: str,
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
         include_metadata: bool = True,
-        hierarchical: bool = False
+        hierarchical: bool = False,
     ) -> dict:
         """
         Format text as structured JSON dictionary.
@@ -51,10 +50,7 @@ class JSONFormatter:
             metadata = self.metadata_parser.parse(text)
 
         # Build base structure
-        result = {
-            "format_version": "1.0",
-            "document_type": self._determine_document_type(metadata)
-        }
+        result = {"format_version": "1.0", "document_type": self._determine_document_type(metadata)}
 
         # Add metadata
         if include_metadata:
@@ -67,7 +63,7 @@ class JSONFormatter:
             result["content"] = {
                 "text": text,
                 "character_count": len(text),
-                "word_count": len(text.split())
+                "word_count": len(text.split()),
             }
 
         return result
@@ -75,10 +71,10 @@ class JSONFormatter:
     def format_to_string(
         self,
         text: str,
-        metadata: Optional[DocumentMetadata] = None,
+        metadata: DocumentMetadata | None = None,
         include_metadata: bool = True,
         hierarchical: bool = False,
-        indent: Optional[int] = 2
+        indent: int | None = 2,
     ) -> str:
         """
         Format text as JSON string.
@@ -111,27 +107,18 @@ class JSONFormatter:
             "document_ids": metadata.document_ids,
             "court": metadata.court,
             "case_value": metadata.case_value,
-            "parties": {
-                "author": metadata.author,
-                "defendant": metadata.defendant
-            },
+            "parties": {"author": metadata.author, "defendant": metadata.defendant},
             "lawyers": [
-                {
-                    "name": lawyer["name"],
-                    "oab": lawyer["oab"],
-                    "state": lawyer["state"]
-                }
+                {"name": lawyer["name"], "oab": lawyer["oab"], "state": lawyer["state"]}
                 for lawyer in metadata.lawyers
             ],
-            "dates": {
-                "signatures": metadata.signature_dates
-            },
+            "dates": {"signatures": metadata.signature_dates},
             "classification": {
                 "is_initial_petition": metadata.is_initial_petition,
                 "is_decision": metadata.is_decision,
-                "is_certificate": metadata.is_certificate
+                "is_certificate": metadata.is_certificate,
             },
-            "sections": metadata.sections
+            "sections": metadata.sections,
         }
 
     def _determine_document_type(self, metadata: DocumentMetadata) -> str:
@@ -167,14 +154,14 @@ class JSONFormatter:
             dict: Hierarchical content structure
         """
         # Split into paragraphs
-        paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
 
         result = {
             "text": text,
             "character_count": len(text),
             "word_count": len(text.split()),
             "paragraph_count": len(paragraphs),
-            "paragraphs": paragraphs
+            "paragraphs": paragraphs,
         }
 
         # Add sections if detected
@@ -184,11 +171,7 @@ class JSONFormatter:
         return result
 
     @staticmethod
-    def save_to_file(
-        data: dict,
-        output_path: str,
-        indent: Optional[int] = 2
-    ) -> None:
+    def save_to_file(data: dict, output_path: str, indent: int | None = 2) -> None:
         """
         Save JSON data to file.
 
@@ -207,7 +190,7 @@ class JSONFormatter:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=indent)
 
             logger.info(f"JSON saved successfully: {output_path}")

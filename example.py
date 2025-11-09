@@ -12,8 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.extractors import PyMuPDFExtractor
-from src.processors import TextNormalizer, MetadataParser
 from src.formatters import MarkdownFormatter
+from src.processors import MetadataParser, TextNormalizer
 
 
 def example_basic_extraction(pdf_path: str):
@@ -33,7 +33,7 @@ def example_basic_extraction(pdf_path: str):
         # Extract text
         text = extractor.extract_text()
         print(f"   Caracteres extraídos: {len(text)}")
-        print(f"\n   Primeiros 200 caracteres:")
+        print("\n   Primeiros 200 caracteres:")
         print(f"   {text[:200]}...\n")
 
 
@@ -79,7 +79,7 @@ def example_metadata_extraction(pdf_path: str):
     parser = MetadataParser()
     metadata = parser.parse(text)
 
-    print(f"\n⚖️  Metadados Jurídicos:\n")
+    print("\n⚖️  Metadados Jurídicos:\n")
 
     if metadata.process_number:
         print(f"   Processo: {metadata.process_number}")
@@ -102,7 +102,7 @@ def example_metadata_extraction(pdf_path: str):
         print(f"   Réu: {metadata.defendant}")
 
     if metadata.lawyers:
-        print(f"\n   Advogados:")
+        print("\n   Advogados:")
         for lawyer in metadata.lawyers:
             print(f"      - {lawyer['name']} (OAB/{lawyer['state']} {lawyer['oab']})")
 
@@ -152,7 +152,7 @@ def example_markdown_output(pdf_path: str, output_path: str = "example_output.md
 
     print(f"\n✅ Markdown salvo em: {output_path}")
     print(f"   Tamanho: {len(markdown)} caracteres")
-    print(f"\n   Preview (primeiras 500 caracteres):")
+    print("\n   Preview (primeiras 500 caracteres):")
     print(f"\n{markdown[:500]}...\n")
 
 
@@ -178,9 +178,9 @@ def example_rag_chunks(pdf_path: str):
     formatter = MarkdownFormatter()
     chunks = formatter.format_for_rag(text, metadata, chunk_size=1000)
 
-    print(f"\n🤖 Chunks para RAG:")
+    print("\n🤖 Chunks para RAG:")
     print(f"   Total de chunks: {len(chunks)}")
-    print(f"\n   Exemplo - Chunk 0:")
+    print("\n   Exemplo - Chunk 0:")
     print(f"   Texto: {chunks[0]['text'][:200]}...")
     print(f"   Metadata: {chunks[0]['metadata']}")
     print()
@@ -223,9 +223,10 @@ def main():
     except Exception as e:
         print(f"\n❌ Erro: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

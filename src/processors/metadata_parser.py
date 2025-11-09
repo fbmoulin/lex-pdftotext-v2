@@ -1,10 +1,9 @@
 """Metadata extraction from legal document text."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
-from ..utils.patterns import RegexPatterns
 from ..utils.cache import get_performance_monitor
+from ..utils.patterns import RegexPatterns
 
 # Initialize performance monitor
 performance = get_performance_monitor()
@@ -15,16 +14,16 @@ class DocumentMetadata:
     """Structured metadata extracted from a legal document."""
 
     # Process information
-    process_number: Optional[str] = None
+    process_number: str | None = None
     document_ids: list[str] = field(default_factory=list)
 
     # Parties
-    author: Optional[str] = None
-    defendant: Optional[str] = None
+    author: str | None = None
+    defendant: str | None = None
 
     # Court information
-    court: Optional[str] = None
-    case_value: Optional[str] = None
+    court: str | None = None
+    case_value: str | None = None
 
     # Signatures
     lawyers: list[dict[str, str]] = field(default_factory=list)
@@ -101,7 +100,7 @@ class MetadataParser:
 
         return metadata
 
-    def _extract_process_number(self, text: str) -> Optional[str]:
+    def _extract_process_number(self, text: str) -> str | None:
         """Extract process number in CNJ format."""
         return RegexPatterns.extract_process_number(text)
 
@@ -109,22 +108,22 @@ class MetadataParser:
         """Extract all document IDs."""
         return RegexPatterns.extract_document_ids(text)
 
-    def _extract_author(self, text: str) -> Optional[str]:
+    def _extract_author(self, text: str) -> str | None:
         """Extract author/plaintiff name."""
         match = RegexPatterns.AUTHOR_PATTERN.search(text)
         return match.group(1).strip() if match else None
 
-    def _extract_defendant(self, text: str) -> Optional[str]:
+    def _extract_defendant(self, text: str) -> str | None:
         """Extract defendant name."""
         match = RegexPatterns.DEFENDANT_PATTERN.search(text)
         return match.group(1).strip() if match else None
 
-    def _extract_court(self, text: str) -> Optional[str]:
+    def _extract_court(self, text: str) -> str | None:
         """Extract court/vara name."""
         match = RegexPatterns.COURT_NAME.search(text)
         return match.group(1).strip() if match else None
 
-    def _extract_case_value(self, text: str) -> Optional[str]:
+    def _extract_case_value(self, text: str) -> str | None:
         """Extract case value."""
         match = RegexPatterns.CASE_VALUE.search(text)
         return match.group(1).strip() if match else None

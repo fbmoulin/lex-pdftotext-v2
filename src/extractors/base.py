@@ -23,7 +23,7 @@ class PDFExtractor(ABC):
         self.pdf_path = Path(pdf_path)
         if not self.pdf_path.exists():
             raise InvalidPathError(f"Arquivo não encontrado: {pdf_path}")
-        if not self.pdf_path.suffix.lower() == '.pdf':
+        if not self.pdf_path.suffix.lower() == ".pdf":
             raise InvalidPathError(f"Arquivo deve ser PDF: {pdf_path}")
 
     @abstractmethod

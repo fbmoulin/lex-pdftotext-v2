@@ -1,7 +1,5 @@
 """Table formatting for Markdown output."""
 
-from typing import Optional
-
 
 class TableFormatter:
     """
@@ -13,9 +11,7 @@ class TableFormatter:
 
     @staticmethod
     def format_table(
-        table_data: list[list],
-        alignment: Optional[list[str]] = None,
-        include_header: bool = True
+        table_data: list[list], alignment: list[str] | None = None, include_header: bool = True
     ) -> str:
         """
         Format table data as Markdown table.
@@ -49,14 +45,14 @@ class TableFormatter:
         # Normalize rows to have same number of columns
         normalized_data = []
         for row in table_data:
-            normalized_row = list(row) + [''] * (num_cols - len(row))
+            normalized_row = list(row) + [""] * (num_cols - len(row))
             # Clean cell values (replace None with empty string)
-            normalized_row = [str(cell) if cell is not None else '' for cell in normalized_row]
+            normalized_row = [str(cell) if cell is not None else "" for cell in normalized_row]
             normalized_data.append(normalized_row)
 
         # Default alignment: left for all columns
         if alignment is None:
-            alignment = ['left'] * num_cols
+            alignment = ["left"] * num_cols
 
         # Build table
         lines = []
@@ -73,7 +69,7 @@ class TableFormatter:
         for row in normalized_data[start_index:]:
             lines.append(TableFormatter._format_row(row))
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     @staticmethod
     def _format_row(row: list[str]) -> str:
@@ -87,8 +83,8 @@ class TableFormatter:
             str: Markdown formatted row
         """
         # Clean and escape pipe characters in cells
-        cleaned_cells = [cell.replace('|', '\\|').strip() for cell in row]
-        return '| ' + ' | '.join(cleaned_cells) + ' |'
+        cleaned_cells = [cell.replace("|", "\\|").strip() for cell in row]
+        return "| " + " | ".join(cleaned_cells) + " |"
 
     @staticmethod
     def _format_separator(alignment: list[str]) -> str:
@@ -103,21 +99,21 @@ class TableFormatter:
         """
         separators = []
         for align in alignment:
-            if align == 'center':
-                separators.append(':---:')
-            elif align == 'right':
-                separators.append('---:')
+            if align == "center":
+                separators.append(":---:")
+            elif align == "right":
+                separators.append("---:")
             else:  # left or default
-                separators.append('---')
+                separators.append("---")
 
-        return '| ' + ' | '.join(separators) + ' |'
+        return "| " + " | ".join(separators) + " |"
 
     @staticmethod
     def format_table_with_caption(
         table_data: list[list],
-        caption: Optional[str] = None,
-        page_number: Optional[int] = None,
-        table_index: Optional[int] = None
+        caption: str | None = None,
+        page_number: int | None = None,
+        table_index: int | None = None,
     ) -> str:
         """
         Format table with caption and metadata.
@@ -135,7 +131,7 @@ class TableFormatter:
 
         # Generate caption if not provided
         if caption is None and page_number is not None:
-            caption = f"Tabela"
+            caption = "Tabela"
             if page_number is not None:
                 caption += f" - Página {page_number + 1}"
             if table_index is not None:
@@ -149,13 +145,10 @@ class TableFormatter:
         table_md = TableFormatter.format_table(table_data)
         sections.append(table_md)
 
-        return '\n'.join(sections)
+        return "\n".join(sections)
 
     @staticmethod
-    def format_all_tables(
-        tables: list[dict],
-        include_metadata: bool = True
-    ) -> str:
+    def format_all_tables(tables: list[dict], include_metadata: bool = True) -> str:
         """
         Format multiple tables as Markdown.
 
@@ -175,18 +168,16 @@ class TableFormatter:
             if include_metadata:
                 # Format with caption
                 table_md = TableFormatter.format_table_with_caption(
-                    table['data'],
-                    page_number=table['page'],
-                    table_index=table['table_index']
+                    table["data"], page_number=table["page"], table_index=table["table_index"]
                 )
             else:
                 # Format without metadata
-                table_md = TableFormatter.format_table(table['data'])
+                table_md = TableFormatter.format_table(table["data"])
 
             formatted_tables.append(table_md)
 
         # Join tables with double newline
-        return '\n\n'.join(formatted_tables)
+        return "\n\n".join(formatted_tables)
 
     @staticmethod
     def detect_alignment(table_data: list[list]) -> list[str]:
@@ -220,14 +211,14 @@ class TableFormatter:
             numeric_count = 0
             for value in col_values:
                 # Remove common formatting (currency, commas, etc.)
-                cleaned = value.replace('R$', '').replace('.', '').replace(',', '').strip()
-                if cleaned.replace('-', '').isdigit():
+                cleaned = value.replace("R$", "").replace(".", "").replace(",", "").strip()
+                if cleaned.replace("-", "").isdigit():
                     numeric_count += 1
 
             # If >50% numeric, right-align
             if col_values and numeric_count / len(col_values) > 0.5:
-                alignments.append('right')
+                alignments.append("right")
             else:
-                alignments.append('left')
+                alignments.append("left")
 
         return alignments

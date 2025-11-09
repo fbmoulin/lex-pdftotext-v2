@@ -6,14 +6,14 @@ Gera executável Windows (.exe) usando PyInstaller com tratamento
 robusto de erros e limpeza automática de arquivos bloqueados.
 """
 
-import sys
-import os
-from pathlib import Path
 import subprocess
+import sys
+from pathlib import Path
 
 # Import build utilities
 try:
     from build_utils import pre_build_cleanup, verify_build_result
+
     HAS_BUILD_UTILS = True
 except ImportError:
     HAS_BUILD_UTILS = False
@@ -24,6 +24,7 @@ def check_requirements():
     """Verifica se PyInstaller está instalado."""
     try:
         import PyInstaller
+
         print("✅ PyInstaller encontrado")
         return True
     except ImportError:
@@ -37,8 +38,8 @@ def build_executable():
     print("\n🔨 Construindo executável...\n")
 
     # Verificar se ícone existe
-    icon_path = Path('assets/logo.ico')
-    icon_arg = f'--icon={icon_path}' if icon_path.exists() else ''
+    icon_path = Path("assets/logo.ico")
+    icon_arg = f"--icon={icon_path}" if icon_path.exists() else ""
 
     if not icon_path.exists():
         print("⚠️  Ícone não encontrado em assets/logo.ico")
@@ -46,17 +47,17 @@ def build_executable():
         print("   Veja assets/ICON_CREATION.md para criar um ícone\n")
 
     # Separador de path (Windows usa ; Linux/macOS usa :)
-    separator = ';' if sys.platform == 'win32' else ':'
+    separator = ";" if sys.platform == "win32" else ":"
 
     # Comando PyInstaller
     cmd = [
-        'pyinstaller',
-        '--onefile',              # Gerar único executável
-        '--windowed',             # Sem console (GUI apenas)
-        '--name=PDF2MD',          # Nome do executável
-        f'--add-data=assets{separator}assets',  # Incluir assets
-        f'--add-data=src{separator}src',        # Incluir src
-        '--clean',                # Limpar cache antes do build
+        "pyinstaller",
+        "--onefile",  # Gerar único executável
+        "--windowed",  # Sem console (GUI apenas)
+        "--name=PDF2MD",  # Nome do executável
+        f"--add-data=assets{separator}assets",  # Incluir assets
+        f"--add-data=src{separator}src",  # Incluir src
+        "--clean",  # Limpar cache antes do build
     ]
 
     if icon_arg:
@@ -64,23 +65,23 @@ def build_executable():
 
     # Hidden imports (dependências que PyInstaller pode não detectar)
     hidden_imports = [
-        'fitz',
-        'PyMuPDF',
-        'webview',
-        'click',
-        'tqdm',
-        'PIL',
-        'PIL.Image',
-        'google.generativeai',
-        'google.ai',
-        'google.ai.generativelanguage',
+        "fitz",
+        "PyMuPDF",
+        "webview",
+        "click",
+        "tqdm",
+        "PIL",
+        "PIL.Image",
+        "google.generativeai",
+        "google.ai",
+        "google.ai.generativelanguage",
     ]
 
     for imp in hidden_imports:
-        cmd.append(f'--hidden-import={imp}')
+        cmd.append(f"--hidden-import={imp}")
 
     # Entry point
-    cmd.append('app_ui.py')
+    cmd.append("app_ui.py")
 
     # Executar PyInstaller
     print(f"Comando: {' '.join(cmd)}\n")
@@ -102,11 +103,11 @@ def create_portable_package():
 
     print("\n📦 Criando pacote portável...")
 
-    dist_dir = Path('dist')
-    package_dir = dist_dir / 'PDF2MD_Portable'
+    dist_dir = Path("dist")
+    package_dir = dist_dir / "PDF2MD_Portable"
 
     # Determinar nome do executável
-    exe_name = 'PDF2MD.exe' if sys.platform == 'win32' else 'PDF2MD'
+    exe_name = "PDF2MD.exe" if sys.platform == "win32" else "PDF2MD"
     exe_path = dist_dir / exe_name
 
     if not exe_path.exists():
@@ -125,13 +126,14 @@ def create_portable_package():
         print(f"   ✓ Copiado: {exe_name}")
 
         # Copiar README
-        if Path('README.md').exists():
-            shutil.copy('README.md', package_dir)
+        if Path("README.md").exists():
+            shutil.copy("README.md", package_dir)
             print("   ✓ Copiado: README.md")
 
         # Criar README de instalação
-        install_readme = package_dir / 'LEIA-ME.txt'
-        install_readme.write_text("""
+        install_readme = package_dir / "LEIA-ME.txt"
+        install_readme.write_text(
+            """
 PDF Legal Extractor - Versão Portável
 ====================================
 
@@ -163,18 +165,16 @@ https://github.com/fbmoulin/pdftotext
 
 Versão: 1.0
 Criado por: Lex Intelligentia
-""", encoding='utf-8')
+""",
+            encoding="utf-8",
+        )
         print("   ✓ Criado: LEIA-ME.txt")
 
         # Criar arquivo zip
-        print(f"   Criando PDF2MD_Portable.zip...")
-        shutil.make_archive(
-            str(dist_dir / 'PDF2MD_Portable'),
-            'zip',
-            package_dir
-        )
+        print("   Criando PDF2MD_Portable.zip...")
+        shutil.make_archive(str(dist_dir / "PDF2MD_Portable"), "zip", package_dir)
 
-        print(f"✅ Pacote portável criado: dist/PDF2MD_Portable.zip")
+        print("✅ Pacote portável criado: dist/PDF2MD_Portable.zip")
         return True
 
     except Exception as e:
@@ -190,7 +190,7 @@ def print_next_steps():
     print("=" * 60)
     print("\nPRÓXIMOS PASSOS:")
     print("\n1. Teste o executável:")
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         print("   > .\\dist\\PDF2MD.exe")
     else:
         print("   > ./dist/PDF2MD")
@@ -255,5 +255,5 @@ def main():
     print_next_steps()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

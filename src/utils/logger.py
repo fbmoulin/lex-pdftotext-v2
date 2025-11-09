@@ -6,8 +6,8 @@ Provides centralized logging with file and console output.
 
 import logging
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 
 def setup_logger(
@@ -15,7 +15,7 @@ def setup_logger(
     log_level: str = "INFO",
     log_file: str = "logs/pdftotext.log",
     max_bytes: int = 10 * 1024 * 1024,  # 10MB
-    backup_count: int = 5
+    backup_count: int = 5,
 ) -> logging.Logger:
     """
     Setup and configure logger with file and console handlers.
@@ -46,16 +46,13 @@ def setup_logger(
 
     # Detailed format with timestamp, level, module, and message
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     # File handler with rotation
     file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding='utf-8'
+        log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
     )
     file_handler.setLevel(level)
     file_handler.setFormatter(formatter)
@@ -64,9 +61,7 @@ def setup_logger(
     # Console handler (less verbose)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.WARNING)  # Only warnings and errors to console
-    console_formatter = logging.Formatter(
-        '%(levelname)s - %(message)s'
-    )
+    console_formatter = logging.Formatter("%(levelname)s - %(message)s")
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 

@@ -1,16 +1,15 @@
 """Image analysis using Google Gemini API."""
 
-import os
 import io
-import base64
-from typing import Optional
-from PIL import Image
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from ratelimit import limits, sleep_and_retry
+import os
 
-from ..utils.logger import get_logger
+from PIL import Image
+from ratelimit import limits, sleep_and_retry
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from ..utils.cache import get_image_cache
 from ..utils.config import get_config
+from ..utils.logger import get_logger
 
 # Initialize logger and config
 logger = get_logger(__name__)
@@ -25,7 +24,9 @@ class ImageAnalyzer:
     identifying evidence, exhibits, signatures, stamps, etc.
     """
 
-    def __init__(self, api_key: Optional[str] = None, max_image_size_mb: int = 4, enable_cache: bool = True):
+    def __init__(
+        self, api_key: str | None = None, max_image_size_mb: int = 4, enable_cache: bool = True
+    ):
         """
         Initialize image analyzer with Gemini API.
 
@@ -37,7 +38,7 @@ class ImageAnalyzer:
         Raises:
             ValueError: If no API key is found
         """
-        self.api_key = api_key or os.environ.get('GEMINI_API_KEY')
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         self.max_image_size_mb = max_image_size_mb
         self.enable_cache = enable_cache
 
@@ -59,15 +60,15 @@ class ImageAnalyzer:
         # Lazy import to avoid requiring google-generativeai if not using images
         try:
             import google.generativeai as genai
+
             self.genai = genai
             self.genai.configure(api_key=self.api_key)
-            self.model = self.genai.GenerativeModel('gemini-1.5-flash')
+            self.model = self.genai.GenerativeModel("gemini-1.5-flash")
             logger.info("ImageAnalyzer initialized with Gemini API")
         except ImportError as e:
             logger.error(f"Failed to import google-generativeai: {e}")
             raise ImportError(
-                "google-generativeai not installed. "
-                "Install with: pip install google-generativeai"
+                "google-generativeai not installed. Install with: pip install google-generativeai"
             )
 
     def _resize_image_if_needed(self, image: Image.Image) -> Image.Image:
@@ -82,11 +83,13 @@ class ImageAnalyzer:
         """
         # Calculate current size
         img_buffer = io.BytesIO()
-        image.save(img_buffer, format='PNG')
+        image.save(img_buffer, format="PNG")
         size_mb = len(img_buffer.getvalue()) / (1024 * 1024)
 
         if size_mb > self.max_image_size_mb:
-            logger.warning(f"Image size {size_mb:.2f}MB exceeds {self.max_image_size_mb}MB, resizing...")
+            logger.warning(
+                f"Image size {size_mb:.2f}MB exceeds {self.max_image_size_mb}MB, resizing..."
+            )
 
             # Calculate new dimensions (reduce by half iteratively until under limit)
             width, height = image.size
@@ -98,7 +101,7 @@ class ImageAnalyzer:
 
                 # Recalculate size
                 img_buffer = io.BytesIO()
-                resized.save(img_buffer, format='PNG')
+                resized.save(img_buffer, format="PNG")
                 size_mb = len(img_buffer.getvalue()) / (1024 * 1024)
 
             logger.info(f"Image resized to {width}x{height} ({size_mb:.2f}MB)")
@@ -112,7 +115,7 @@ class ImageAnalyzer:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type((Exception,)),
-        reraise=True
+        reraise=True,
     )
     def _call_gemini_api(self, prompt: str, image: Image.Image) -> str:
         """
@@ -129,8 +132,12 @@ class ImageAnalyzer:
             Exception: If all retries fail
         """
         try:
-            logger.debug(f"Calling Gemini API for image analysis (timeout: {config.gemini_api_timeout}s)")
-            response = self.model.generate_content([prompt, image], request_options={'timeout': config.gemini_api_timeout})
+            logger.debug(
+                f"Calling Gemini API for image analysis (timeout: {config.gemini_api_timeout}s)"
+            )
+            response = self.model.generate_content(
+                [prompt, image], request_options={"timeout": config.gemini_api_timeout}
+            )
 
             if not response or not response.text:
                 logger.warning("Empty response from Gemini API")
@@ -144,10 +151,7 @@ class ImageAnalyzer:
             raise
 
     def describe_image(
-        self,
-        image: Image.Image,
-        context: str = "legal document",
-        page_num: Optional[int] = None
+        self, image: Image.Image, context: str = "legal document", page_num: int | None = None
     ) -> str:
         """
         Generate a description of an image using Gemini Vision.
@@ -197,9 +201,7 @@ class ImageAnalyzer:
             raise  # Raise exception instead of returning error string
 
     def describe_images_batch(
-        self,
-        images: list[dict],
-        context: str = "legal document"
+        self, images: list[dict], context: str = "legal document"
     ) -> list[dict]:
         """
         Analyze multiple images in batch.
@@ -221,14 +223,12 @@ class ImageAnalyzer:
                 logger.debug(f"Processing image {idx}/{total}")
 
                 description = self.describe_image(
-                    img_data['image'],
-                    context=context,
-                    page_num=img_data['page_num']
+                    img_data["image"], context=context, page_num=img_data["page_num"]
                 )
 
                 # Add description to image data
                 img_data_copy = img_data.copy()
-                img_data_copy['description'] = description
+                img_data_copy["description"] = description
                 results.append(img_data_copy)
 
             except Exception as e:
@@ -240,13 +240,13 @@ class ImageAnalyzer:
 
                 # Add error as description
                 img_data_copy = img_data.copy()
-                img_data_copy['description'] = f"[Erro: {type(e).__name__}]"
+                img_data_copy["description"] = f"[Erro: {type(e).__name__}]"
                 results.append(img_data_copy)
 
         logger.info(f"Batch image analysis completed: {len(results)} images processed")
         return results
 
-    def _build_prompt(self, context: str, page_num: Optional[int] = None) -> str:
+    def _build_prompt(self, context: str, page_num: int | None = None) -> str:
         """
         Build prompt for Gemini vision analysis.
 
@@ -291,10 +291,10 @@ def format_image_description_markdown(image_data: dict, index: int = 1) -> str:
     Returns:
         str: Formatted Markdown string
     """
-    page_num = image_data.get('page_num', '?')
-    width = image_data.get('width', '?')
-    height = image_data.get('height', '?')
-    description = image_data.get('description', '[Sem descrição]')
+    page_num = image_data.get("page_num", "?")
+    width = image_data.get("width", "?")
+    height = image_data.get("height", "?")
+    description = image_data.get("description", "[Sem descrição]")
 
     md = f"""### 🖼️ Imagem {index} (Página {page_num})
 

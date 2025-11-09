@@ -6,11 +6,11 @@ Provides hash-based caching for expensive operations like image analysis.
 
 import hashlib
 import json
-import pickle
-from pathlib import Path
-from typing import Any, Optional, Callable
-from functools import wraps
 import time
+from collections.abc import Callable
+from functools import wraps
+from pathlib import Path
+from typing import Any
 
 from .logger import get_logger
 
@@ -33,11 +33,11 @@ class ImageDescriptionCache:
             max_entries: Maximum number of cached entries
         """
         if cache_dir is None:
-            cache_dir = Path.cwd() / '.cache' / 'images'
+            cache_dir = Path.cwd() / ".cache" / "images"
 
         self.cache_dir = cache_dir
         self.max_entries = max_entries
-        self.cache_file = self.cache_dir / 'descriptions.json'
+        self.cache_file = self.cache_dir / "descriptions.json"
 
         # Create cache directory
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -53,7 +53,7 @@ class ImageDescriptionCache:
             return {}
 
         try:
-            with open(self.cache_file, 'r', encoding='utf-8') as f:
+            with open(self.cache_file, encoding="utf-8") as f:
                 cache = json.load(f)
             logger.debug(f"Loaded {len(cache)} entries from cache")
             return cache
@@ -68,14 +68,12 @@ class ImageDescriptionCache:
             if len(self._cache) > self.max_entries:
                 # Sort by timestamp and keep newest entries
                 sorted_items = sorted(
-                    self._cache.items(),
-                    key=lambda x: x[1].get('timestamp', 0),
-                    reverse=True
+                    self._cache.items(), key=lambda x: x[1].get("timestamp", 0), reverse=True
                 )
-                self._cache = dict(sorted_items[:self.max_entries])
+                self._cache = dict(sorted_items[: self.max_entries])
                 logger.info(f"Cache trimmed to {self.max_entries} entries")
 
-            with open(self.cache_file, 'w', encoding='utf-8') as f:
+            with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(self._cache, f, ensure_ascii=False, indent=2)
             logger.debug(f"Saved {len(self._cache)} entries to cache")
         except Exception as e:
@@ -95,13 +93,13 @@ class ImageDescriptionCache:
 
         # Convert image to bytes
         img_bytes = io.BytesIO()
-        image.save(img_bytes, format='PNG')
+        image.save(img_bytes, format="PNG")
         img_data = img_bytes.getvalue()
 
         # Generate hash
         return hashlib.sha256(img_data).hexdigest()
 
-    def get(self, image: Any, context: str = None) -> Optional[str]:
+    def get(self, image: Any, context: str = None) -> str | None:
         """
         Get cached description for image.
 
@@ -119,7 +117,7 @@ class ImageDescriptionCache:
         if cache_key in self._cache:
             entry = self._cache[cache_key]
             logger.debug(f"Cache hit for image {img_hash[:8]}...")
-            return entry['description']
+            return entry["description"]
 
         logger.debug(f"Cache miss for image {img_hash[:8]}...")
         return None
@@ -139,9 +137,9 @@ class ImageDescriptionCache:
 
         # Store with timestamp
         self._cache[cache_key] = {
-            'description': description,
-            'timestamp': time.time(),
-            'hash': img_hash
+            "description": description,
+            "timestamp": time.time(),
+            "hash": img_hash,
         }
 
         logger.debug(f"Cached description for image {img_hash[:8]}...")
@@ -158,10 +156,10 @@ class ImageDescriptionCache:
     def stats(self) -> dict:
         """Get cache statistics."""
         return {
-            'total_entries': len(self._cache),
-            'cache_dir': str(self.cache_dir),
-            'cache_file': str(self.cache_file),
-            'max_entries': self.max_entries
+            "total_entries": len(self._cache),
+            "cache_dir": str(self.cache_dir),
+            "cache_file": str(self.cache_file),
+            "max_entries": self.max_entries,
         }
 
 
@@ -189,6 +187,7 @@ class PerformanceMonitor:
             def extract_pdf(path):
                 ...
         """
+
         def decorator(func: Callable) -> Callable:
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -204,19 +203,19 @@ class PerformanceMonitor:
                     # Store metrics
                     if operation not in self.metrics:
                         self.metrics[operation] = {
-                            'count': 0,
-                            'total_time': 0,
-                            'avg_time': 0,
-                            'min_time': float('inf'),
-                            'max_time': 0
+                            "count": 0,
+                            "total_time": 0,
+                            "avg_time": 0,
+                            "min_time": float("inf"),
+                            "max_time": 0,
                         }
 
                     metrics = self.metrics[operation]
-                    metrics['count'] += 1
-                    metrics['total_time'] += duration
-                    metrics['avg_time'] = metrics['total_time'] / metrics['count']
-                    metrics['min_time'] = min(metrics['min_time'], duration)
-                    metrics['max_time'] = max(metrics['max_time'], duration)
+                    metrics["count"] += 1
+                    metrics["total_time"] += duration
+                    metrics["avg_time"] = metrics["total_time"] / metrics["count"]
+                    metrics["min_time"] = min(metrics["min_time"], duration)
+                    metrics["max_time"] = max(metrics["max_time"], duration)
 
                     # Log performance
                     logger.info(
@@ -228,12 +227,11 @@ class PerformanceMonitor:
 
                 except Exception as e:
                     duration = time.time() - start_time
-                    logger.error(
-                        f"Performance [{operation}]: FAILED after {duration:.3f}s - {e}"
-                    )
+                    logger.error(f"Performance [{operation}]: FAILED after {duration:.3f}s - {e}")
                     raise
 
             return wrapper
+
         return decorator
 
     def get_metrics(self, operation: str = None) -> dict:
@@ -280,8 +278,8 @@ class PerformanceMonitor:
 
 
 # Global instances
-_image_cache: Optional[ImageDescriptionCache] = None
-_performance_monitor: Optional[PerformanceMonitor] = None
+_image_cache: ImageDescriptionCache | None = None
+_performance_monitor: PerformanceMonitor | None = None
 
 
 def get_image_cache() -> ImageDescriptionCache:

@@ -1,10 +1,9 @@
 """Text normalization for legal documents."""
 
 import re
-from typing import Set
 
-from ..utils.patterns import RegexPatterns
 from ..utils.cache import get_performance_monitor
+from ..utils.patterns import RegexPatterns
 
 # Initialize performance monitor
 performance = get_performance_monitor()
@@ -76,7 +75,7 @@ class TextNormalizer:
         Returns:
             str: Text with repetitive content removed
         """
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         # Count line frequencies (ignoring empty lines and very short lines)
         line_counts = {}
@@ -87,21 +86,18 @@ class TextNormalizer:
                 line_counts[stripped] = line_counts.get(stripped, 0) + 1
 
         # Identify repetitive lines (appear more than threshold times)
-        repetitive_lines = {
-            line for line, count in line_counts.items()
-            if count >= threshold
-        }
+        repetitive_lines = {line for line, count in line_counts.items() if count >= threshold}
 
         # Additional patterns to remove (common footer/header indicators)
         footer_patterns = [
-            r'\b\d{5}-?\d{3}\b',  # CEP format (12345-678 or 12345678)
-            r'\(\d{2}\)\s*\d{4,5}-?\d{4}',  # Phone numbers (11) 98765-4321
-            r'www\.',  # Websites
-            r'@\w+\.\w+',  # Email addresses
-            r'\b[Aa]v\.|[Rr]ua\s+',  # Street addresses (Av. / Rua)
-            r'\b[Ee]scritor[ií]o\s+de\s+[Aa]dvocacia\b',  # "Escritório de Advocacia"
-            r'\b[Aa]dvocacia\s+e\s+[Cc]onsultoria\b',  # "Advocacia e Consultoria"
-            r'\bOAB/[A-Z]{2}\s+\d+',  # OAB registration
+            r"\b\d{5}-?\d{3}\b",  # CEP format (12345-678 or 12345678)
+            r"\(\d{2}\)\s*\d{4,5}-?\d{4}",  # Phone numbers (11) 98765-4321
+            r"www\.",  # Websites
+            r"@\w+\.\w+",  # Email addresses
+            r"\b[Aa]v\.|[Rr]ua\s+",  # Street addresses (Av. / Rua)
+            r"\b[Ee]scritor[ií]o\s+de\s+[Aa]dvocacia\b",  # "Escritório de Advocacia"
+            r"\b[Aa]dvocacia\s+e\s+[Cc]onsultoria\b",  # "Advocacia e Consultoria"
+            r"\bOAB/[A-Z]{2}\s+\d+",  # OAB registration
         ]
 
         # Filter out repetitive lines and footer patterns
@@ -126,7 +122,7 @@ class TextNormalizer:
             if not is_footer:
                 filtered_lines.append(line)
 
-        return '\n'.join(filtered_lines)
+        return "\n".join(filtered_lines)
 
     def _final_cleanup(self, text: str) -> str:
         """
@@ -135,17 +131,17 @@ class TextNormalizer:
         This is needed because PDFs often have blank pages or large whitespace areas.
         """
         # First, collapse all whitespace-only lines to truly empty lines
-        text = re.sub(r'^\s+$', '', text, flags=re.MULTILINE)
+        text = re.sub(r"^\s+$", "", text, flags=re.MULTILINE)
 
         # Split into lines
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         # Remove sequences of blank lines - keep max 1
         cleaned = []
         blank_count = 0
 
         for line in lines:
-            if line == '':  # Truly empty line
+            if line == "":  # Truly empty line
                 blank_count += 1
                 # Keep max 1 consecutive blank line (for paragraph breaks)
                 if blank_count <= 1:
@@ -155,11 +151,11 @@ class TextNormalizer:
                 cleaned.append(line)
 
         # Join
-        text = '\n'.join(cleaned)
+        text = "\n".join(cleaned)
 
         # Final pass: remove any remaining excessive blanks
         # This ensures no more than 2 newlines in a row (one blank line between paragraphs)
-        text = re.sub(r'\n{3,}', '\n\n', text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
 
         return text.strip()
 
@@ -169,10 +165,10 @@ class TextNormalizer:
         text = RegexPatterns.clean_noise(text)
 
         # Remove repetitive "Num. XXXXX - Pág. X" lines
-        text = re.sub(r'Num\.\s*\d+\s*-\s*Pág\.\s*\d+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r"Num\.\s*\d+\s*-\s*Pág\.\s*\d+", "", text, flags=re.IGNORECASE)
 
         # Remove standalone page markers
-        text = re.sub(r'---\s*página\s*\{\}\s*---', '', text, flags=re.IGNORECASE)
+        text = re.sub(r"---\s*página\s*\{\}\s*---", "", text, flags=re.IGNORECASE)
 
         return text
 
@@ -185,7 +181,7 @@ class TextNormalizer:
         - Proper names at start of sentences
         - Roman numerals
         """
-        lines = text.split('\n')
+        lines = text.split("\n")
         normalized_lines = []
 
         for line in lines:
@@ -201,7 +197,7 @@ class TextNormalizer:
             else:
                 normalized_lines.append(line)
 
-        return '\n'.join(normalized_lines)
+        return "\n".join(normalized_lines)
 
     def _convert_to_sentence_case(self, line: str) -> str:
         """
@@ -233,7 +229,7 @@ class TextNormalizer:
             line = line[0].upper() + line[1:]
 
         # Capitalize after sentence-ending punctuation
-        line = re.sub(r'([.!?]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), line)
+        line = re.sub(r"([.!?]\s+)([a-z])", lambda m: m.group(1) + m.group(2).upper(), line)
 
         # Restore acronyms (placeholders are still in the format we set)
         for placeholder, acronym in acronym_map.items():
@@ -252,10 +248,10 @@ class TextNormalizer:
         - Remove duplicate consecutive lines
         """
         # Remove trailing/leading whitespace from each line
-        lines = [line.rstrip() for line in text.split('\n')]
+        lines = [line.rstrip() for line in text.split("\n")]
 
         # Normalize spaces within lines
-        lines = [re.sub(r' +', ' ', line) for line in lines]
+        lines = [re.sub(r" +", " ", line) for line in lines]
 
         # Remove consecutive duplicate lines (keep only first occurrence)
         deduped_lines = []
@@ -264,7 +260,7 @@ class TextNormalizer:
 
         for line in lines:
             # Count consecutive empty lines
-            if line.strip() == '':
+            if line.strip() == "":
                 consecutive_empty += 1
                 # Allow max 1 consecutive empty line (for paragraph breaks)
                 if consecutive_empty <= 1:
@@ -277,10 +273,10 @@ class TextNormalizer:
                 prev_line = line
 
         # Join back
-        text = '\n'.join(deduped_lines)
+        text = "\n".join(deduped_lines)
 
         # Reduce any excessive blank lines to single blank line
-        text = re.sub(r'\n\n+', '\n\n', text)
+        text = re.sub(r"\n\n+", "\n\n", text)
 
         # Remove leading/trailing whitespace from entire text
         text = text.strip()
@@ -297,7 +293,7 @@ class TextNormalizer:
         Returns:
             str: Text without page markers
         """
-        return re.sub(r'\n*---\s*PÁGINA\s+\d+\s*---\n*', '\n\n', text, flags=re.IGNORECASE)
+        return re.sub(r"\n*---\s*PÁGINA\s+\d+\s*---\n*", "\n\n", text, flags=re.IGNORECASE)
 
     def clean_line_breaks(self, text: str) -> str:
         """
@@ -306,6 +302,6 @@ class TextNormalizer:
         Example: "desenvolvi-\nmento" becomes "desenvolvimento"
         """
         # Fix hyphenated words split across lines
-        text = re.sub(r'-\s*\n\s*', '', text)
+        text = re.sub(r"-\s*\n\s*", "", text)
 
         return text

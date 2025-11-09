@@ -1,12 +1,12 @@
 """Markdown formatter for legal document text."""
 
-from typing import Optional
 import os
 import tempfile
 from pathlib import Path
+
 from ..processors.metadata_parser import DocumentMetadata, MetadataParser
-from ..utils.logger import get_logger
 from ..utils.cache import get_performance_monitor
+from ..utils.logger import get_logger
 
 # Initialize logger and performance monitor
 logger = get_logger(__name__)
@@ -30,8 +30,8 @@ class MarkdownFormatter:
     def format(
         self,
         text: str,
-        metadata: Optional[DocumentMetadata] = None,
-        include_metadata_header: bool = True
+        metadata: DocumentMetadata | None = None,
+        include_metadata_header: bool = True,
     ) -> str:
         """
         Format text as structured Markdown.
@@ -71,11 +71,7 @@ class MarkdownFormatter:
 
         return "\n".join(sections)
 
-    def format_with_sections(
-        self,
-        text: str,
-        metadata: Optional[DocumentMetadata] = None
-    ) -> str:
+    def format_with_sections(self, text: str, metadata: DocumentMetadata | None = None) -> str:
         """
         Format with automatic section detection and structuring.
 
@@ -126,11 +122,7 @@ class MarkdownFormatter:
 
         return "\n".join(sections)
 
-    def _structure_petition(
-        self,
-        text: str,
-        metadata: DocumentMetadata
-    ) -> str:
+    def _structure_petition(self, text: str, metadata: DocumentMetadata) -> str:
         """
         Structure an initial petition into subsections.
 
@@ -154,7 +146,7 @@ class MarkdownFormatter:
         # This can be enhanced with more sophisticated NLP
         if metadata.sections:
             structured = []
-            lines = text.split('\n')
+            lines = text.split("\n")
 
             for section in metadata.sections:
                 # Find section in text and convert to markdown header
@@ -162,16 +154,13 @@ class MarkdownFormatter:
                     if section.upper() in line.upper():
                         lines[i] = f"\n### {section}\n"
 
-            return '\n'.join(lines)
+            return "\n".join(lines)
 
         return text
 
     @performance.track("rag_chunking")
     def format_for_rag(
-        self,
-        text: str,
-        metadata: Optional[DocumentMetadata] = None,
-        chunk_size: int = 1000
+        self, text: str, metadata: DocumentMetadata | None = None, chunk_size: int = 1000
     ) -> list[dict[str, str]]:
         """
         Format document optimized for RAG ingestion.
@@ -201,30 +190,33 @@ class MarkdownFormatter:
 
         # Prepare base metadata
         base_metadata = {
-            'process_number': metadata.process_number or '',
-            'document_ids': ','.join(metadata.document_ids),
-            'court': metadata.court or '',
-            'author': metadata.author or '',
-            'defendant': metadata.defendant or '',
+            "process_number": metadata.process_number or "",
+            "document_ids": ",".join(metadata.document_ids),
+            "court": metadata.court or "",
+            "author": metadata.author or "",
+            "defendant": metadata.defendant or "",
         }
 
         # If text is shorter than chunk size, return as single chunk
         if len(text.strip()) <= chunk_size:
-            return [{
-                'text': text.strip(),
-                'metadata': {**base_metadata, 'chunk_index': 0},
-                'chunk_index': 0
-            }]
+            return [
+                {
+                    "text": text.strip(),
+                    "metadata": {**base_metadata, "chunk_index": 0},
+                    "chunk_index": 0,
+                }
+            ]
 
         # Split into sentences while preserving terminators
         # Match complete sentences including punctuation
         import re
+
         # Match sentences: text followed by terminator(s)
-        sentence_pattern = r'([^.!?]*[.!?]+)'
+        sentence_pattern = r"([^.!?]*[.!?]+)"
         parts = re.findall(sentence_pattern, text)
 
         # Handle remaining text without terminator
-        remaining = re.sub(sentence_pattern, '', text).strip()
+        remaining = re.sub(sentence_pattern, "", text).strip()
         if remaining:
             parts.append(remaining)
 
@@ -244,11 +236,13 @@ class MarkdownFormatter:
             else:
                 # Current chunk is full, save it
                 if current_chunk:
-                    chunks.append({
-                        'text': current_chunk.strip(),
-                        'metadata': {**base_metadata, 'chunk_index': chunk_index},
-                        'chunk_index': chunk_index
-                    })
+                    chunks.append(
+                        {
+                            "text": current_chunk.strip(),
+                            "metadata": {**base_metadata, "chunk_index": chunk_index},
+                            "chunk_index": chunk_index,
+                        }
+                    )
                     chunk_index += 1
 
                 # If the sentence itself is longer than chunk_size, split by words
@@ -264,11 +258,13 @@ class MarkdownFormatter:
                         else:
                             # Save word chunk
                             if word_chunk:
-                                chunks.append({
-                                    'text': word_chunk.strip(),
-                                    'metadata': {**base_metadata, 'chunk_index': chunk_index},
-                                    'chunk_index': chunk_index
-                                })
+                                chunks.append(
+                                    {
+                                        "text": word_chunk.strip(),
+                                        "metadata": {**base_metadata, "chunk_index": chunk_index},
+                                        "chunk_index": chunk_index,
+                                    }
+                                )
                                 chunk_index += 1
                             word_chunk = word
 
@@ -280,11 +276,13 @@ class MarkdownFormatter:
 
         # Add final chunk
         if current_chunk:
-            chunks.append({
-                'text': current_chunk.strip(),
-                'metadata': {**base_metadata, 'chunk_index': chunk_index},
-                'chunk_index': chunk_index
-            })
+            chunks.append(
+                {
+                    "text": current_chunk.strip(),
+                    "metadata": {**base_metadata, "chunk_index": chunk_index},
+                    "chunk_index": chunk_index,
+                }
+            )
 
         return chunks
 
@@ -311,14 +309,12 @@ class MarkdownFormatter:
 
         # Write to temporary file in same directory (for atomic rename)
         temp_fd, temp_path = tempfile.mkstemp(
-            dir=output_path.parent,
-            prefix=f".{output_path.stem}_",
-            suffix=".tmp"
+            dir=output_path.parent, prefix=f".{output_path.stem}_", suffix=".tmp"
         )
 
         try:
             # Write content to temporary file
-            with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+            with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
                 f.write(content)
                 f.flush()
                 os.fsync(f.fileno())  # Ensure data is written to disk

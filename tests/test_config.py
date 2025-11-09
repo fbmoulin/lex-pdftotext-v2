@@ -6,10 +6,8 @@ and the precedence hierarchy.
 """
 
 import os
-import tempfile
+
 import yaml
-from pathlib import Path
-import pytest
 
 from src.utils.config import Config, get_config, reload_config
 
@@ -80,19 +78,19 @@ class TestConfigValidation:
 
     def test_log_level_validation_valid(self):
         """Test that valid log levels are accepted."""
-        for level in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             config = Config(log_level=level)
             assert config.log_level == level
 
     def test_log_level_validation_lowercase(self):
         """Test that lowercase log levels are uppercased."""
-        config = Config(log_level='debug')
-        assert config.log_level == 'DEBUG'
+        config = Config(log_level="debug")
+        assert config.log_level == "DEBUG"
 
     def test_log_level_validation_invalid(self):
         """Test that invalid log level defaults to INFO."""
-        config = Config(log_level='INVALID')
-        assert config.log_level == 'INFO'
+        config = Config(log_level="INVALID")
+        assert config.log_level == "INFO"
 
 
 class TestConfigFromFile:
@@ -102,20 +100,20 @@ class TestConfigFromFile:
         """Test loading configuration from valid YAML file."""
         config_file = tmp_path / "config.yaml"
         config_data = {
-            'max_pdf_size_mb': 1000,
-            'chunk_size': 2000,
-            'log_level': 'DEBUG',
-            'enable_image_analysis': True
+            "max_pdf_size_mb": 1000,
+            "chunk_size": 2000,
+            "log_level": "DEBUG",
+            "enable_image_analysis": True,
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
 
         config = Config.from_file(config_file)
 
         assert config.max_pdf_size_mb == 1000
         assert config.chunk_size == 2000
-        assert config.log_level == 'DEBUG'
+        assert config.log_level == "DEBUG"
         assert config.enable_image_analysis is True
 
     def test_load_from_nonexistent_file(self, tmp_path):
@@ -131,7 +129,7 @@ class TestConfigFromFile:
         """Test loading from invalid YAML returns defaults."""
         config_file = tmp_path / "invalid.yaml"
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write("invalid: yaml: content: [[[")
 
         config = Config.from_file(config_file)
@@ -143,7 +141,7 @@ class TestConfigFromFile:
         """Test loading from empty YAML file."""
         config_file = tmp_path / "empty.yaml"
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write("")
 
         config = Config.from_file(config_file)
@@ -157,9 +155,9 @@ class TestConfigFromEnv:
 
     def test_load_from_env_integers(self):
         """Test loading integer values from environment."""
-        os.environ['MAX_PDF_SIZE_MB'] = '2000'
-        os.environ['CHUNK_SIZE'] = '3000'
-        os.environ['BATCH_SIZE'] = '50'
+        os.environ["MAX_PDF_SIZE_MB"] = "2000"
+        os.environ["CHUNK_SIZE"] = "3000"
+        os.environ["BATCH_SIZE"] = "50"
 
         config = Config.from_env()
 
@@ -168,31 +166,31 @@ class TestConfigFromEnv:
         assert config.batch_size == 50
 
         # Cleanup
-        del os.environ['MAX_PDF_SIZE_MB']
-        del os.environ['CHUNK_SIZE']
-        del os.environ['BATCH_SIZE']
+        del os.environ["MAX_PDF_SIZE_MB"]
+        del os.environ["CHUNK_SIZE"]
+        del os.environ["BATCH_SIZE"]
 
     def test_load_from_env_strings(self):
         """Test loading string values from environment."""
-        os.environ['LOG_LEVEL'] = 'ERROR'
-        os.environ['OUTPUT_DIR'] = 'custom/output'
-        os.environ['GEMINI_API_KEY'] = 'test-api-key-123'
+        os.environ["LOG_LEVEL"] = "ERROR"
+        os.environ["OUTPUT_DIR"] = "custom/output"
+        os.environ["GEMINI_API_KEY"] = "test-api-key-123"
 
         config = Config.from_env()
 
-        assert config.log_level == 'ERROR'
-        assert config.output_dir == 'custom/output'
-        assert config.gemini_api_key == 'test-api-key-123'
+        assert config.log_level == "ERROR"
+        assert config.output_dir == "custom/output"
+        assert config.gemini_api_key == "test-api-key-123"
 
         # Cleanup
-        del os.environ['LOG_LEVEL']
-        del os.environ['OUTPUT_DIR']
-        del os.environ['GEMINI_API_KEY']
+        del os.environ["LOG_LEVEL"]
+        del os.environ["OUTPUT_DIR"]
+        del os.environ["GEMINI_API_KEY"]
 
     def test_load_from_env_booleans(self):
         """Test loading boolean values from environment."""
-        os.environ['ENABLE_IMAGE_ANALYSIS'] = 'true'
-        os.environ['VALIDATE_PDFS'] = 'false'
+        os.environ["ENABLE_IMAGE_ANALYSIS"] = "true"
+        os.environ["VALIDATE_PDFS"] = "false"
 
         config = Config.from_env()
 
@@ -200,12 +198,12 @@ class TestConfigFromEnv:
         assert config.validate_pdfs is False
 
         # Cleanup
-        del os.environ['ENABLE_IMAGE_ANALYSIS']
-        del os.environ['VALIDATE_PDFS']
+        del os.environ["ENABLE_IMAGE_ANALYSIS"]
+        del os.environ["VALIDATE_PDFS"]
 
     def test_env_invalid_integer_uses_default(self):
         """Test that invalid integer env vars use defaults."""
-        os.environ['CHUNK_SIZE'] = 'not-a-number'
+        os.environ["CHUNK_SIZE"] = "not-a-number"
 
         config = Config.from_env()
 
@@ -213,19 +211,19 @@ class TestConfigFromEnv:
         assert config.chunk_size == 1000
 
         # Cleanup
-        del os.environ['CHUNK_SIZE']
+        del os.environ["CHUNK_SIZE"]
 
     def test_env_override_base_config(self):
         """Test that env vars override base config."""
         base_config = Config(chunk_size=500)
-        os.environ['CHUNK_SIZE'] = '8000'
+        os.environ["CHUNK_SIZE"] = "8000"
 
         config = Config.from_env(base_config)
 
         assert config.chunk_size == 8000
 
         # Cleanup
-        del os.environ['CHUNK_SIZE']
+        del os.environ["CHUNK_SIZE"]
 
 
 class TestConfigPrecedence:
@@ -234,13 +232,13 @@ class TestConfigPrecedence:
     def test_precedence_env_over_yaml(self, tmp_path):
         """Test that environment variables override YAML config."""
         config_file = tmp_path / "config.yaml"
-        config_data = {'chunk_size': 2000}
+        config_data = {"chunk_size": 2000}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
 
         # Set env var
-        os.environ['CHUNK_SIZE'] = '5000'
+        os.environ["CHUNK_SIZE"] = "5000"
 
         config = Config.load(config_file)
 
@@ -248,14 +246,14 @@ class TestConfigPrecedence:
         assert config.chunk_size == 5000
 
         # Cleanup
-        del os.environ['CHUNK_SIZE']
+        del os.environ["CHUNK_SIZE"]
 
     def test_precedence_yaml_over_defaults(self, tmp_path):
         """Test that YAML config overrides defaults."""
         config_file = tmp_path / "config.yaml"
-        config_data = {'chunk_size': 3000}
+        config_data = {"chunk_size": 3000}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
 
         config = Config.load(config_file)
@@ -267,15 +265,15 @@ class TestConfigPrecedence:
         """Test full precedence chain: env > yaml > default."""
         config_file = tmp_path / "config.yaml"
         config_data = {
-            'chunk_size': 2000,      # From YAML
-            'batch_size': 25,        # From YAML (no env override)
+            "chunk_size": 2000,  # From YAML
+            "batch_size": 25,  # From YAML (no env override)
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
 
         # Set env var for chunk_size only
-        os.environ['CHUNK_SIZE'] = '7000'
+        os.environ["CHUNK_SIZE"] = "7000"
 
         config = Config.load(config_file)
 
@@ -287,7 +285,7 @@ class TestConfigPrecedence:
         assert config.max_pdf_size_mb == 500
 
         # Cleanup
-        del os.environ['CHUNK_SIZE']
+        del os.environ["CHUNK_SIZE"]
 
 
 class TestConfigSave:
@@ -296,7 +294,7 @@ class TestConfigSave:
     def test_save_config_to_file(self, tmp_path):
         """Test saving configuration to YAML file."""
         config_file = tmp_path / "saved_config.yaml"
-        config = Config(chunk_size=5000, log_level='DEBUG')
+        config = Config(chunk_size=5000, log_level="DEBUG")
 
         config.save(config_file)
 
@@ -304,11 +302,11 @@ class TestConfigSave:
         assert config_file.exists()
 
         # Load and verify
-        with open(config_file, 'r') as f:
+        with open(config_file) as f:
             saved_data = yaml.safe_load(f)
 
-        assert saved_data['chunk_size'] == 5000
-        assert saved_data['log_level'] == 'DEBUG'
+        assert saved_data["chunk_size"] == 5000
+        assert saved_data["log_level"] == "DEBUG"
 
     def test_save_creates_directory(self, tmp_path):
         """Test that save creates parent directories."""
@@ -330,18 +328,18 @@ class TestConfigToDict:
         config_dict = config.to_dict()
 
         # Check key fields are present
-        assert 'max_pdf_size_mb' in config_dict
-        assert 'chunk_size' in config_dict
-        assert 'log_level' in config_dict
-        assert 'enable_image_analysis' in config_dict
+        assert "max_pdf_size_mb" in config_dict
+        assert "chunk_size" in config_dict
+        assert "log_level" in config_dict
+        assert "enable_image_analysis" in config_dict
 
     def test_to_dict_matches_values(self):
         """Test that to_dict values match config attributes."""
-        config = Config(chunk_size=3000, log_level='WARNING')
+        config = Config(chunk_size=3000, log_level="WARNING")
         config_dict = config.to_dict()
 
-        assert config_dict['chunk_size'] == 3000
-        assert config_dict['log_level'] == 'WARNING'
+        assert config_dict["chunk_size"] == 3000
+        assert config_dict["log_level"] == "WARNING"
 
 
 class TestGlobalConfig:
@@ -349,10 +347,9 @@ class TestGlobalConfig:
 
     def test_get_config_returns_instance(self):
         """Test that get_config returns a Config instance."""
-        from src.utils.config import _config
-
         # Reset global config first
         import src.utils.config
+
         src.utils.config._config = None
 
         config = get_config()
@@ -361,13 +358,14 @@ class TestGlobalConfig:
     def test_reload_config_updates_global(self, tmp_path):
         """Test that reload_config updates global instance."""
         config_file = tmp_path / "reload.yaml"
-        config_data = {'chunk_size': 9999}
+        config_data = {"chunk_size": 9999}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
 
         # Reset global config
         import src.utils.config
+
         src.utils.config._config = None
 
         # First load
@@ -384,6 +382,7 @@ class TestGlobalConfig:
         """Test that get_config returns same instance."""
         # Reset global config
         import src.utils.config
+
         src.utils.config._config = None
 
         config1 = get_config()

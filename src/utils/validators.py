@@ -2,20 +2,19 @@
 PDF validation utilities.
 """
 
-from pathlib import Path
-from typing import Tuple
-import fitz  # PyMuPDF
-import re
-import os
-import shutil
 import platform
+import re
+import shutil
+from pathlib import Path
+
+import fitz  # PyMuPDF
 
 from .exceptions import (
+    InvalidPathError,
     PDFCorruptedError,
+    PDFEmptyError,
     PDFEncryptedError,
     PDFTooLargeError,
-    PDFEmptyError,
-    InvalidPathError
 )
 from .logger import get_logger
 
@@ -46,10 +45,8 @@ class PDFValidator:
         if not pdf_path.is_file():
             raise InvalidPathError(f"Caminho não é um arquivo: {pdf_path}")
 
-        if pdf_path.suffix.lower() != '.pdf':
-            raise InvalidPathError(
-                f"Extensão inválida: {pdf_path.suffix}. Esperado: .pdf"
-            )
+        if pdf_path.suffix.lower() != ".pdf":
+            raise InvalidPathError(f"Extensão inválida: {pdf_path.suffix}. Esperado: .pdf")
 
     @staticmethod
     def validate_size(pdf_path: Path, max_size_mb: int = DEFAULT_MAX_SIZE_MB) -> None:
@@ -72,7 +69,7 @@ class PDFValidator:
             )
 
     @staticmethod
-    def validate_integrity(pdf_path: Path, max_pages: int = DEFAULT_MAX_PAGES) -> Tuple[bool, str]:
+    def validate_integrity(pdf_path: Path, max_pages: int = DEFAULT_MAX_PAGES) -> tuple[bool, str]:
         """
         Validate PDF integrity and readability.
 
@@ -103,9 +100,7 @@ class PDFValidator:
 
             if page_count == 0:
                 doc.close()
-                raise PDFEmptyError(
-                    f"PDF vazio (0 páginas): {pdf_path.name}"
-                )
+                raise PDFEmptyError(f"PDF vazio (0 páginas): {pdf_path.name}")
 
             if page_count > max_pages:
                 doc.close()
@@ -119,25 +114,21 @@ class PDFValidator:
                 _ = first_page.get_text()
             except Exception as e:
                 doc.close()
-                raise PDFCorruptedError(
-                    f"Erro ao ler primeira página: {e}"
-                )
+                raise PDFCorruptedError(f"Erro ao ler primeira página: {e}")
 
             doc.close()
             return True, "OK"
 
         except (fitz.FileDataError, fitz.FitzError) as e:
-            raise PDFCorruptedError(
-                f"Arquivo PDF corrompido: {pdf_path.name} - {str(e)}"
-            )
+            raise PDFCorruptedError(f"Arquivo PDF corrompido: {pdf_path.name} - {str(e)}")
 
     @classmethod
     def validate_all(
         cls,
         pdf_path: Path,
         max_size_mb: int = DEFAULT_MAX_SIZE_MB,
-        max_pages: int = DEFAULT_MAX_PAGES
-    ) -> Tuple[bool, str]:
+        max_pages: int = DEFAULT_MAX_PAGES,
+    ) -> tuple[bool, str]:
         """
         Run all validations on PDF file.
 
@@ -183,9 +174,7 @@ def sanitize_output_path(user_input: str, base_dir: Path) -> Path:
     try:
         output_path.relative_to(base_dir.resolve())
     except ValueError:
-        raise InvalidPathError(
-            f"Caminho inválido: tentativa de acesso fora do diretório permitido"
-        )
+        raise InvalidPathError("Caminho inválido: tentativa de acesso fora do diretório permitido")
 
     return output_path
 
@@ -216,7 +205,7 @@ def validate_process_number(process_number: str) -> bool:
     # J: Judicial segment (1 digit)
     # TT: Court (2 digits)
     # OOOO: Origin (4 digits)
-    pattern = r'^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$'
+    pattern = r"^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$"
 
     if not re.match(pattern, process_number):
         raise ValueError(
@@ -254,14 +243,33 @@ def validate_filename(filename: str, allow_path: bool = False) -> str:
     filename = filename.strip()
 
     # Check for path separators if not allowed
-    if not allow_path and ('/' in filename or '\\' in filename):
+    if not allow_path and ("/" in filename or "\\" in filename):
         raise ValueError(f"Filename cannot contain path separators: {filename}")
 
     # Windows reserved names
     reserved_names = {
-        'CON', 'PRN', 'AUX', 'NUL',
-        'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
-        'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "COM5",
+        "COM6",
+        "COM7",
+        "COM8",
+        "COM9",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "LPT4",
+        "LPT5",
+        "LPT6",
+        "LPT7",
+        "LPT8",
+        "LPT9",
     }
 
     # Get base name without extension
@@ -273,22 +281,18 @@ def validate_filename(filename: str, allow_path: bool = False) -> str:
         )
 
     # Invalid characters (Windows is more restrictive)
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         invalid_chars = r'<>:"|?*'
     else:
-        invalid_chars = '\0'  # Linux is very permissive
+        invalid_chars = "\0"  # Linux is very permissive
 
     for char in invalid_chars:
         if char in filename:
-            raise ValueError(
-                f"Filename contains invalid character '{char}': {filename}"
-            )
+            raise ValueError(f"Filename contains invalid character '{char}': {filename}")
 
     # Check length (255 is common limit, use 250 to be safe)
     if len(filename) > 250:
-        raise ValueError(
-            f"Filename too long ({len(filename)} chars). Maximum: 250 characters"
-        )
+        raise ValueError(f"Filename too long ({len(filename)} chars). Maximum: 250 characters")
 
     # Normalize extension to lowercase for consistency
     path = Path(filename)
@@ -320,20 +324,16 @@ def validate_chunk_size(chunk_size: int, min_size: int = 100, max_size: int = 10
         raise ValueError(f"Chunk size must be an integer, got {type(chunk_size).__name__}")
 
     if chunk_size < min_size:
-        raise ValueError(
-            f"Chunk size too small: {chunk_size}. Minimum: {min_size} characters"
-        )
+        raise ValueError(f"Chunk size too small: {chunk_size}. Minimum: {min_size} characters")
 
     if chunk_size > max_size:
-        raise ValueError(
-            f"Chunk size too large: {chunk_size}. Maximum: {max_size} characters"
-        )
+        raise ValueError(f"Chunk size too large: {chunk_size}. Maximum: {max_size} characters")
 
     logger.debug(f"Chunk size validated: {chunk_size}")
     return True
 
 
-def check_disk_space(path: Path, required_mb: int = 100) -> Tuple[bool, int]:
+def check_disk_space(path: Path, required_mb: int = 100) -> tuple[bool, int]:
     """
     Check if sufficient disk space is available.
 
@@ -366,13 +366,11 @@ def check_disk_space(path: Path, required_mb: int = 100) -> Tuple[bool, int]:
 
         if has_space:
             logger.debug(
-                f"Disk space check passed: {available_mb:.1f}MB available, "
-                f"{required_mb}MB required"
+                f"Disk space check passed: {available_mb:.1f}MB available, {required_mb}MB required"
             )
         else:
             logger.warning(
-                f"Insufficient disk space: {available_mb:.1f}MB available, "
-                f"{required_mb}MB required"
+                f"Insufficient disk space: {available_mb:.1f}MB available, {required_mb}MB required"
             )
 
         return has_space, int(available_mb)
