@@ -22,10 +22,11 @@ except ImportError:
 
 def check_requirements():
     """Verifica se PyInstaller está instalado."""
-    try:
-        import PyInstaller
+    import importlib.util
 
-        print("✅ PyInstaller encontrado")
+    try:
+        if importlib.util.find_spec("PyInstaller") is not None:
+            print("✅ PyInstaller encontrado")
         return True
     except ImportError:
         print("❌ PyInstaller não encontrado")
@@ -87,7 +88,7 @@ def build_executable():
     print(f"Comando: {' '.join(cmd)}\n")
 
     try:
-        result = subprocess.run(cmd, check=True, capture_output=False)
+        subprocess.run(cmd, check=True, capture_output=False)
         return True
     except subprocess.CalledProcessError as e:
         print(f"\n❌ Erro ao construir executável (código {e.returncode})")

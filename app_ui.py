@@ -87,6 +87,7 @@ class API:
     """Backend API for PyWebview interface."""
 
     def __init__(self):
+        """Initialize the API with default state."""
         self.window = None
         self.last_output_path = None  # Store last generated file path
 
@@ -203,7 +204,6 @@ class API:
             # Extract text and images
             with PyMuPDFExtractor(pdf_path) as extractor:
                 raw_text = extractor.extract_text()
-                page_count = extractor.get_page_count()
 
                 # Extract images if option is enabled
                 images = []
@@ -378,7 +378,7 @@ class API:
             return message
 
         except Exception as e:
-            raise Exception(f"Erro no processamento em lote: {str(e)}")
+            raise Exception(f"Erro no processamento em lote: {str(e)}") from e
 
     def merge_process(self, input_dir, options):
         """
@@ -396,7 +396,7 @@ class API:
             import re
 
             # Find all PDFs recursively
-            pdf_files = sorted(list(input_dir.rglob("*.pdf")))
+            pdf_files = sorted(input_dir.rglob("*.pdf"))
 
             # Exclude PDFs in processado folder
             pdf_files = [f for f in pdf_files if "processado" not in f.parts]
@@ -511,7 +511,7 @@ class API:
             return message
 
         except Exception as e:
-            raise Exception(f"Erro ao mesclar processos: {str(e)}")
+            raise Exception(f"Erro ao mesclar processos: {str(e)}") from e
 
 
 def main():

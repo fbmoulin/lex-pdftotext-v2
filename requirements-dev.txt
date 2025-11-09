@@ -11,6 +11,8 @@ isort>=5.13.0
 # Linting
 flake8>=7.0.0
 ruff>=0.6.0
+radon>=6.0.0  # Code complexity metrics
+bandit>=1.7.0  # Security linting
 
 # Type checking
 mypy>=1.11.0

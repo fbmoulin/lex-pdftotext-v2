@@ -436,7 +436,7 @@ def merge(input_dir, output, normalize, format, process_number):
     input_dir = Path(input_dir)
 
     # Find all PDFs recursively (including subdirectories)
-    pdf_files = sorted(list(input_dir.rglob("*.pdf")))
+    pdf_files = sorted(input_dir.rglob("*.pdf"))
 
     # Exclude PDFs already in 'processado' folder
     pdf_files = [f for f in pdf_files if "processado" not in f.parts]
