@@ -12,8 +12,8 @@ project = "PDF Text Extractor for Legal Documents"
 copyright = "2025, fbmoulin"
 author = "fbmoulin"
 
-version = "0.3.0"
-release = "0.3.0"
+version = "0.4.0"
+release = "0.4.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
