@@ -178,6 +178,19 @@ class MetadataParser:
         """
         lines = []
 
+        # Add each section
+        lines.extend(self._format_basic_fields(metadata))
+        lines.extend(self._format_parties(metadata))
+        lines.extend(self._format_people(metadata))
+        lines.extend(self._format_dates(metadata))
+        lines.extend(self._format_document_types(metadata))
+
+        return "\n".join(lines)
+
+    def _format_basic_fields(self, metadata: DocumentMetadata) -> list[str]:
+        """Format basic metadata fields (process, documents, court, value)."""
+        lines = []
+
         if metadata.process_number:
             lines.append(f"**Processo:** {metadata.process_number}")
 
@@ -191,11 +204,23 @@ class MetadataParser:
         if metadata.case_value:
             lines.append(f"**Valor da Causa:** R$ {metadata.case_value}")
 
+        return lines
+
+    def _format_parties(self, metadata: DocumentMetadata) -> list[str]:
+        """Format party information (author, defendant)."""
+        lines = []
+
         if metadata.author:
             lines.append(f"**Autor(a):** {metadata.author}")
 
         if metadata.defendant:
             lines.append(f"**Réu/Ré:** {metadata.defendant}")
+
+        return lines
+
+    def _format_people(self, metadata: DocumentMetadata) -> list[str]:
+        """Format people information (lawyers, judges)."""
+        lines = []
 
         if metadata.lawyers:
             lines.append("\n**Advogados:**")
@@ -207,11 +232,21 @@ class MetadataParser:
             for judge in metadata.judges:
                 lines.append(f"- {judge}")
 
+        return lines
+
+    def _format_dates(self, metadata: DocumentMetadata) -> list[str]:
+        """Format signature dates."""
+        lines = []
+
         if metadata.signature_dates:
             lines.append(f"\n**Datas de Assinatura:** {', '.join(metadata.signature_dates)}")
 
-        # Document type
+        return lines
+
+    def _format_document_types(self, metadata: DocumentMetadata) -> list[str]:
+        """Format document type information."""
         doc_types = []
+
         if metadata.is_initial_petition:
             doc_types.append("Petição Inicial")
         if metadata.is_decision:
@@ -220,6 +255,6 @@ class MetadataParser:
             doc_types.append("Certidão")
 
         if doc_types:
-            lines.append(f"\n**Tipo de Documento:** {', '.join(doc_types)}")
+            return [f"\n**Tipo de Documento:** {', '.join(doc_types)}"]
 
-        return "\n".join(lines)
+        return []
