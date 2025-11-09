@@ -6,10 +6,16 @@ Extract and structure text from Brazilian legal PDF documents (PJe format).
 """
 
 import sys
+import os
 from pathlib import Path
 import shutil
 import click
 from tqdm import tqdm
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -17,6 +23,62 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.extractors import PyMuPDFExtractor
 from src.processors import TextNormalizer, MetadataParser
 from src.formatters import MarkdownFormatter
+from src.utils.logger import setup_logger, get_logger
+from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size
+from src.utils.config import get_config
+
+# Load configuration
+config = get_config()
+
+# Initialize logging from configuration
+setup_logger(log_level=config.log_level, log_file=config.log_file)
+logger = get_logger(__name__)
+
+
+def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
+    """
+    Safely move a file with error handling.
+
+    Args:
+        src: Source file path
+        dest: Destination file path
+        create_backup: Whether to backup if destination exists
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Create destination directory if needed
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        # Handle existing destination
+        if dest.exists():
+            if create_backup:
+                backup_path = dest.with_suffix(dest.suffix + '.bak')
+                logger.warning(f"Destination exists, creating backup: {backup_path}")
+                shutil.copy2(str(dest), str(backup_path))
+            else:
+                logger.warning(f"Destination exists, will overwrite: {dest}")
+
+        # Perform move
+        shutil.move(str(src), str(dest))
+        logger.info(f"File moved successfully: {src} -> {dest}")
+        return True
+
+    except PermissionError as e:
+        logger.error(f"Permission denied moving file {src}: {e}")
+        click.echo(f"⚠️  Aviso: Sem permissão para mover arquivo: {src}", err=True)
+        return False
+
+    except shutil.Error as e:
+        logger.error(f"Error moving file {src}: {e}")
+        click.echo(f"⚠️  Aviso: Erro ao mover arquivo: {src}", err=True)
+        return False
+
+    except Exception as e:
+        logger.error(f"Unexpected error moving file {src}: {e}", exc_info=True)
+        click.echo(f"⚠️  Aviso: Erro inesperado ao mover arquivo: {src}", err=True)
+        return False
 
 
 @click.group()
@@ -138,10 +200,12 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
 
         # Move processed PDF to 'processado' folder
         processado_dir = pdf_path.parent / 'processado'
-        processado_dir.mkdir(parents=True, exist_ok=True)
         new_pdf_path = processado_dir / pdf_path.name
-        shutil.move(str(pdf_path), str(new_pdf_path))
-        click.echo(f"\n📦 PDF movido para: {new_pdf_path}")
+
+        if safe_move_file(pdf_path, new_pdf_path):
+            click.echo(f"\n📦 PDF movido para: {new_pdf_path}")
+        else:
+            click.echo(f"\n⚠️  PDF não foi movido (ainda em: {pdf_path})")
 
     except Exception as e:
         click.echo(f"❌ Erro: {str(e)}", err=True)
@@ -198,6 +262,34 @@ def batch(input_dir, output_dir, format, normalize, metadata):
     click.echo(f"📁 Encontrados {len(pdf_files)} arquivos PDF")
     click.echo(f"📂 Salvando em: {output_dir}\n")
 
+    # Check disk space
+    try:
+        total_estimated_mb = sum(estimate_output_size(pdf) for pdf in pdf_files)
+        required_mb = max(total_estimated_mb, config.min_disk_space_mb)
+
+        has_space, available_mb = check_disk_space(output_dir, required_mb)
+
+        if not has_space:
+            click.echo(
+                f"⚠️  Aviso: Espaço em disco insuficiente!\n"
+                f"   Disponível: {available_mb}MB\n"
+                f"   Estimado: {total_estimated_mb}MB\n"
+                f"   Recomendado: {required_mb}MB",
+                err=True
+            )
+
+            if not click.confirm("Deseja continuar mesmo assim?"):
+                click.echo("❌ Operação cancelada pelo usuário")
+                sys.exit(1)
+        else:
+            logger.info(
+                f"Disk space check passed: {available_mb}MB available, "
+                f"{total_estimated_mb}MB estimated for {len(pdf_files)} files"
+            )
+    except Exception as e:
+        logger.warning(f"Could not check disk space: {e}")
+        click.echo(f"⚠️  Aviso: Não foi possível verificar espaço em disco: {e}", err=True)
+
     # Process each PDF
     success_count = 0
     error_count = 0
@@ -249,9 +341,10 @@ def batch(input_dir, output_dir, format, normalize, metadata):
 
                 # Move processed PDF to 'processado' folder
                 processado_dir = input_dir / 'processado'
-                processado_dir.mkdir(parents=True, exist_ok=True)
                 new_pdf_path = processado_dir / pdf_path.name
-                shutil.move(str(pdf_path), str(new_pdf_path))
+
+                if not safe_move_file(pdf_path, new_pdf_path):
+                    tqdm.write(f"⚠️  {pdf_path.name}: Arquivo processado mas não movido")
 
                 success_count += 1
 
@@ -431,16 +524,20 @@ def merge(input_dir, output, normalize, format, process_number):
 
         # Move processed PDFs to 'processado' folder
         processado_dir = input_dir / 'processado'
-        processado_dir.mkdir(parents=True, exist_ok=True)
+        moved_count = 0
 
         for pdf_path, _, _ in files:
             # Preserve subdirectory structure
             relative_path = pdf_path.relative_to(input_dir)
             new_pdf_path = processado_dir / relative_path
-            new_pdf_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(pdf_path), str(new_pdf_path))
 
-        click.echo(f"   📦 {len(files)} PDF(s) movido(s) para: {processado_dir}")
+            if safe_move_file(pdf_path, new_pdf_path):
+                moved_count += 1
+
+        if moved_count > 0:
+            click.echo(f"   📦 {moved_count} PDF(s) movido(s) para: {processado_dir}")
+        if moved_count < len(files):
+            click.echo(f"   ⚠️  {len(files) - moved_count} PDF(s) não foram movidos")
 
     # Summary
     click.echo(f"\n🎉 Concluído! {len(files_created)} arquivo(s) mesclado(s) criado(s)")

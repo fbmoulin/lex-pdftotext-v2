@@ -99,6 +99,102 @@ export GEMINI_API_KEY='sua-chave-aqui'
 
 **Nota:** A análise de imagens é opcional. Se não configurada, o app funcionará normalmente sem esta feature.
 
+## ⚙️ Configuração
+
+O aplicativo suporta configuração através de três fontes (em ordem de precedência):
+
+1. **Variáveis de ambiente** (.env ou sistema)
+2. **Arquivo config.yaml** (raiz do projeto)
+3. **Valores padrão** (configuração interna)
+
+### Arquivo config.yaml
+
+Crie ou edite o arquivo `config.yaml` na raiz do projeto:
+
+```yaml
+# PDF Processing
+max_pdf_size_mb: 500          # Tamanho máximo de PDF (MB)
+max_pdf_pages: 10000           # Número máximo de páginas
+pdf_open_timeout: 30           # Timeout para abrir PDF (segundos)
+
+# Text Processing
+chunk_size: 1000               # Tamanho de chunk para RAG (caracteres)
+min_chunk_size: 100            # Tamanho mínimo de chunk
+max_chunk_size: 10000          # Tamanho máximo de chunk
+
+# Image Processing
+max_image_size_mb: 4           # Tamanho máximo de imagem (MB)
+enable_image_analysis: false   # Habilitar análise de imagens com Gemini
+
+# API Configuration
+gemini_rate_limit: 60          # Requisições por minuto ao Gemini
+
+# Output
+output_dir: data/output        # Diretório de saída padrão
+default_format: markdown       # Formato: markdown ou txt
+
+# Logging
+log_level: INFO                # DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_file: logs/pdftotext.log   # Arquivo de log
+log_max_bytes: 10485760        # Tamanho máximo do log (10MB)
+log_backup_count: 5            # Número de backups de log
+
+# Disk Space
+min_disk_space_mb: 100         # Espaço livre mínimo requerido (MB)
+
+# Validation
+validate_pdfs: true            # Validar PDFs antes de processar
+validate_output_paths: true    # Validar caminhos de saída
+
+# Performance
+batch_size: 10                 # Arquivos por atualização de progresso
+```
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto (ou configure no sistema):
+
+```bash
+# API Configuration (prioritário)
+GEMINI_API_KEY=sua-chave-api-aqui
+
+# Override de configurações (opcional)
+CHUNK_SIZE=2000
+LOG_LEVEL=DEBUG
+ENABLE_IMAGE_ANALYSIS=true
+OUTPUT_DIR=custom/output
+
+# Todas as opções de config.yaml podem ser sobrescritas
+# Formato: NOME_CAMPO_EM_MAIÚSCULA=valor
+```
+
+### Precedência de Configuração
+
+```
+Variáveis de Ambiente > config.yaml > Valores Padrão
+```
+
+**Exemplo:**
+- `config.yaml` define `chunk_size: 1000`
+- `.env` define `CHUNK_SIZE=5000`
+- **Resultado:** Usa `5000` (env tem prioridade)
+
+### Validação Automática
+
+O sistema valida e ajusta automaticamente:
+- **chunk_size**: Forçado entre `min_chunk_size` e `max_chunk_size`
+- **log_level**: Deve ser DEBUG, INFO, WARNING, ERROR ou CRITICAL
+- Valores inválidos são corrigidos para defaults com aviso no log
+
+### Verificar Configuração Atual
+
+```python
+from src.utils.config import get_config
+
+config = get_config()
+print(config.to_dict())  # Mostra toda configuração carregada
+```
+
 ## 🚀 Uso
 
 ### Interface Gráfica (GUI)

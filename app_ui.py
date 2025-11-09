@@ -9,6 +9,12 @@ import sys
 import os
 from pathlib import Path
 import webview
+import shutil
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -17,6 +23,58 @@ from src.extractors import PyMuPDFExtractor
 from src.processors import TextNormalizer, MetadataParser, ImageAnalyzer, format_image_description_markdown
 from src.formatters import MarkdownFormatter
 from src.utils.exceptions import PDFExtractionError
+from src.utils.logger import setup_logger, get_logger
+from src.utils.config import get_config
+
+# Load configuration
+config = get_config()
+
+# Initialize logging from configuration
+setup_logger(log_level=config.log_level, log_file=config.log_file)
+logger = get_logger(__name__)
+
+
+def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
+    """
+    Safely move a file with error handling.
+
+    Args:
+        src: Source file path
+        dest: Destination file path
+        create_backup: Whether to backup if destination exists
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Create destination directory if needed
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        # Handle existing destination
+        if dest.exists():
+            if create_backup:
+                backup_path = dest.with_suffix(dest.suffix + '.bak')
+                logger.warning(f"Destination exists, creating backup: {backup_path}")
+                shutil.copy2(str(dest), str(backup_path))
+            else:
+                logger.warning(f"Destination exists, will overwrite: {dest}")
+
+        # Perform move
+        shutil.move(str(src), str(dest))
+        logger.info(f"File moved successfully: {src} -> {dest}")
+        return True
+
+    except PermissionError as e:
+        logger.error(f"Permission denied moving file {src}: {e}")
+        return False
+
+    except shutil.Error as e:
+        logger.error(f"Error moving file {src}: {e}")
+        return False
+
+    except Exception as e:
+        logger.error(f"Unexpected error moving file {src}: {e}", exc_info=True)
+        return False
 
 
 class API:
@@ -211,14 +269,13 @@ class API:
 
             # Move to processed
             processado_dir = pdf_path.parent / 'processado'
-            processado_dir.mkdir(parents=True, exist_ok=True)
             new_pdf_path = processado_dir / pdf_path.name
 
-            import shutil
-            shutil.move(str(pdf_path), str(new_pdf_path))
-
             # Build success message
-            message = f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+            if safe_move_file(pdf_path, new_pdf_path):
+                message = f"✅ Sucesso! Arquivo salvo em: {output_path}\n📦 PDF movido para: {new_pdf_path}"
+            else:
+                message = f"✅ Sucesso! Arquivo salvo em: {output_path}\n⚠️ PDF não foi movido (ainda em: {pdf_path})"
             if images:
                 message += f"\n🖼️ {len(images)} imagem(ns) processada(s)"
 
@@ -300,11 +357,10 @@ class API:
 
                     # Move processed PDF
                     processado_dir = input_dir / 'processado'
-                    processado_dir.mkdir(parents=True, exist_ok=True)
                     new_pdf_path = processado_dir / pdf_path.name
 
-                    import shutil
-                    shutil.move(str(pdf_path), str(new_pdf_path))
+                    if not safe_move_file(pdf_path, new_pdf_path):
+                        logger.warning(f"Could not move {pdf_path.name}, but extraction succeeded")
 
                     success_count += 1
 
@@ -440,13 +496,11 @@ class API:
 
                 # Move processed PDFs
                 processado_dir = input_dir / 'processado'
-                processado_dir.mkdir(parents=True, exist_ok=True)
 
                 for pdf_path, _, _ in files:
                     relative_path = pdf_path.relative_to(input_dir)
                     new_pdf_path = processado_dir / relative_path
-                    new_pdf_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.move(str(pdf_path), str(new_pdf_path))
+                    safe_move_file(pdf_path, new_pdf_path)
 
             # Summary
             if not files_created:

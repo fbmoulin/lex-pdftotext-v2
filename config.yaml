@@ -1,0 +1,41 @@
+# PDF Text Extractor - Configuration File
+# This file contains default configuration values
+# Environment variables (.env) override these settings
+
+# PDF Processing Configuration
+max_pdf_size_mb: 500          # Maximum PDF file size in MB
+max_pdf_pages: 10000           # Maximum number of pages in PDF
+pdf_open_timeout: 30           # Timeout for opening PDF files (seconds)
+
+# Text Processing Configuration
+chunk_size: 1000               # Default chunk size for RAG (characters)
+min_chunk_size: 100            # Minimum allowed chunk size
+max_chunk_size: 10000          # Maximum allowed chunk size
+
+# Image Processing Configuration
+max_image_size_mb: 4           # Maximum image size before resizing (MB)
+enable_image_analysis: false   # Enable Gemini AI image analysis (requires API key)
+
+# API Configuration
+# gemini_api_key: null         # Set via environment variable GEMINI_API_KEY
+gemini_rate_limit: 60          # API requests per minute
+
+# Output Configuration
+output_dir: data/output        # Default output directory
+default_format: markdown       # Output format: markdown or txt
+
+# Logging Configuration
+log_level: INFO                # DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_file: logs/pdftotext.log   # Log file path
+log_max_bytes: 10485760        # Maximum log file size (10MB)
+log_backup_count: 5            # Number of backup log files to keep
+
+# Disk Space Configuration
+min_disk_space_mb: 100         # Minimum required free disk space (MB)
+
+# Validation Configuration
+validate_pdfs: true            # Validate PDFs before processing
+validate_output_paths: true    # Validate output file paths
+
+# Performance Configuration
+batch_size: 10                 # Process N files before showing progress update
