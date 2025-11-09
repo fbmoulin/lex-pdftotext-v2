@@ -168,7 +168,7 @@ def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.3.0")
 def cli():
     """
     PDF Legal Text Extractor
