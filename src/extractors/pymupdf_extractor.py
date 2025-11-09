@@ -13,10 +13,13 @@ from ..utils.exceptions import PDFExtractionError
 from ..utils.logger import get_logger
 from ..utils.timeout import TimeoutError
 from ..utils.cache import get_performance_monitor
+from ..utils.config import get_config
+from ..utils.constants import PAGE_LOG_INTERVAL
 
-# Initialize logger and performance monitor
+# Initialize logger, performance monitor, and config
 logger = get_logger(__name__)
 performance = get_performance_monitor()
+config = get_config()
 
 
 class PyMuPDFExtractor(PDFExtractor):
@@ -123,16 +126,16 @@ class PyMuPDFExtractor(PDFExtractor):
                 with ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(page.get_text, "text")
                     try:
-                        text = future.result(timeout=10)  # 10s timeout per page
+                        text = future.result(timeout=config.page_extraction_timeout)
                     except FuturesTimeoutError:
-                        logger.warning(f"Page {page_num + 1} extraction timed out, skipping")
+                        logger.warning(f"Page {page_num + 1} extraction timed out after {config.page_extraction_timeout}s, skipping")
                         continue
 
                 # Skip completely empty or whitespace-only pages
                 if text.strip():
                     pages.append(text)
 
-                if (page_num + 1) % 50 == 0:
+                if (page_num + 1) % PAGE_LOG_INTERVAL == 0:
                     logger.debug(f"Processed {page_num + 1}/{len(self.doc)} pages")
 
             except Exception as e:

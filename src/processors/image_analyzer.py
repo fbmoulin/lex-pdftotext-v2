@@ -10,9 +10,11 @@ from ratelimit import limits, sleep_and_retry
 
 from ..utils.logger import get_logger
 from ..utils.cache import get_image_cache
+from ..utils.config import get_config
 
-# Initialize logger
+# Initialize logger and config
 logger = get_logger(__name__)
+config = get_config()
 
 
 class ImageAnalyzer:
@@ -127,8 +129,8 @@ class ImageAnalyzer:
             Exception: If all retries fail
         """
         try:
-            logger.debug("Calling Gemini API for image analysis")
-            response = self.model.generate_content([prompt, image], request_options={'timeout': 30})
+            logger.debug(f"Calling Gemini API for image analysis (timeout: {config.gemini_api_timeout}s)")
+            response = self.model.generate_content([prompt, image], request_options={'timeout': config.gemini_api_timeout})
 
             if not response or not response.text:
                 logger.warning("Empty response from Gemini API")

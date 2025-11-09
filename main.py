@@ -27,6 +27,7 @@ from src.utils.logger import setup_logger, get_logger
 from src.utils.validators import check_disk_space, estimate_output_size, validate_chunk_size, sanitize_output_path
 from src.utils.config import get_config
 from src.utils.exceptions import InvalidPathError
+from src.utils.constants import MAX_SUMMARY_ITEMS, MAX_DETAILED_ITEMS, FILENAME_DISPLAY_LENGTH
 
 # Load configuration
 config = get_config()
@@ -34,6 +35,77 @@ config = get_config()
 # Initialize logging from configuration
 setup_logger(log_level=config.log_level, log_file=config.log_file)
 logger = get_logger(__name__)
+
+
+def extract_and_normalize_pdf(pdf_path: Path, normalize: bool = True) -> tuple[str, str, object]:
+    """
+    Extract and normalize text from a PDF file.
+
+    Args:
+        pdf_path: Path to PDF file
+        normalize: Whether to normalize the text
+
+    Returns:
+        Tuple of (raw_text, processed_text, metadata)
+    """
+    # Extract text
+    with PyMuPDFExtractor(pdf_path) as extractor:
+        raw_text = extractor.extract_text()
+
+    # Normalize if enabled
+    if normalize:
+        normalizer = TextNormalizer()
+        processed_text = normalizer.normalize(raw_text)
+        processed_text = normalizer.remove_page_markers(processed_text)
+    else:
+        processed_text = raw_text
+
+    # Extract metadata
+    metadata_parser = MetadataParser()
+    doc_metadata = metadata_parser.parse(processed_text)
+
+    return raw_text, processed_text, doc_metadata
+
+
+def format_output_text(
+    processed_text: str,
+    doc_metadata: object,
+    format: str = 'markdown',
+    include_metadata: bool = True,
+    structured: bool = False
+) -> str:
+    """
+    Format processed text for output.
+
+    Args:
+        processed_text: Normalized text
+        doc_metadata: Extracted metadata
+        format: Output format ('markdown' or 'txt')
+        include_metadata: Whether to include metadata header
+        structured: Whether to use structured sections (markdown only)
+
+    Returns:
+        Formatted output text
+    """
+    if format == 'markdown':
+        formatter = MarkdownFormatter()
+
+        if structured:
+            return formatter.format_with_sections(processed_text, doc_metadata)
+        else:
+            return formatter.format(
+                processed_text,
+                doc_metadata,
+                include_metadata_header=include_metadata
+            )
+    else:
+        # Plain text output
+        if include_metadata:
+            metadata_parser = MetadataParser()
+            metadata_str = metadata_parser.format_metadata_as_markdown(doc_metadata)
+            return f"{metadata_str}\n\n---\n\n{processed_text}"
+        else:
+            return processed_text
 
 
 def safe_move_file(src: Path, dest: Path, create_backup: bool = False) -> bool:
@@ -148,48 +220,24 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
     click.echo(f"📄 Extraindo texto de: {pdf_path.name}")
 
     try:
-        # Extract text
+        # Get page count before extraction
         with PyMuPDFExtractor(pdf_path) as extractor:
             click.echo(f"   Páginas: {extractor.get_page_count()}")
-            raw_text = extractor.extract_text()
 
-        # Process text
+        # Extract and normalize text
         if normalize:
             click.echo("   Normalizando texto...")
-            normalizer = TextNormalizer()
-            processed_text = normalizer.normalize(raw_text)
-            processed_text = normalizer.remove_page_markers(processed_text)
-        else:
-            processed_text = raw_text
-
-        # Extract metadata
-        click.echo("   Extraindo metadados...")
-        metadata_parser = MetadataParser()
-        doc_metadata = metadata_parser.parse(processed_text)
+        raw_text, processed_text, doc_metadata = extract_and_normalize_pdf(pdf_path, normalize)
 
         # Format output
-        if format == 'markdown':
-            click.echo("   Formatando como Markdown...")
-            formatter = MarkdownFormatter()
-
-            if structured:
-                output_text = formatter.format_with_sections(
-                    processed_text,
-                    doc_metadata
-                )
-            else:
-                output_text = formatter.format(
-                    processed_text,
-                    doc_metadata,
-                    include_metadata_header=metadata
-                )
-        else:
-            # Plain text output
-            if metadata:
-                metadata_str = metadata_parser.format_metadata_as_markdown(doc_metadata)
-                output_text = f"{metadata_str}\n\n---\n\n{processed_text}"
-            else:
-                output_text = processed_text
+        click.echo(f"   Formatando como {format.title()}...")
+        output_text = format_output_text(
+            processed_text,
+            doc_metadata,
+            format=format,
+            include_metadata=metadata,
+            structured=structured
+        )
 
         # Save to file
         click.echo(f"   Salvando em: {output}")
@@ -202,8 +250,8 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
         if doc_metadata.process_number:
             click.echo(f"\n📋 Processo: {doc_metadata.process_number}")
         if doc_metadata.document_ids:
-            click.echo(f"   IDs: {', '.join(doc_metadata.document_ids[:3])}" +
-                      (f" (+{len(doc_metadata.document_ids)-3} mais)" if len(doc_metadata.document_ids) > 3 else ""))
+            click.echo(f"   IDs: {', '.join(doc_metadata.document_ids[:MAX_SUMMARY_ITEMS])}" +
+                      (f" (+{len(doc_metadata.document_ids)-MAX_SUMMARY_ITEMS} mais)" if len(doc_metadata.document_ids) > MAX_SUMMARY_ITEMS else ""))
 
         # Move processed PDF to 'processado' folder
         processado_dir = pdf_path.parent / 'processado'
@@ -303,7 +351,7 @@ def batch(input_dir, output_dir, format, normalize, metadata):
 
     with tqdm(pdf_files, desc="Processando PDFs", unit="arquivo") as pbar:
         for pdf_path in pbar:
-            pbar.set_description(f"Processando {pdf_path.name[:30]}")
+            pbar.set_description(f"Processando {pdf_path.name[:FILENAME_DISPLAY_LENGTH]}")
 
             try:
                 # Determine output path
@@ -312,36 +360,16 @@ def batch(input_dir, output_dir, format, normalize, metadata):
                 else:
                     output_path = output_dir / pdf_path.with_suffix('.txt').name
 
-                # Extract text
-                with PyMuPDFExtractor(pdf_path) as extractor:
-                    raw_text = extractor.extract_text()
-
-                # Process text
-                if normalize:
-                    normalizer = TextNormalizer()
-                    processed_text = normalizer.normalize(raw_text)
-                    processed_text = normalizer.remove_page_markers(processed_text)
-                else:
-                    processed_text = raw_text
-
-                # Extract metadata
-                metadata_parser = MetadataParser()
-                doc_metadata = metadata_parser.parse(processed_text)
+                # Extract and normalize text
+                raw_text, processed_text, doc_metadata = extract_and_normalize_pdf(pdf_path, normalize)
 
                 # Format output
-                if format == 'markdown':
-                    formatter = MarkdownFormatter()
-                    output_text = formatter.format(
-                        processed_text,
-                        doc_metadata,
-                        include_metadata_header=metadata
-                    )
-                else:
-                    if metadata:
-                        metadata_str = metadata_parser.format_metadata_as_markdown(doc_metadata)
-                        output_text = f"{metadata_str}\n\n---\n\n{processed_text}"
-                    else:
-                        output_text = processed_text
+                output_text = format_output_text(
+                    processed_text,
+                    doc_metadata,
+                    format=format,
+                    include_metadata=metadata
+                )
 
                 # Save to file
                 MarkdownFormatter.save_to_file(output_text, str(output_path))
@@ -417,25 +445,13 @@ def merge(input_dir, output, normalize, format, process_number):
 
     # Group PDFs by process number
     metadata_parser = MetadataParser()
-    normalizer = TextNormalizer() if normalize else None
     process_groups = {}  # {process_number: [(pdf_path, text, metadata), ...]}
 
     # First pass: extract and group by process number
     for pdf_path in pdf_files:
         try:
-            # Quick extraction to get process number
-            with PyMuPDFExtractor(pdf_path) as extractor:
-                raw_text = extractor.extract_text()
-
-            # Normalize if enabled
-            if normalize:
-                processed_text = normalizer.normalize(raw_text)
-                processed_text = normalizer.remove_page_markers(processed_text)
-            else:
-                processed_text = raw_text
-
-            # Extract metadata
-            doc_metadata = metadata_parser.parse(processed_text)
+            # Extract and normalize text
+            raw_text, processed_text, doc_metadata = extract_and_normalize_pdf(pdf_path, normalize)
 
             # Get process number
             proc_num = doc_metadata.process_number
@@ -606,10 +622,10 @@ def info(pdf_path):
 
         if doc_metadata.document_ids:
             click.echo(f"\n   IDs dos Documentos ({len(doc_metadata.document_ids)}):")
-            for doc_id in doc_metadata.document_ids[:5]:
+            for doc_id in doc_metadata.document_ids[:MAX_DETAILED_ITEMS]:
                 click.echo(f"      - {doc_id}")
-            if len(doc_metadata.document_ids) > 5:
-                click.echo(f"      ... e mais {len(doc_metadata.document_ids) - 5}")
+            if len(doc_metadata.document_ids) > MAX_DETAILED_ITEMS:
+                click.echo(f"      ... e mais {len(doc_metadata.document_ids) - MAX_DETAILED_ITEMS}")
 
         if doc_metadata.lawyers:
             click.echo(f"\n   Advogados ({len(doc_metadata.lawyers)}):")
@@ -617,7 +633,7 @@ def info(pdf_path):
                 click.echo(f"      - {lawyer['name']} (OAB/{lawyer['state']} {lawyer['oab']})")
 
         if doc_metadata.signature_dates:
-            click.echo(f"\n   Assinaturas: {', '.join(doc_metadata.signature_dates[:3])}")
+            click.echo(f"\n   Assinaturas: {', '.join(doc_metadata.signature_dates[:MAX_SUMMARY_ITEMS])}")
 
         # Document type
         doc_types = []

@@ -174,11 +174,12 @@ class MarkdownFormatter:
         Format document optimized for RAG ingestion.
 
         Splits text into semantic chunks with metadata attached.
+        Respects sentence and word boundaries for better semantic coherence.
 
         Args:
             text: Processed document text
             metadata: Document metadata
-            chunk_size: Approximate size of each chunk (characters)
+            chunk_size: Maximum size of each chunk (characters)
 
         Returns:
             list[dict]: List of chunks with metadata
@@ -204,29 +205,41 @@ class MarkdownFormatter:
             'defendant': metadata.defendant or '',
         }
 
-        # Split into chunks (simple paragraph-based splitting for now)
-        paragraphs = text.split('\n\n')
+        # If text is shorter than chunk size, return as single chunk
+        if len(text.strip()) <= chunk_size:
+            return [{
+                'text': text.strip(),
+                'metadata': {**base_metadata, 'chunk_index': 0},
+                'chunk_index': 0
+            }]
 
-        # Handle case where text has no paragraph breaks
-        if not paragraphs or all(not p.strip() for p in paragraphs):
-            # Return entire text as single chunk if it's short enough
-            if len(text.strip()) <= chunk_size:
-                return [{
-                    'text': text.strip(),
-                    'metadata': {**base_metadata, 'chunk_index': 0},
-                    'chunk_index': 0
-                }]
-            # Otherwise split by characters (fallback for malformed text)
-            paragraphs = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+        # Split into sentences while preserving terminators
+        # Match complete sentences including punctuation
+        import re
+        # Match sentences: text followed by terminator(s)
+        sentence_pattern = r'([^.!?]*[.!?]+)'
+        parts = re.findall(sentence_pattern, text)
+
+        # Handle remaining text without terminator
+        remaining = re.sub(sentence_pattern, '', text).strip()
+        if remaining:
+            parts.append(remaining)
+
+        sentences = [s.strip() for s in parts if s.strip()]
 
         chunks = []
         current_chunk = ""
         chunk_index = 0
 
-        for para in paragraphs:
-            if len(current_chunk) + len(para) < chunk_size:
-                current_chunk += para + "\n\n"
+        for sentence in sentences:
+            # If adding this sentence keeps us under chunk_size, add it
+            if len(current_chunk) + len(sentence) + 1 <= chunk_size:
+                if current_chunk:
+                    current_chunk += " " + sentence
+                else:
+                    current_chunk = sentence
             else:
+                # Current chunk is full, save it
                 if current_chunk:
                     chunks.append({
                         'text': current_chunk.strip(),
@@ -234,9 +247,35 @@ class MarkdownFormatter:
                         'chunk_index': chunk_index
                     })
                     chunk_index += 1
-                current_chunk = para + "\n\n"
 
-        # Add last chunk
+                # If the sentence itself is longer than chunk_size, split by words
+                if len(sentence) > chunk_size:
+                    words = sentence.split()
+                    word_chunk = ""
+                    for word in words:
+                        if len(word_chunk) + len(word) + 1 <= chunk_size:
+                            if word_chunk:
+                                word_chunk += " " + word
+                            else:
+                                word_chunk = word
+                        else:
+                            # Save word chunk
+                            if word_chunk:
+                                chunks.append({
+                                    'text': word_chunk.strip(),
+                                    'metadata': {**base_metadata, 'chunk_index': chunk_index},
+                                    'chunk_index': chunk_index
+                                })
+                                chunk_index += 1
+                            word_chunk = word
+
+                    # Start new chunk with remaining words
+                    current_chunk = word_chunk
+                else:
+                    # Start new chunk with this sentence
+                    current_chunk = sentence
+
+        # Add final chunk
         if current_chunk:
             chunks.append({
                 'text': current_chunk.strip(),

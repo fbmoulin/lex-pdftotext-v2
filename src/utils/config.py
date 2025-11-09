@@ -24,6 +24,7 @@ class Config:
     max_pdf_size_mb: int = 500
     max_pdf_pages: int = 10000
     pdf_open_timeout: int = 30
+    page_extraction_timeout: int = 10  # Timeout per page extraction
 
     # Text Processing
     chunk_size: int = 1000
@@ -37,6 +38,7 @@ class Config:
     # API Configuration
     gemini_api_key: Optional[str] = None
     gemini_rate_limit: int = 60  # requests per minute
+    gemini_api_timeout: int = 30  # API call timeout in seconds
 
     # Output Configuration
     output_dir: str = "data/output"
@@ -136,6 +138,7 @@ class Config:
             'MAX_PDF_SIZE_MB': ('max_pdf_size_mb', int),
             'MAX_PDF_PAGES': ('max_pdf_pages', int),
             'PDF_OPEN_TIMEOUT': ('pdf_open_timeout', int),
+            'PAGE_EXTRACTION_TIMEOUT': ('page_extraction_timeout', int),
             'CHUNK_SIZE': ('chunk_size', int),
             'MIN_CHUNK_SIZE': ('min_chunk_size', int),
             'MAX_CHUNK_SIZE': ('max_chunk_size', int),
@@ -143,6 +146,7 @@ class Config:
             'ENABLE_IMAGE_ANALYSIS': ('enable_image_analysis', lambda x: x.lower() == 'true'),
             'GEMINI_API_KEY': ('gemini_api_key', str),
             'GEMINI_RATE_LIMIT': ('gemini_rate_limit', int),
+            'GEMINI_API_TIMEOUT': ('gemini_api_timeout', int),
             'OUTPUT_DIR': ('output_dir', str),
             'DEFAULT_FORMAT': ('default_format', str),
             'LOG_LEVEL': ('log_level', str),

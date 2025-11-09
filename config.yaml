@@ -6,6 +6,7 @@
 max_pdf_size_mb: 500          # Maximum PDF file size in MB
 max_pdf_pages: 10000           # Maximum number of pages in PDF
 pdf_open_timeout: 30           # Timeout for opening PDF files (seconds)
+page_extraction_timeout: 10    # Timeout per page extraction (seconds)
 
 # Text Processing Configuration
 chunk_size: 1000               # Default chunk size for RAG (characters)
@@ -19,6 +20,7 @@ enable_image_analysis: false   # Enable Gemini AI image analysis (requires API k
 # API Configuration
 # gemini_api_key: null         # Set via environment variable GEMINI_API_KEY
 gemini_rate_limit: 60          # API requests per minute
+gemini_api_timeout: 30         # API call timeout (seconds)
 
 # Output Configuration
 output_dir: data/output        # Default output directory
