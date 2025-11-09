@@ -209,6 +209,9 @@ class TestImageAnalyzerDescribe:
         mock_model_class.return_value = mock_model
 
         analyzer = ImageAnalyzer(enable_cache=True)
+        # Clear cache before test to ensure clean state
+        if analyzer.cache:
+            analyzer.cache.clear()
 
         test_image = Image.new("RGB", (100, 100), color="red")
 
@@ -305,11 +308,13 @@ class TestImageAnalyzerBatch:
         """Test batch processing continues on individual errors."""
         mock_model = MagicMock()
 
-        # First call succeeds, second fails, third succeeds
+        # First call succeeds, second fails (3 retry attempts), third succeeds
         mock_model.generate_content.side_effect = [
-            MagicMock(text="Success 1"),
-            Exception("API Error"),
-            MagicMock(text="Success 2"),
+            MagicMock(text="Success 1"),  # Image 1 succeeds
+            Exception("API Error"),  # Image 2 attempt 1 fails
+            Exception("API Error"),  # Image 2 attempt 2 fails
+            Exception("API Error"),  # Image 2 attempt 3 fails
+            MagicMock(text="Success 2"),  # Image 3 succeeds
         ]
 
         mock_model_class.return_value = mock_model
