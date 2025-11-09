@@ -61,7 +61,7 @@ repos:
   hooks:
   - id: bandit
     args: [-r, src/, -f, screen]
-    exclude: ^tests/
+    exclude: ^tests/|^docs/
 
   # Docstring checks
 - repo: https://github.com/PyCQA/pydocstyle
