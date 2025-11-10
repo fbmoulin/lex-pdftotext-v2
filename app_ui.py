@@ -566,9 +566,9 @@ def main():
     # Store window reference in API (private to prevent serialization)
     api._window = window
 
-    # Start application with simple configuration
+    # Start application with debug enabled to see console logs
     print("[PyWebview] Starting application with default backend...")
-    webview.start()
+    webview.start(debug=True)
 
 
 if __name__ == "__main__":

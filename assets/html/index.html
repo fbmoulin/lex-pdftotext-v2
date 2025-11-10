@@ -842,12 +842,55 @@
             });
         });
 
-        // Check if running in PyWebview or browser
-        const isPyWebview = typeof pywebview !== 'undefined';
+        // Check if running in PyWebview or browser - use polling to handle timing
+        let isPyWebview = false;
+        let pywebviewChecked = false;
+
+        // Poll for pywebview with retry mechanism
+        function checkPyWebviewAvailability() {
+            let attempts = 0;
+            const maxAttempts = 20; // 2 seconds total
+            const interval = 100; // Check every 100ms
+
+            const checkInterval = setInterval(() => {
+                attempts++;
+
+                if (typeof pywebview !== 'undefined') {
+                    clearInterval(checkInterval);
+                    isPyWebview = true;
+                    pywebviewChecked = true;
+                    console.log('[PyWebview] API detected and available');
+
+                    // Hide demo banner
+                    const banner = document.getElementById('demo-banner');
+                    if (banner) {
+                        banner.style.display = 'none';
+                    }
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    isPyWebview = false;
+                    pywebviewChecked = true;
+                    console.log('[Browser] Running in demo mode');
+
+                    // Show demo banner
+                    const banner = document.getElementById('demo-banner');
+                    if (banner) {
+                        banner.style.display = 'block';
+                    }
+                }
+            }, interval);
+        }
+
+        // Start checking when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkPyWebviewAvailability);
+        } else {
+            checkPyWebviewAvailability();
+        }
 
         async function selectFolder(mode) {
             currentMode = mode;
-            if (isPyWebview) {
+            if (isPyWebview && typeof pywebview !== 'undefined') {
                 const result = await pywebview.api.select_folder();
                 if (result) {
                     currentFolder = result;
@@ -860,7 +903,7 @@
         }
 
         async function selectFile() {
-            if (isPyWebview) {
+            if (isPyWebview && typeof pywebview !== 'undefined') {
                 // PyWebview mode - use native file dialog
                 const result = await pywebview.api.select_file();
                 if (result) {
@@ -1054,13 +1097,8 @@
             }
         }
 
-        // Load saved theme and show demo banner on page load
+        // Load saved theme on page load (banner now controlled by checkPyWebviewAvailability)
         (function() {
-            // Show demo banner if not in PyWebview
-            if (!isPyWebview) {
-                document.getElementById('demo-banner').style.display = 'block';
-            }
-
             // Load saved theme
             const savedTheme = localStorage.getItem('theme');
             const html = document.documentElement;
