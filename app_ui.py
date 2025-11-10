@@ -556,7 +556,9 @@ def main():
     api.window = window
 
     # Start application
-    webview.start(debug=False)
+    # Use 'edgehtml' backend to avoid EdgeChromium recursion bug with AccessibilityObject
+    # See: https://github.com/r0x0r/pywebview/issues/1157
+    webview.start(gui="edgehtml", debug=False, private_mode=True)
 
 
 if __name__ == "__main__":
