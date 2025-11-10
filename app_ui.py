@@ -99,7 +99,7 @@ class API:
 
     def __init__(self):
         """Initialize the API with default state."""
-        self.window = None
+        self._window = None  # Private: prevents serialization to JavaScript
         self.last_output_path = None  # Store last generated file path
 
     def select_folder(self):
@@ -109,7 +109,7 @@ class API:
             str: Selected folder path
         """
         try:
-            result = self.window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
+            result = self._window.create_file_dialog(webview.FOLDER_DIALOG, allow_multiple=False)
             if result and len(result) > 0:
                 return result[0]
             return None
@@ -123,7 +123,7 @@ class API:
             str: Selected file path
         """
         try:
-            result = self.window.create_file_dialog(
+            result = self._window.create_file_dialog(
                 webview.OPEN_DIALOG, file_types=("PDF Files (*.pdf)",), allow_multiple=False
             )
             if result and len(result) > 0:
@@ -174,7 +174,7 @@ class API:
             if not self.last_output_path or not Path(self.last_output_path).exists():
                 raise Exception("Nenhum arquivo foi gerado ainda")
 
-            result = self.window.create_file_dialog(
+            result = self._window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 save_filename=Path(self.last_output_path).name,
                 file_types=("Markdown Files (*.md)",),
@@ -541,10 +541,21 @@ def main():
             print(f"   Erro ao listar: {e}")
         sys.exit(1)
 
-    # Create window
+    # Read HTML content directly to avoid path issues with PyInstaller
+    try:
+        with open(html_path, encoding="utf-8") as f:
+            html_content = f.read()
+        print("[PyWebview] HTML loaded successfully")
+    except Exception as e:
+        print(f"❌ Erro ao ler HTML: {e}")
+        sys.exit(1)
+
+    # Create window with HTML content
+    # Use simple configuration to avoid issues
+    print("[PyWebview] Creating window...")
     window = webview.create_window(
         "PDF Legal Extractor",
-        html_path.as_uri(),
+        html=html_content,
         js_api=api,
         width=900,
         height=750,
@@ -552,13 +563,12 @@ def main():
         min_size=(800, 600),
     )
 
-    # Store window reference in API
-    api.window = window
+    # Store window reference in API (private to prevent serialization)
+    api._window = window
 
-    # Start application
-    # Use 'edgehtml' backend to avoid EdgeChromium recursion bug with AccessibilityObject
-    # See: https://github.com/r0x0r/pywebview/issues/1157
-    webview.start(gui="edgehtml", debug=False, private_mode=True)
+    # Start application with simple configuration
+    print("[PyWebview] Starting application with default backend...")
+    webview.start()
 
 
 if __name__ == "__main__":
