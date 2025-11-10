@@ -34,15 +34,22 @@ def check_requirements():
         return False
 
 
-def build_executable():
-    """Constrói o executável com PyInstaller."""
-    print("\n🔨 Construindo executável...\n")
+def build_executable(debug_mode: bool = False):
+    """Constrói o executável com PyInstaller.
+
+    Args:
+        debug_mode: Se True, cria versão com console para debug
+    """
+    mode_name = "debug (com console)" if debug_mode else "release (sem console)"
+    exe_name = "PDF2MD_debug" if debug_mode else "PDF2MD"
+
+    print(f"\n🔨 Construindo executável {mode_name}...\n")
 
     # Verificar se ícone existe
     icon_path = Path("assets/logo.ico")
     icon_arg = f"--icon={icon_path}" if icon_path.exists() else ""
 
-    if not icon_path.exists():
+    if not icon_path.exists() and not debug_mode:
         print("⚠️  Ícone não encontrado em assets/logo.ico")
         print("   O executável será criado sem ícone personalizado")
         print("   Veja assets/ICON_CREATION.md para criar um ícone\n")
@@ -54,14 +61,17 @@ def build_executable():
     cmd = [
         "pyinstaller",
         "--onefile",  # Gerar único executável
-        "--windowed",  # Sem console (GUI apenas)
-        "--name=PDF2MD",  # Nome do executável
+        f"--name={exe_name}",  # Nome do executável
         f"--add-data=assets{separator}assets",  # Incluir assets
         f"--add-data=src{separator}src",  # Incluir src
         "--clean",  # Limpar cache antes do build
     ]
 
-    if icon_arg:
+    # Adicionar --windowed apenas para versão release (sem console)
+    if not debug_mode:
+        cmd.append("--windowed")
+
+    if icon_arg and not debug_mode:
         cmd.append(icon_arg)
 
     # Hidden imports (dependências que PyInstaller pode não detectar)
@@ -189,19 +199,35 @@ def print_next_steps():
     print("\n" + "=" * 60)
     print("🎉 Build concluído!")
     print("=" * 60)
+    print("\n📦 EXECUTÁVEIS CRIADOS:")
+    if sys.platform == "win32":
+        print("   1. PDF2MD_debug.exe  - Com console (para ver erros)")
+        print("   2. PDF2MD.exe        - Sem console (versão final)")
+    else:
+        print("   1. PDF2MD_debug      - Com console (para ver erros)")
+        print("   2. PDF2MD            - Sem console (versão final)")
+
     print("\nPRÓXIMOS PASSOS:")
-    print("\n1. Teste o executável:")
+    print("\n1. Teste primeiro a versão DEBUG:")
+    if sys.platform == "win32":
+        print("   > .\\dist\\PDF2MD_debug.exe")
+        print("   (Se der erro, você verá no console)")
+    else:
+        print("   > ./dist/PDF2MD_debug")
+
+    print("\n2. Se funcionar, use a versão RELEASE:")
     if sys.platform == "win32":
         print("   > .\\dist\\PDF2MD.exe")
     else:
         print("   > ./dist/PDF2MD")
 
-    print("\n2. Para criar instalador Windows:")
+    print("\n3. Para criar instalador Windows:")
     print("   > Abra installer.iss no Inno Setup Compiler")
     print("   > Clique em 'Compile' (F9)")
 
-    print("\n3. Distribua:")
+    print("\n4. Distribua:")
     print("   - Executável: dist/PDF2MD.exe (stand-alone)")
+    print("   - Debug: dist/PDF2MD_debug.exe (para troubleshooting)")
     print("   - Portável: dist/PDF2MD_Portable.zip")
     print("   - Instalador: Output/PDF2MD_Setup.exe (após Inno Setup)")
     print("\n" + "=" * 60)
@@ -226,8 +252,17 @@ def main():
     else:
         print("\n🧹 Pulando limpeza avançada (build_utils indisponível)\n")
 
-    # Construir executável
-    if not build_executable():
+    # Construir executáveis (debug e release)
+    print("\n📦 Construindo 2 versões: debug (com console) e release (sem console)\n")
+
+    # 1. Versão DEBUG (com console para ver erros)
+    print("🔧 [1/2] Versão DEBUG (mostra erros)...")
+    if not build_executable(debug_mode=True):
+        print("\n⚠️  Build debug falhou, mas continuando...")
+
+    # 2. Versão RELEASE (sem console, versão final)
+    print("\n🎯 [2/2] Versão RELEASE (versão final)...")
+    if not build_executable(debug_mode=False):
         print("\n" + "=" * 60)
         print("❌ Build falhou!")
         print("=" * 60)

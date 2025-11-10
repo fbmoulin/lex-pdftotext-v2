@@ -24,6 +24,26 @@ from src.utils.config import get_config
 from src.utils.exceptions import PDFExtractionError
 from src.utils.logger import get_logger, setup_logger
 
+
+def get_resource_path(relative_path: str) -> Path:
+    """Get absolute path to resource, works for dev and for PyInstaller.
+
+    Args:
+        relative_path: Relative path from the application root
+
+    Returns:
+        Absolute path to the resource
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = Path(sys._MEIPASS)  # type: ignore
+    except AttributeError:
+        # Running in normal Python environment
+        base_path = Path(__file__).parent
+
+    return base_path / relative_path
+
+
 # Load configuration
 config = get_config()
 
@@ -501,17 +521,24 @@ class API:
 def main():
     """Main application entry point."""
     # Load environment variables from .env file
-    env_path = Path(__file__).parent / ".env"
+    env_path = get_resource_path(".env")
     load_dotenv(env_path)
 
     # Create API instance
     api = API()
 
-    # Get HTML path
-    html_path = Path(__file__).parent / "assets" / "html" / "index.html"
+    # Get HTML path using PyInstaller-aware path resolution
+    html_path = get_resource_path("assets/html/index.html")
 
     if not html_path.exists():
         print(f"❌ Erro: Arquivo HTML não encontrado: {html_path}")
+        print(f"   Diretório base: {get_resource_path('')}")
+        print("   Conteúdo do diretório:")
+        try:
+            for item in get_resource_path("").iterdir():
+                print(f"     - {item.name}")
+        except Exception as e:
+            print(f"   Erro ao listar: {e}")
         sys.exit(1)
 
     # Create window

@@ -6,6 +6,7 @@ Environment variables take precedence over config file values.
 """
 
 import os
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,16 @@ import yaml
 from .logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _get_base_path() -> Path:
+    """Get base path for the application, works for dev and PyInstaller."""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        return Path(sys._MEIPASS)  # type: ignore
+    except AttributeError:
+        # Running in normal Python environment - go up 2 levels from src/utils/
+        return Path(__file__).parent.parent.parent
 
 
 @dataclass
@@ -188,7 +199,8 @@ class Config:
             Config instance
         """
         if config_path is None:
-            config_path = Path.cwd() / "config.yaml"
+            # Use PyInstaller-aware path resolution
+            config_path = _get_base_path() / "config.yaml"
 
         # Load from file first
         file_config = cls.from_file(config_path)
