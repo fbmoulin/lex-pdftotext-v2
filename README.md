@@ -2,22 +2,23 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Release](https://img.shields.io/badge/release-v0.4.0-brightgreen.svg)](https://github.com/fbmoulin/pdftotext/releases/tag/v0.4.0)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://fbmoulin.github.io/pdftotext/)
-[![Coverage](https://img.shields.io/badge/coverage-93.85%25-brightgreen.svg)](https://github.com/fbmoulin/pdftotext)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/fbmoulin/pdftotext)
+[![Release](https://img.shields.io/badge/release-v0.5.0-brightgreen.svg)](https://github.com/fbmoulin/lex-pdftotext-v2/releases)
+[![Tests](https://img.shields.io/badge/tests-323%20passed-brightgreen.svg)](https://github.com/fbmoulin/lex-pdftotext-v2)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/fbmoulin/lex-pdftotext-v2)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](https://mypy-lang.org/)
+[![MCP](https://img.shields.io/badge/MCP-Claude%20Desktop-blueviolet.svg)](https://modelcontextprotocol.io/)
 
 > **Projeto criado por [Lex Intelligentia](https://lexintelligentia.com)** - Soluções inteligentes
 > para análise jurídica
 
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
-**Disponível em duas versões**:
+**Disponível em três versões**:
 
 - 🖥️ **Interface Gráfica (GUI)** - Aplicativo Windows stand-alone com design moderno dark theme
 - ⌨️ **Interface de Linha de Comando (CLI)** - Terminal/script
+- 🤖 **MCP Server** - Integração nativa com Claude Desktop
 
 ## 🎯 Objetivo
 
@@ -67,26 +68,52 @@ recursiva** - Processa subpastas (processos com múltiplos volumes) ✅ **Export
 pasta ou salvar em local personalizado ✅ CLI amigável com comandos intuitivos ✅ **Pacote
 PyPI-ready** - Instalável com pip install
 
+### Novidades v0.5.0
+
+✅ **Índice de Peças Processuais (`--indexed`)** - Gera índice navegável com:
+
+- Tabela de conteúdo com âncoras para cada documento
+- Detecção automática de tipo (petição, decisão, certidão, etc.)
+- Ícones visuais para cada tipo de peça
+- Cross-references entre documentos
+
+✅ **MCP Server para Claude Desktop** - Integração nativa com Claude:
+
+- Ferramenta `extract_legal_pdf` - Extração completa com índice
+- Ferramenta `extract_metadata_only` - Apenas metadados
+- Ferramenta `list_document_ids` - Lista IDs com posições
+
+✅ **Docker Support** - Deploy com containers:
+
+- `docker-compose.yml` para desenvolvimento
+- `docker-compose.prod.yml` para produção
+- Imagens separadas para API e Worker
+
 ## 📚 Documentação
 
 **📖 [Documentação Completa](https://fbmoulin.github.io/pdftotext/)** disponível no GitHub Pages
 
 A documentação inclui:
 
-- **[Guia de Instalação](https://fbmoulin.github.io/pdftotext/installation.html)** - Instruções detalhadas de setup
-- **[Quick Start](https://fbmoulin.github.io/pdftotext/quickstart.html)** - Comece a usar em 5 minutos
-- **[Guia de Uso](https://fbmoulin.github.io/pdftotext/usage.html)** - Exemplos avançados e casos de uso
-- **[Referência da API](https://fbmoulin.github.io/pdftotext/api/index.html)** - Documentação completa de todas as classes e funções
-- **[Guia de Contribuição](https://fbmoulin.github.io/pdftotext/contributing.html)** - Como contribuir com o projeto
-- **[Changelog](https://fbmoulin.github.io/pdftotext/changelog.html)** - Histórico de versões e métricas de qualidade
+- **[Guia de Instalação](https://fbmoulin.github.io/pdftotext/installation.html)** - Instruções
+  detalhadas de setup
+- **[Quick Start](https://fbmoulin.github.io/pdftotext/quickstart.html)** - Comece a usar em 5
+  minutos
+- **[Guia de Uso](https://fbmoulin.github.io/pdftotext/usage.html)** - Exemplos avançados e casos de
+  uso
+- **[Referência da API](https://fbmoulin.github.io/pdftotext/api/index.html)** - Documentação
+  completa de todas as classes e funções
+- **[Guia de Contribuição](https://fbmoulin.github.io/pdftotext/contributing.html)** - Como
+  contribuir com o projeto
+- **[Changelog](https://fbmoulin.github.io/pdftotext/changelog.html)** - Histórico de versões e
+  métricas de qualidade
 
-### Métricas de Qualidade (v0.4.0)
+### Métricas de Qualidade (v0.5.0)
 
-- ✅ **93.85% de cobertura de testes** (275 testes passando)
-- ✅ **100% de type safety** (0 erros MyPy)
+- ✅ **323 testes passando**
+- ✅ **0 erros Ruff** (linter limpo)
 - ✅ **0 issues de segurança** (Bandit)
-- ✅ **10 módulos com 100% de cobertura**
-- ✅ **10 módulos com 90%+ de cobertura**
+- ✅ **Type checked** (MyPy)
 
 ## 📦 Instalação
 
@@ -310,7 +337,35 @@ python main.py extract documento.pdf --no-metadata
 
 # Com estruturação automática de seções
 python main.py extract documento.pdf --structured
+
+# 🆕 Com índice de peças processuais e cross-references
+python main.py extract documento.pdf --indexed
 ```
+
+### Índice de Peças Processuais (--indexed)
+
+O flag `--indexed` gera um índice navegável no início do documento:
+
+```markdown
+## 📑 Índice de Peças Processuais
+
+| # | ID | Tipo | Linha |
+|---|-----|------|-------|
+| 1 | [79670915](#doc-79670915) | 📋 Petição | 45 |
+| 2 | [79670916](#doc-79670916) | ⚖️ Decisão | 234 |
+| 3 | [79670917](#doc-79670917) | 📜 Certidão | 567 |
+
+---
+
+<!-- doc-79670915 -->
+[Conteúdo do documento...]
+```
+
+**Benefícios:**
+
+- Navegação rápida entre peças do processo
+- Identificação visual do tipo de documento
+- Âncoras para referência direta
 
 ### Processar múltiplos PDFs (batch)
 
@@ -421,50 +476,82 @@ python main.py batch --help
 python main.py merge --help
 ```
 
+## 🤖 MCP Server (Claude Desktop)
+
+Integração nativa com Claude Desktop via Model Context Protocol (MCP).
+
+### Instalação
+
+1. **Configure o Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "pdf-legal-extractor": {
+      "command": "python",
+      "args": ["/caminho/para/pdftotext/mcp_server/server.py"]
+    }
+  }
+}
+```
+
+2. **Reinicie o Claude Desktop**
+
+### Ferramentas Disponíveis
+
+| Ferramenta              | Descrição                                                  |
+| ----------------------- | ---------------------------------------------------------- |
+| `extract_legal_pdf`     | Extrai texto completo com índice, metadados e normalização |
+| `extract_metadata_only` | Extrai apenas metadados (processo, partes, advogados)      |
+| `list_document_ids`     | Lista IDs de documentos com tipo e posição                 |
+
+### Exemplo de Uso no Claude
+
+```
+Usuário: Extraia o PDF em /home/user/processo.pdf
+
+Claude: [Usa extract_legal_pdf]
+
+## Processo 5022930-18.2025.8.08.0012
+
+### 📑 Índice de Peças Processuais
+| # | ID | Tipo | Linha |
+|---|-----|------|-------|
+| 1 | 79670915 | 📋 Petição | 45 |
+...
+```
+
 ## 📂 Estrutura do Projeto
 
 ```
 pdftotext/
-├── src/                     # Código-fonte principal
-│   ├── extractors/          # Extração de texto (PyMuPDF)
-│   │   ├── base.py          # Interface abstrata
-│   │   └── pymupdf_extractor.py
-│   ├── processors/          # Processamento de texto
-│   │   ├── text_normalizer.py    # Normalização (UPPERCASE → sentence case)
-│   │   └── metadata_parser.py    # Extração de metadados
-│   ├── formatters/          # Formatação de saída
-│   │   └── markdown_formatter.py # Markdown estruturado
-│   └── utils/
-│       ├── patterns.py      # Padrões regex para PJe
-│       ├── exceptions.py    # Exceções customizadas
-│       └── validators.py    # Validação de PDFs
-├── assets/                  # Assets para GUI
-│   ├── html/
-│   │   └── index.html       # Interface web
-│   ├── logo.ico             # Ícone do aplicativo (criar)
-│   └── ICON_CREATION.md     # Guia para criar ícone
-├── data/                    # Dados do usuário
-│   ├── input/               # PDFs a processar
-│   │   ├── processo-1.pdf              # PDFs individuais
-│   │   ├── 0000865-32.2016.8.08.0012/  # Subpasta para múltiplos volumes
-│   │   │   ├── volume-1.pdf
-│   │   │   └── volume-2.pdf
-│   │   └── processado/                 # PDFs já processados (auto-criado)
-│   │       └── [mesma estrutura do input]
-│   └── output/              # Textos extraídos (.md gerados aqui)
-├── tests/                   # Testes unitários
+├── src/
+│   ├── lex_pdftotext/       # 🆕 Pacote principal (v0.5.0)
+│   │   ├── extractors/      # Extração de texto (PyMuPDF)
+│   │   ├── processors/      # Normalização e metadados
+│   │   ├── formatters/      # Markdown, JSON, índice
+│   │   ├── api/             # 🆕 FastAPI routes
+│   │   ├── models/          # 🆕 SQLAlchemy models
+│   │   ├── storage/         # 🆕 S3/local storage
+│   │   ├── worker/          # 🆕 Background tasks
+│   │   └── utils/           # Patterns, config, validators
+│   └── [shims]              # Backward compatibility
+├── mcp_server/              # 🆕 MCP Server (Claude Desktop)
+│   ├── server.py            # Servidor MCP
+│   └── requirements.txt
+├── docker/                  # 🆕 Docker support
+│   ├── Dockerfile.api
+│   ├── Dockerfile.worker
+│   ├── docker-compose.yml
+│   └── docker-compose.prod.yml
+├── tests/                   # 323 testes
+│   ├── test_extraction.py
+│   ├── test_api.py          # 🆕 Testes API
+│   └── test_saas.py         # 🆕 Testes SaaS
+├── assets/html/             # Interface GUI
 ├── main.py                  # CLI principal
-├── app_ui.py                # GUI principal (PyWebview)
-├── build_exe.py             # Script de build
-├── installer.iss            # Script Inno Setup
-├── requirements.txt
-├── BUILD_GUIDE.md           # Guia de build e distribuição
-├── SECURITY_IMPROVEMENTS.md # Melhorias de segurança
-├── CHANGELOG_SECURITY.md    # Changelog de segurança
-├── WORKFLOW.md              # Guia completo de uso CLI
-├── OCR_GUIDE.md             # Guia para PDFs escaneados
-├── CLAUDE.md                # Instruções para Claude Code
-└── README.md
+├── app_ui.py                # GUI (PyWebview)
+└── pyproject.toml           # Package config
 ```
 
 ## 📁 Organização de Arquivos
@@ -658,16 +745,19 @@ chunks = process_for_rag("processo.pdf")
 
 - [ ] Suporte nativo a OCR para PDFs escaneados (veja [OCR_GUIDE.md](./OCR_GUIDE.md) para soluções
   atuais)
-- [ ] Extração de tabelas estruturadas
+- [x] ~~Extração de tabelas estruturadas~~ ✅ v0.4.0
 - [ ] Detecção automática de seções (NLP)
 - [ ] Cache de análises de imagens
 - [ ] Retry logic para API calls do Gemini
-- [ ] API REST (FastAPI)
+- [x] ~~API REST (FastAPI)~~ ✅ v0.5.0
 - [ ] Interface web responsiva
-- [ ] Exportação JSON estruturado
+- [x] ~~Exportação JSON estruturado~~ ✅ v0.4.0
 - [ ] Integração direta com vector databases
 - [ ] Análise FIRAC+ automática
 - [ ] Suporte a mais idiomas de interface
+- [x] ~~Índice de peças processuais~~ ✅ v0.5.0
+- [x] ~~MCP Server (Claude Desktop)~~ ✅ v0.5.0
+- [x] ~~Docker support~~ ✅ v0.5.0
 
 ## 📄 Licença
 
