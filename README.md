@@ -14,8 +14,9 @@
 
 Extração e estruturação de texto de documentos PDF processuais brasileiros (formato PJe).
 
-**Disponível em três versões**:
+**Disponível em quatro versões**:
 
+- 🌐 **Dashboard Web (Next.js)** - Interface moderna com shadcn/ui para processamento de PDFs
 - 🖥️ **Interface Gráfica (GUI)** - Aplicativo Windows stand-alone com design moderno dark theme
 - ⌨️ **Interface de Linha de Comando (CLI)** - Terminal/script
 - 🤖 **MCP Server** - Integração nativa com Claude Desktop
@@ -87,7 +88,14 @@ PyPI-ready** - Instalável com pip install
 
 - `docker-compose.yml` para desenvolvimento
 - `docker-compose.prod.yml` para produção
-- Imagens separadas para API e Worker
+- Imagens separadas para API, Worker e Frontend
+
+✅ **Dashboard Web (Next.js)** - Interface moderna:
+
+- Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
+- Páginas: Extrair, Lote, Mesclar, Tabelas, Histórico, Info
+- Suporte a dark/light mode
+- React Query para cache e polling de jobs
 
 ## 📚 Documentação
 
@@ -259,6 +267,56 @@ print(config.to_dict())  # Mostra toda configuração carregada
 ```
 
 ## 🚀 Uso
+
+### Dashboard Web (Next.js) 🆕
+
+Interface web moderna para processamento de PDFs.
+
+#### Desenvolvimento Local
+
+```bash
+# 1. Iniciar backend
+source venv/bin/activate
+uvicorn src.lex_pdftotext.api.main:app --reload --port 8000
+
+# 2. Iniciar frontend (em outro terminal)
+cd frontend
+bun install
+bun run dev
+
+# 3. Acessar http://localhost:3000
+```
+
+#### Docker (Recomendado)
+
+```bash
+cd docker
+docker compose up --build
+
+# Acesse:
+# Frontend: http://localhost:3000
+# API: http://localhost:8000
+```
+
+#### Funcionalidades do Dashboard
+
+| Página | Descrição |
+|--------|-----------|
+| **Extrair** | Upload de PDF único com opções de processamento |
+| **Lote** | Processamento de múltiplos PDFs simultaneamente |
+| **Mesclar** | Combinar PDFs do mesmo processo |
+| **Tabelas** | Extrair tabelas como Markdown ou CSV |
+| **Histórico** | Acompanhar status de todos os jobs |
+| **Info** | Ver metadados sem extração completa |
+
+**Opções de processamento:**
+- ✅ Normalizar texto
+- ✅ Incluir metadados
+- ✅ Estruturar seções
+- ✅ Indexar peças processuais
+- 🤖 Analisar imagens (Gemini Vision)
+
+---
 
 ### Interface Gráfica (GUI)
 
@@ -528,7 +586,7 @@ pdftotext/
 ├── src/
 │   ├── lex_pdftotext/       # 🆕 Pacote principal (v0.5.0)
 │   │   ├── extractors/      # Extração de texto (PyMuPDF)
-│   │   ├── processors/      # Normalização e metadados
+│   │   ├── processors/      # Normalização, metadados, ImageAnalyzer
 │   │   ├── formatters/      # Markdown, JSON, índice
 │   │   ├── api/             # 🆕 FastAPI routes
 │   │   ├── models/          # 🆕 SQLAlchemy models
@@ -536,19 +594,32 @@ pdftotext/
 │   │   ├── worker/          # 🆕 Background tasks
 │   │   └── utils/           # Patterns, config, validators
 │   └── [shims]              # Backward compatibility
-├── mcp_server/              # 🆕 MCP Server (Claude Desktop)
+├── frontend/                # 🆕 Next.js Dashboard (v0.6.0)
+│   ├── app/                 # App Router pages
+│   │   ├── extract/         # Extração de PDF
+│   │   ├── batch/           # Processamento em lote
+│   │   ├── merge/           # Mesclar PDFs
+│   │   ├── tables/          # Extração de tabelas
+│   │   ├── jobs/            # Histórico de jobs
+│   │   └── info/            # Informações do PDF
+│   ├── components/          # React components
+│   │   ├── ui/              # shadcn/ui components
+│   │   └── layout/          # Sidebar, Header
+│   └── lib/                 # API client, React Query
+├── mcp_server/              # MCP Server (Claude Desktop)
 │   ├── server.py            # Servidor MCP
 │   └── requirements.txt
-├── docker/                  # 🆕 Docker support
+├── docker/                  # Docker support
 │   ├── Dockerfile.api
 │   ├── Dockerfile.worker
+│   ├── Dockerfile.frontend  # 🆕 Next.js container
 │   ├── docker-compose.yml
 │   └── docker-compose.prod.yml
 ├── tests/                   # 323 testes
 │   ├── test_extraction.py
-│   ├── test_api.py          # 🆕 Testes API
-│   └── test_saas.py         # 🆕 Testes SaaS
-├── assets/html/             # Interface GUI
+│   ├── test_api.py
+│   └── test_saas.py
+├── assets/html/             # Interface GUI (desktop)
 ├── main.py                  # CLI principal
 ├── app_ui.py                # GUI (PyWebview)
 └── pyproject.toml           # Package config
@@ -750,7 +821,7 @@ chunks = process_for_rag("processo.pdf")
 - [ ] Cache de análises de imagens
 - [ ] Retry logic para API calls do Gemini
 - [x] ~~API REST (FastAPI)~~ ✅ v0.5.0
-- [ ] Interface web responsiva
+- [x] ~~Interface web responsiva~~ ✅ v0.6.0 (Next.js + shadcn/ui)
 - [x] ~~Exportação JSON estruturado~~ ✅ v0.4.0
 - [ ] Integração direta com vector databases
 - [ ] Análise FIRAC+ automática

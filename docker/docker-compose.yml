@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -57,7 +55,6 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.worker
-    container_name: lex-pdftotext-worker
     environment:
       - REDIS_URL=redis://redis:6379
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
