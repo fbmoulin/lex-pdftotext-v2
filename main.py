@@ -12,15 +12,19 @@ import click
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.extractors import PyMuPDFExtractor, TableExtractor
-from src.formatters import JSONFormatter, MarkdownFormatter, TableFormatter
-from src.processors import DocumentMetadata, MetadataParser, TextNormalizer
-from src.utils.cache import get_performance_monitor
-from src.utils.config import get_config
-from src.utils.constants import FILENAME_DISPLAY_LENGTH, MAX_DETAILED_ITEMS, MAX_SUMMARY_ITEMS
-from src.utils.exceptions import InvalidPathError
-from src.utils.logger import get_logger, setup_logger
-from src.utils.validators import (
+from src.lex_pdftotext.extractors import PyMuPDFExtractor, TableExtractor
+from src.lex_pdftotext.formatters import JSONFormatter, MarkdownFormatter, TableFormatter
+from src.lex_pdftotext.processors import DocumentMetadata, MetadataParser, TextNormalizer
+from src.lex_pdftotext.utils.cache import get_performance_monitor
+from src.lex_pdftotext.utils.config import get_config
+from src.lex_pdftotext.utils.constants import (
+    FILENAME_DISPLAY_LENGTH,
+    MAX_DETAILED_ITEMS,
+    MAX_SUMMARY_ITEMS,
+)
+from src.lex_pdftotext.utils.exceptions import InvalidPathError
+from src.lex_pdftotext.utils.logger import get_logger, setup_logger
+from src.lex_pdftotext.utils.validators import (
     check_disk_space,
     estimate_output_size,
     sanitize_output_path,
@@ -71,6 +75,8 @@ def format_output_text(
     format: str = "markdown",
     include_metadata: bool = True,
     structured: bool = False,
+    indexed: bool = False,
+    raw_text: str = "",
 ) -> str:
     """Format processed text for output.
 
@@ -80,6 +86,8 @@ def format_output_text(
         format: Output format ('markdown', 'txt', or 'json')
         include_metadata: Whether to include metadata header
         structured: Whether to use structured sections (markdown only)
+        indexed: Whether to generate index with document anchors
+        raw_text: Raw text for extracting document positions (required for indexed mode)
 
     Returns:
         Formatted output text
@@ -87,7 +95,15 @@ def format_output_text(
     if format == "markdown":
         md_formatter = MarkdownFormatter()
 
-        if structured:
+        if indexed:
+            # Extract document positions from raw text for indexed mode
+            from src.lex_pdftotext.utils.patterns import RegexPatterns
+
+            doc_metadata.document_positions = RegexPatterns.extract_document_ids_with_positions(
+                raw_text
+            )
+            return md_formatter.format_with_index(processed_text, doc_metadata)
+        elif structured:
             return md_formatter.format_with_sections(processed_text, doc_metadata)
         else:
             return md_formatter.format(
@@ -197,7 +213,12 @@ def cli():
     default=False,
     help="Auto-detect and structure sections (default: False)",
 )
-def extract(pdf_path, output, format, normalize, metadata, structured):
+@click.option(
+    "--indexed/--no-indexed",
+    default=False,
+    help="Generate index with document anchors and cross-references (default: False)",
+)
+def extract(pdf_path, output, format, normalize, metadata, structured, indexed):
     """Extract text from a single PDF file.
 
     Example:
@@ -242,6 +263,8 @@ def extract(pdf_path, output, format, normalize, metadata, structured):
             format=format,
             include_metadata=metadata,
             structured=structured,
+            indexed=indexed,
+            raw_text=raw_text,
         )
 
         # Save to file
