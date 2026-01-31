@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { History, RefreshCw, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useJobs } from '@/lib/queries';
-import type { Job, JobStatus } from '@/lib/types';
+import type { JobStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const statusConfig: Record<JobStatus, { icon: React.ElementType; label: string; color: string }> = {

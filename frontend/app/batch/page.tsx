@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Files, Upload, X, Loader2, CheckCircle2 } from 'lucide-react';
+import { Files, Upload, X, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { ProcessingOptions } from '@/components/processing-options';
 import { useBatch } from '@/lib/queries';
 import type { ExtractOptions } from '@/lib/types';

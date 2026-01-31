@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Info, Loader2, FileText, Table2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Info, Loader2, FileText } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PDFDropzone } from '@/components/pdf-dropzone';
 import { usePDFInfo } from '@/lib/queries';

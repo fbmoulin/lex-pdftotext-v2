@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Combine, Upload, X, Loader2, GripVertical } from 'lucide-react';
+import { Combine, Upload, X, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useMerge, useJob, useJobResult } from '@/lib/queries';
 import { JobCard } from '@/components/job-card';
 import { MarkdownViewer } from '@/components/markdown-viewer';

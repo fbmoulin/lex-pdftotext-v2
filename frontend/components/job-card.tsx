@@ -19,6 +19,7 @@ const statusConfig = {
     icon: Clock,
     label: 'Na fila',
     color: 'text-muted-foreground',
+    animate: false,
   },
   started: {
     icon: Loader2,
@@ -30,11 +31,13 @@ const statusConfig = {
     icon: CheckCircle2,
     label: 'Concluído',
     color: 'text-green-500',
+    animate: false,
   },
   failed: {
     icon: XCircle,
     label: 'Erro',
     color: 'text-red-500',
+    animate: false,
   },
 };
 

@@ -14,7 +14,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { title: 'Início', href: '/', icon: Home },

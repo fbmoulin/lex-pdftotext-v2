@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 
 export default function TablesPage() {
   const [file, setFile] = useState<File | null>(null);
