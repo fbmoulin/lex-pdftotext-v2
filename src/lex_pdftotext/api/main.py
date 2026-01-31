@@ -112,6 +112,8 @@ async def extract_pdf(
     include_metadata: Annotated[bool, Query(description="Include metadata")] = True,
     chunk_for_rag: Annotated[bool, Query(description="Split into RAG chunks")] = False,
     chunk_size: Annotated[int, Query(description="Chunk size", ge=100, le=10000)] = 1000,
+    indexed: Annotated[bool, Query(description="Include section indexing")] = False,
+    analyze_images: Annotated[bool, Query(description="Analyze images with Gemini Vision")] = False,
 ):
     """
     Extract text from a PDF document.
@@ -150,6 +152,8 @@ async def extract_pdf(
                 "include_metadata": include_metadata,
                 "chunk_for_rag": chunk_for_rag,
                 "chunk_size": chunk_size,
+                "indexed": indexed,
+                "analyze_images": analyze_images,
             },
         },
         job_id=job_id,

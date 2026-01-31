@@ -63,7 +63,8 @@ def extract_pdf_task(job_id: str, filepath: str, options: dict) -> dict:
     Args:
         job_id: Unique job identifier
         filepath: Path to the PDF file
-        options: Extraction options (format, normalize, include_metadata, chunk_for_rag)
+        options: Extraction options (format, normalize, include_metadata, chunk_for_rag,
+                 indexed, analyze_images)
 
     Returns:
         Extraction result dictionary
@@ -85,12 +86,19 @@ def extract_pdf_task(job_id: str, filepath: str, options: dict) -> dict:
 
         update_job_status(job_id, "started", progress=10, message="Reading PDF")
 
-        # Extract raw text
+        # Extract raw text and optionally images
+        images = []
         with PyMuPDFExtractor(str(filepath_obj)) as extractor:
             raw_text = extractor.extract_text()
             page_count = extractor.page_count
 
-        update_job_status(job_id, "started", progress=40, message="Processing text")
+            # Extract images if analyze_images is enabled
+            if options.get("analyze_images", False):
+                update_job_status(job_id, "started", progress=20, message="Extracting images")
+                images = extractor.extract_images()
+                logger.info(f"Extracted {len(images)} images from PDF")
+
+        update_job_status(job_id, "started", progress=30, message="Processing text")
 
         # Normalize text
         text = raw_text
@@ -98,13 +106,39 @@ def extract_pdf_task(job_id: str, filepath: str, options: dict) -> dict:
             normalizer = TextNormalizer()
             text = normalizer.normalize(raw_text)
 
-        update_job_status(job_id, "started", progress=60, message="Extracting metadata")
+        update_job_status(job_id, "started", progress=50, message="Extracting metadata")
 
         # Extract metadata
         metadata = None
         if options.get("include_metadata", True):
             parser = MetadataParser()
             metadata = parser.parse(text)
+
+        # Analyze images with Gemini Vision if enabled and images were found
+        image_descriptions = []
+        if options.get("analyze_images", False) and images:
+            update_job_status(
+                job_id, "started", progress=60, message=f"Analyzing {len(images)} images with AI"
+            )
+            try:
+                from ..processors.image_analyzer import (
+                    ImageAnalyzer,
+                    format_image_description_markdown,
+                )
+
+                analyzer = ImageAnalyzer()
+                context = metadata.document_type if metadata else "legal document"
+                analyzed_images = analyzer.describe_images_batch(images, context=context)
+
+                # Format image descriptions as markdown
+                for idx, img_data in enumerate(analyzed_images, 1):
+                    image_descriptions.append(format_image_description_markdown(img_data, idx))
+
+                logger.info(f"Analyzed {len(image_descriptions)} images successfully")
+            except Exception as e:
+                logger.warning(
+                    f"Image analysis failed: {e}. Continuing without image descriptions."
+                )
 
         update_job_status(job_id, "started", progress=80, message="Formatting output")
 
@@ -113,28 +147,46 @@ def extract_pdf_task(job_id: str, filepath: str, options: dict) -> dict:
         result: dict[str, Any] = {}
 
         if output_format == "json":
-            formatter = JSONFormatter()
-            result = formatter.format(text, metadata)
+            json_formatter = JSONFormatter()
+            result = json_formatter.format(text, metadata)
+            # Add image descriptions to JSON output
+            if image_descriptions:
+                result["image_descriptions"] = image_descriptions
         elif output_format == "markdown":
-            formatter = MarkdownFormatter()
+            md_formatter = MarkdownFormatter()
             if options.get("chunk_for_rag", False):
                 chunk_size = options.get("chunk_size", 1000)
-                chunks = formatter.format_for_rag(text, metadata, chunk_size=chunk_size)
+                chunks = md_formatter.format_for_rag(text, metadata, chunk_size=chunk_size)
                 result = {
                     "chunks": chunks,
                     "total_chunks": len(chunks),
                     "metadata": metadata.to_dict() if metadata else None,
                 }
             else:
+                formatted_text = md_formatter.format(text, metadata)
+                # Append image descriptions to markdown output
+                if image_descriptions:
+                    formatted_text += "\n\n## 📷 Imagens Analisadas\n\n"
+                    formatted_text += "\n".join(image_descriptions)
                 result = {
-                    "text": formatter.format(text, metadata),
+                    "text": formatted_text,
                     "metadata": metadata.to_dict() if metadata else None,
                 }
+            # Add image count to result
+            if image_descriptions:
+                result["images_analyzed"] = len(image_descriptions)
         else:  # text
+            formatted_text = text
+            # Append image descriptions to plain text output
+            if image_descriptions:
+                formatted_text += "\n\n=== IMAGENS ANALISADAS ===\n\n"
+                formatted_text += "\n".join(image_descriptions)
             result = {
-                "text": text,
+                "text": formatted_text,
                 "metadata": metadata.to_dict() if metadata else None,
             }
+            if image_descriptions:
+                result["images_analyzed"] = len(image_descriptions)
 
         # Add processing info
         processing_time = time.time() - start_time
