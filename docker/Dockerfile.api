@@ -1,0 +1,46 @@
+# Dockerfile.api - FastAPI server for lex-pdftotext
+FROM python:3.11-slim
+
+LABEL maintainer="Felipe Bertrand Sardenberg Moulin <felipe.moulin.juiz@gmail.com>"
+LABEL description="lex-pdftotext API server"
+LABEL version="1.0.0"
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
+
+# Copy application code
+COPY src/ ./src/
+COPY pyproject.toml .
+
+# Install the package in editable mode
+RUN pip install -e .
+
+# Create directories for uploads and outputs
+RUN mkdir -p /app/uploads /app/outputs /app/temp
+
+# Set volume mount points
+VOLUME ["/app/uploads", "/app/outputs"]
+
+# Expose API port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the API server
+CMD ["uvicorn", "src.lex_pdftotext.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

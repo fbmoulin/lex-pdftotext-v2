@@ -1,9 +1,45 @@
-"""PDF to text extraction for legal documents."""
+"""
+Backward compatibility module.
+All functionality moved to lex_pdftotext package.
 
-__version__ = "0.1.0"
+This module provides backward compatibility for existing code that imports from 'src.*'.
+New code should import from 'lex_pdftotext.*' directly.
+"""
 
-from .extractors import PyMuPDFExtractor
-from .formatters import MarkdownFormatter
-from .processors import MetadataParser, TextNormalizer
+# Re-export submodules for backward compatibility
+from .lex_pdftotext import extractors
+from .lex_pdftotext import formatters
+from .lex_pdftotext import processors
+from .lex_pdftotext import utils
 
-__all__ = ["PyMuPDFExtractor", "TextNormalizer", "MetadataParser", "MarkdownFormatter"]
+# Re-export main classes
+from .lex_pdftotext import (
+    __version__,
+    PyMuPDFExtractor,
+    TextNormalizer,
+    MetadataParser,
+    MarkdownFormatter,
+    JSONFormatter,
+    TableFormatter,
+    extract_pdf,
+    extract_metadata,
+)
+
+__all__ = [
+    "__version__",
+    # Submodules
+    "extractors",
+    "formatters",
+    "processors",
+    "utils",
+    # Classes
+    "PyMuPDFExtractor",
+    "TextNormalizer",
+    "MetadataParser",
+    "MarkdownFormatter",
+    "JSONFormatter",
+    "TableFormatter",
+    # Functions
+    "extract_pdf",
+    "extract_metadata",
+]

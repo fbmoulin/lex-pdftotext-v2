@@ -23,6 +23,7 @@ wheels/
 # Virtual environments
 venv/
 venv_build/
+venv_windows/
 env/
 ENV/
 .venv

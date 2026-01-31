@@ -3,14 +3,14 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pdftotext-legal"
-version = "0.4.0"
+name = "lex-pdftotext"
+version = "1.0.0"
 description = "Extract and structure text from Brazilian legal PDF documents (PJe format)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {file = "LICENSE"}
+license = "MIT"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Felipe Bertrand Sardenberg Moulin", email = "felipe.moulin.juiz@gmail.com"}
 ]
 keywords = [
     "pdf",
@@ -20,13 +20,13 @@ keywords = [
     "pje",
     "document processing",
     "rag",
-    "markdown"
+    "markdown",
+    "lex-intelligentia"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Legal Industry",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -38,23 +38,21 @@ classifiers = [
 ]
 
 dependencies = [
-    "pymupdf>=1.26.6",
-    "pdfplumber>=0.11.8",
-    "click>=8.1.0",
+    "pymupdf>=1.23.0",
+    "pdfplumber>=0.10.0",
+    "click>=8.0.0",
     "python-dotenv>=1.0.0",
-    "tqdm>=4.66.0",
-    "Pillow>=10.0.0",
-    "tenacity>=8.2.0",
-    "ratelimit>=2.2.1",
+    "tqdm>=4.65.0",
     "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
+vision = [
+    "google-generativeai>=0.3.0",
+    "Pillow>=10.0.0",
+]
 gui = [
     "pywebview>=4.0",
-]
-ai = [
-    "google-generativeai>=0.3.0",
 ]
 dev = [
     "black>=24.0.0",
@@ -73,30 +71,32 @@ dev = [
     "pre-commit>=3.8.0",
     "bandit>=1.7.0",
     "radon>=6.0.0",
+    "build>=1.0.0",
+    "twine>=5.0.0",
 ]
 build = [
     "pyinstaller>=6.0.0",
 ]
 all = [
-    "pdftotext-legal[gui,ai,dev,build]",
+    "lex-pdftotext[vision,gui,dev,build]",
 ]
 
 [project.urls]
 Homepage = "https://github.com/fbmoulin/pdftotext"
-Documentation = "https://github.com/fbmoulin/pdftotext#readme"
+Documentation = "https://fbmoulin.github.io/pdftotext/"
 Repository = "https://github.com/fbmoulin/pdftotext"
 Issues = "https://github.com/fbmoulin/pdftotext/issues"
+Changelog = "https://github.com/fbmoulin/pdftotext/blob/main/CHANGELOG.md"
 
 [project.scripts]
-pdftotext-legal = "main:cli"
-pdftotext-gui = "app_ui:main"
+lex-pdftotext = "src.lex_pdftotext.cli:main"
 
-[tool.setuptools]
-packages = {find = {}}
-py-modules = ["main", "app_ui", "example"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [tool.setuptools.package-data]
-src = ["py.typed"]
+"src.lex_pdftotext" = ["py.typed"]
 
 # Black configuration
 [tool.black]
@@ -122,7 +122,7 @@ extend-exclude = '''
 profile = "black"
 line_length = 100
 skip_gitignore = true
-known_first_party = ["src"]
+known_first_party = ["src", "lex_pdftotext"]
 
 # Ruff configuration
 [tool.ruff]

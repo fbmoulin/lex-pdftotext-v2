@@ -1,7 +1,3 @@
-"""PDF text extraction modules."""
-
-from .base import PDFExtractor
-from .pymupdf_extractor import PyMuPDFExtractor
-from .table_extractor import TableExtractor
-
-__all__ = ["PDFExtractor", "PyMuPDFExtractor", "TableExtractor"]
+"""Backward compatibility - redirects to lex_pdftotext.extractors."""
+from ..lex_pdftotext.extractors import *
+from ..lex_pdftotext.extractors import __all__
